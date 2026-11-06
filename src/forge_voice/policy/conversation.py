@@ -124,12 +124,13 @@ class ConversationPolicy:
     def record_readback(self, state: CallState, payload: Mapping[str, Any]) -> None:
         state.readback_done = True
         state.readback_payload = dict(payload)
+        state.awaiting_confirmation = True
         state.explicit_yes = False
         state.confirmation_token = None
         state.phase = CallPhase.readback
 
     def confirm(self, state: CallState, utterance: str) -> bool:
-        if not state.readback_done:
+        if not state.readback_done or not state.awaiting_confirmation:
             state.explicit_yes = False
             return False
         text = utterance.lower()
@@ -138,6 +139,7 @@ class ConversationPolicy:
         )
         if not decided and REFUSAL_PATTERN.search(text):
             decided = False
+        state.awaiting_confirmation = False
         state.explicit_yes = decided
         return decided
 

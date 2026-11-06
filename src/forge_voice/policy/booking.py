@@ -7,6 +7,7 @@ ownership, the change cutoff and idempotency replay. It never talks to a model o
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import suppress
 from datetime import date, datetime, time, timedelta
 from typing import Any, Literal
 from zoneinfo import ZoneInfo
@@ -101,7 +102,7 @@ class BookingService:
         self.store = store
         self.outbox = outbox
         self.clock = clock
-        self.tokens = tokens or ConfirmationTokenStore(clock)
+        self.tokens = tokens or ConfirmationTokenStore(clock, store=store)
         self._offers: dict[str, Offer] = {}
 
     # ------------------------------------------------------------- availability
@@ -180,12 +181,15 @@ class BookingService:
     ) -> BookingWrite:
         payload = canonical_booking_payload(service_id, slot_id, customer)
         key = self.idempotency_key(call_id, "book", slot_id)
+        self._require_confirmation_presence(confirmed, token)
+        binding = self._binding(call_id, "book", slot_id, payload)
+        self._authorize_token(token, binding, key, payload)
         replay = self._replay(key, payload)
         if replay is not None:
             self._audit(call_id, "booking_replayed", "book", payload)
+            self._drain_outbox(self.clock.now)
             return replay
 
-        self._require_confirmation_presence(confirmed, token)
         self._require_service(service_id)
         if not self.tenant.has_zip(customer.address.zip):
             raise BookingError(
@@ -203,14 +207,6 @@ class BookingService:
             )
         if offer.service_id != service_id:
             raise BookingError(ErrorCode.slot_unavailable, "That slot is for another service.")
-        binding = self._check_confirmation(
-            confirmed=confirmed,
-            token=token,
-            call_id=call_id,
-            intent="book",
-            target=slot_id,
-            payload=payload,
-        )
 
         customer_record = self._customer_for_write(customer)
         now = self.clock.now
@@ -232,15 +228,31 @@ class BookingService:
                 status="booked",
                 contact_phone=customer.phone,
                 address=customer.address,
+                confirmation_sms="queued",
                 created_at=now,
                 updated_at=now,
             )
             self.store.create_booking(booking)
             self._set_slot_status(slot.slot_id, "booked")
-            self._put_idempotency(key, call_id, "book", slot_id, payload, booking, now)
+            self.store.insert_confirmation(
+                ConfirmationRecord(
+                    message_id=self.store.next_message_id(self.tenant.tenant_id),
+                    tenant_id=self.tenant.tenant_id,
+                    booking_id=booking.booking_id,
+                    to=booking.contact_phone,
+                    created_at=now,
+                )
+            )
+            self._put_idempotency(key, call_id, "book", slot_id, payload, booking, now, token=token)
+            consumed = self.tokens.consume_in_transaction(token or "", binding)
+            if consumed.status is not TokenStatus.valid:
+                raise BookingError(
+                    ErrorCode.confirmation_expired,
+                    "That confirmation is no longer valid. Please confirm again.",
+                )
             self._audit(call_id, "booking_committed", "book", payload)
-        self.tokens.consume(token or "", binding)
-        return self._finish_booking(booking, key, call_id)
+        self._drain_outbox(now)
+        return BookingWrite(booking=booking)
 
     # --------------------------------------------------------------- reschedule
     def reschedule(
@@ -257,17 +269,20 @@ class BookingService:
     ) -> BookingWrite:
         payload = canonical_reschedule_payload(booking_id, new_slot_id)
         key = self.idempotency_key(call_id, "reschedule", new_slot_id)
-        replay = self._replay(key, payload)
-        if replay is not None:
-            self._audit(call_id, "booking_replayed", "reschedule", payload)
-            return replay
 
         booking = self._load_booking(booking_id)
         self._check_ownership(booking, caller_phone, ownership_verified)
         if booking.status == "cancelled":
             raise BookingError(ErrorCode.already_cancelled, "That booking is already cancelled.")
-        self._check_cutoff(booking)
         self._require_confirmation_presence(confirmed, token)
+        binding = self._binding(call_id, "reschedule", new_slot_id, payload)
+        self._authorize_token(token, binding, key, payload)
+        replay = self._replay(key, payload)
+        if replay is not None:
+            self._audit(call_id, "booking_replayed", "reschedule", payload)
+            self._drain_outbox(self.clock.now)
+            return replay
+        self._check_cutoff(booking)
         offer = self._offers.get(new_slot_id)
         if offer is None:
             raise BookingError(ErrorCode.slot_unavailable, "That slot is no longer offered.")
@@ -279,14 +294,6 @@ class BookingService:
             )
         if offer.service_id != booking.service_id:
             raise BookingError(ErrorCode.slot_unavailable, "That slot is for another service.")
-        binding = self._check_confirmation(
-            confirmed=confirmed,
-            token=token,
-            call_id=call_id,
-            intent="reschedule",
-            target=new_slot_id,
-            payload=payload,
-        )
 
         now = self.clock.now
         with self.store.transaction():
@@ -299,15 +306,44 @@ class BookingService:
             if current.slot_id != new_slot_id:
                 self._set_slot_status(current.slot_id, "open")
             self.store.move_booking(
-                self.tenant.tenant_id, booking_id, slot=new_slot, updated_at=now
+                self.tenant.tenant_id,
+                booking_id,
+                slot=new_slot,
+                updated_at=now,
+                reason=reason,
             )
             self._set_slot_status(new_slot_id, "booked")
             moved = self.store.get_booking(self.tenant.tenant_id, booking_id)
             assert moved is not None
-            self._put_idempotency(key, call_id, "reschedule", new_slot_id, payload, moved, now)
+            self.store.insert_confirmation(
+                ConfirmationRecord(
+                    message_id=self.store.next_message_id(self.tenant.tenant_id),
+                    tenant_id=self.tenant.tenant_id,
+                    booking_id=booking_id,
+                    to=moved.contact_phone,
+                    created_at=now,
+                )
+            )
+            self.store.set_booking_confirmation(
+                self.tenant.tenant_id,
+                booking_id,
+                sms="queued",
+                email="not_requested",
+            )
+            moved = self.store.get_booking(self.tenant.tenant_id, booking_id)
+            assert moved is not None
+            self._put_idempotency(
+                key, call_id, "reschedule", new_slot_id, payload, moved, now, token=token
+            )
+            consumed = self.tokens.consume_in_transaction(token or "", binding)
+            if consumed.status is not TokenStatus.valid:
+                raise BookingError(
+                    ErrorCode.confirmation_expired,
+                    "That confirmation is no longer valid. Please confirm again.",
+                )
             self._audit(call_id, "booking_rescheduled", "reschedule", payload)
-        self.tokens.consume(token or "", binding)
-        return self._finish_booking(moved, key, call_id)
+        self._drain_outbox(now)
+        return BookingWrite(booking=moved)
 
     # ------------------------------------------------------------------- cancel
     def cancel(
@@ -323,25 +359,22 @@ class BookingService:
     ) -> BookingWrite:
         payload = canonical_cancel_payload(booking_id)
         key = self.idempotency_key(call_id, "cancel", booking_id)
-        replay = self._replay(key, payload)
-        if replay is not None:
-            self._audit(call_id, "booking_replayed", "cancel", payload)
-            return replay
 
         booking = self._load_booking(booking_id)
         self._check_ownership(booking, caller_phone, ownership_verified)
+        binding = self._binding(call_id, "cancel", booking_id, payload)
         if booking.status == "cancelled":
+            if token:
+                self.tokens.consume(token, binding)
             return BookingWrite(booking=booking, already_cancelled=True)
-        self._check_cutoff(booking)
         self._require_confirmation_presence(confirmed, token)
-        binding = self._check_confirmation(
-            confirmed=confirmed,
-            token=token,
-            call_id=call_id,
-            intent="cancel",
-            target=booking_id,
-            payload=payload,
-        )
+        self._authorize_token(token, binding, key, payload)
+        replay = self._replay(key, payload)
+        if replay is not None:
+            self._audit(call_id, "booking_replayed", "cancel", payload)
+            self._drain_outbox(self.clock.now)
+            return replay
+        self._check_cutoff(booking)
 
         now = self.clock.now
         with self.store.transaction():
@@ -349,6 +382,8 @@ class BookingService:
             if current is None:
                 raise BookingError(ErrorCode.not_found, "No matching booking.")
             if current.status == "cancelled":
+                if token:
+                    self.tokens.consume_in_transaction(token, binding)
                 return BookingWrite(booking=current, already_cancelled=True)
             self.store.cancel_booking(
                 self.tenant.tenant_id, booking_id, reason=reason, cancelled_at=now
@@ -356,10 +391,35 @@ class BookingService:
             self._set_slot_status(current.slot_id, "open")
             cancelled = self.store.get_booking(self.tenant.tenant_id, booking_id)
             assert cancelled is not None
-            self._put_idempotency(key, call_id, "cancel", booking_id, payload, cancelled, now)
+            self.store.insert_confirmation(
+                ConfirmationRecord(
+                    message_id=self.store.next_message_id(self.tenant.tenant_id),
+                    tenant_id=self.tenant.tenant_id,
+                    booking_id=booking_id,
+                    to=cancelled.contact_phone,
+                    created_at=now,
+                )
+            )
+            self.store.set_booking_confirmation(
+                self.tenant.tenant_id,
+                booking_id,
+                sms="queued",
+                email="not_requested",
+            )
+            cancelled = self.store.get_booking(self.tenant.tenant_id, booking_id)
+            assert cancelled is not None
+            self._put_idempotency(
+                key, call_id, "cancel", booking_id, payload, cancelled, now, token=token
+            )
+            consumed = self.tokens.consume_in_transaction(token or "", binding)
+            if consumed.status is not TokenStatus.valid:
+                raise BookingError(
+                    ErrorCode.confirmation_expired,
+                    "That confirmation is no longer valid. Please confirm again.",
+                )
             self._audit(call_id, "booking_cancelled", "cancel", payload)
-        self.tokens.consume(token or "", binding)
-        return self._finish_booking(cancelled, key, call_id)
+        self._drain_outbox(now)
+        return BookingWrite(booking=cancelled)
 
     def replay(
         self,
@@ -368,8 +428,14 @@ class BookingService:
         intent: str,
         target: str,
         payload: Mapping[str, Any],
+        confirmed: bool = False,
+        token: str | None = None,
     ) -> BookingWrite | None:
-        return self._replay(self.idempotency_key(call_id, intent, target), payload)
+        self._require_confirmation_presence(confirmed, token)
+        key = self.idempotency_key(call_id, intent, target)
+        binding = self._binding(call_id, intent, target, payload)
+        self._authorize_token(token, binding, key, payload)
+        return self._replay(key, payload)
 
     def idempotency_key(self, call_id: str, intent: str, target: str) -> str:
         return f"{self.tenant.tenant_id}:{call_id}:{intent}:{target}"
@@ -403,36 +469,53 @@ class BookingService:
                 "Please confirm the read-back with an explicit yes before I write anything.",
             )
 
-    def _check_confirmation(
-        self,
-        *,
-        confirmed: bool,
-        token: str | None,
-        call_id: str,
-        intent: str,
-        target: str,
-        payload: Mapping[str, Any],
+    def _binding(
+        self, call_id: str, intent: str, target: str, payload: Mapping[str, Any]
     ) -> TokenBinding:
-        self._require_confirmation_presence(confirmed, token)
-        binding = TokenBinding(
+        return TokenBinding(
             tenant_id=self.tenant.tenant_id,
             call_id=call_id,
             intent=intent,
             target=target,
             payload_hash=payload_digest(payload),
         )
-        check = self.tokens.validate(token, binding)
-        if check.status in {TokenStatus.used, TokenStatus.expired}:
+
+    def _authorize_token(
+        self,
+        token: str | None,
+        binding: TokenBinding,
+        key: str,
+        payload: Mapping[str, Any],
+    ) -> None:
+        check = self.tokens.validate(token or "", binding)
+        if check.status is TokenStatus.valid:
+            return
+        if check.status is TokenStatus.used:
+            record = self.store.get_idempotency(self.tenant.tenant_id, key)
+            if (
+                record is not None
+                and record.token == token
+                and record.payload_hash == payload_digest(payload)
+            ):
+                return
             raise BookingError(
                 ErrorCode.confirmation_expired,
                 "That confirmation is no longer valid. Please confirm again.",
             )
-        if check.status is not TokenStatus.valid:
+        if check.status is TokenStatus.expired:
             raise BookingError(
-                ErrorCode.explicit_confirmation_required,
-                "A valid policy confirmation is required before a write.",
+                ErrorCode.confirmation_expired,
+                "That confirmation is no longer valid. Please confirm again.",
             )
-        return binding
+        raise BookingError(
+            ErrorCode.explicit_confirmation_required,
+            "A valid policy confirmation is required before a write.",
+        )
+
+    def _drain_outbox(self, now: datetime) -> None:
+        with suppress(OSError):
+            # The confirmation row stays undrained for the next writer; the booking stands.
+            self.outbox.drain(self.store, now, self.tenant.tenant_id)
 
     def _load_booking(self, booking_id: str) -> BookingRecord:
         booking = self.store.get_booking(self.tenant.tenant_id, booking_id)
@@ -468,9 +551,9 @@ class BookingService:
         return None
 
     def _insert_new_customer(self, customer: CustomerInput, now: datetime) -> CustomerRecord:
-        count = len(self.store.list_customers(self.tenant.tenant_id))
+        number = self.store.next_sequence(self.tenant.tenant_id, "customer")
         record = CustomerRecord(
-            customer_id=f"cus_{self.tenant.tenant_id}_{count + 1:04d}",
+            customer_id=f"cus_{self.tenant.tenant_id}_{number:04d}",
             tenant_id=self.tenant.tenant_id,
             name=customer.name,
             phone=customer.phone,
@@ -481,8 +564,8 @@ class BookingService:
         return record
 
     def _next_booking_id(self) -> str:
-        count = self.store.count_bookings(self.tenant.tenant_id)
-        return f"bk_{self.tenant.tenant_id}_{count + 1:04d}"
+        number = self.store.next_sequence(self.tenant.tenant_id, "booking")
+        return f"bk_{self.tenant.tenant_id}_{number:04d}"
 
     def _set_slot_status(self, slot_id: str, status: str) -> None:
         self.store.set_slot_status_in_transaction(self.tenant.tenant_id, slot_id, status)
@@ -496,6 +579,8 @@ class BookingService:
         payload: Mapping[str, Any],
         booking: BookingRecord,
         now: datetime,
+        *,
+        token: str | None,
     ) -> None:
         result = BookingWrite(booking=booking)
         self.store.put_idempotency(
@@ -508,52 +593,9 @@ class BookingService:
                 payload_hash=payload_digest(payload),
                 result_json=result.model_dump_json(),
                 created_at=now,
+                token=token,
             )
         )
-
-    def _finish_booking(self, booking: BookingRecord, key: str, call_id: str) -> BookingWrite:
-        status = self._queue_confirmation(booking, call_id)
-        updated = self.store.get_booking(self.tenant.tenant_id, booking.booking_id)
-        assert updated is not None
-        write = BookingWrite(booking=updated.model_copy(update={"confirmation_sms": status}))
-        existing = self.store.get_idempotency(self.tenant.tenant_id, key)
-        if existing is not None:
-            result = BookingWrite(booking=updated.model_copy(update={"confirmation_sms": status}))
-            self.store.update_idempotency_result(
-                self.tenant.tenant_id, key, result.model_dump_json()
-            )
-        return write
-
-    def _queue_confirmation(self, booking: BookingRecord, call_id: str) -> str:
-        now = self.clock.now
-        message_id = self.store.next_message_id(self.tenant.tenant_id)
-        record = ConfirmationRecord(
-            message_id=message_id,
-            tenant_id=self.tenant.tenant_id,
-            booking_id=booking.booking_id,
-            to=booking.contact_phone,
-            created_at=now,
-        )
-        try:
-            self.outbox.send(record)
-            status = "queued"
-        except OSError:
-            status = "failed"
-            record = record.model_copy(update={"status": "failed"})
-        self.store.add_confirmation(record)
-        self.store.set_booking_confirmation(
-            self.tenant.tenant_id,
-            booking.booking_id,
-            sms=status,
-            email="not_requested",
-        )
-        self._audit(
-            call_id,
-            "confirmation_queued" if status == "queued" else "confirmation_failed",
-            "send_confirmation",
-            {"booking_id": booking.booking_id},
-        )
-        return status
 
     def _audit(self, call_id: str, tool: str, result_code: str, payload: Mapping[str, Any]) -> None:
         self.store.append_event(

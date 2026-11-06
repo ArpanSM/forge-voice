@@ -7,10 +7,13 @@ tenant, and no adapter reaches the network.
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
+import threading
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from datetime import datetime
+from functools import wraps
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +27,7 @@ from forge_voice.domain import (
     IdempotencyRecord,
     SlotRecord,
     TicketRecord,
+    TokenRecord,
 )
 
 SCHEMA = """
@@ -140,7 +144,29 @@ CREATE TABLE IF NOT EXISTS idempotency (
     target TEXT NOT NULL,
     payload_hash TEXT NOT NULL,
     result_json TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    token TEXT
+);
+
+CREATE TABLE IF NOT EXISTS confirmation_tokens (
+    token TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL,
+    call_id TEXT NOT NULL,
+    intent TEXT NOT NULL,
+    target TEXT NOT NULL,
+    payload_hash TEXT NOT NULL,
+    issued_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used_at TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_tokens_tenant_call
+    ON confirmation_tokens(tenant_id, call_id);
+
+CREATE TABLE IF NOT EXISTS sequences (
+    tenant_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    value INTEGER NOT NULL,
+    PRIMARY KEY (tenant_id, name)
 );
 
 CREATE TABLE IF NOT EXISTS confirmations (
@@ -151,7 +177,8 @@ CREATE TABLE IF NOT EXISTS confirmations (
     channel TEXT NOT NULL,
     template TEXT NOT NULL,
     status TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    drained_at TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_confirmations_tenant_booking
     ON confirmations(tenant_id, booking_id);
@@ -187,11 +214,32 @@ def _address(row: Mapping[str, Any]) -> Address:
     )
 
 
+def _locked_method(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        with self._lock:
+            return method(self, *args, **kwargs)
+
+    return wrapper
+
+
+def _serialized(cls):
+    for name, value in list(cls.__dict__.items()):
+        if name.startswith("_") or name in {"transaction", "close"}:
+            continue
+        if callable(value):
+            setattr(cls, name, _locked_method(value))
+    return cls
+
+
+@_serialized
 class SQLiteAdapter:
     """One local database behind the synthetic calendar, CRM, booking and audit ports."""
 
     def __init__(self, path: str | Path = ":memory:") -> None:
         self.path = str(path)
+        self._lock = threading.RLock()
+        self._in_transaction = False
         self._conn = sqlite3.connect(self.path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._conn.isolation_level = None
@@ -199,18 +247,37 @@ class SQLiteAdapter:
         self._conn.executescript(SCHEMA)
 
     def close(self) -> None:
-        self._conn.close()
+        with self._lock:
+            self._conn.close()
 
     @contextmanager
     def transaction(self) -> Iterator[None]:
-        self._conn.execute("BEGIN IMMEDIATE")
-        try:
-            yield
-        except Exception:
-            self._conn.execute("ROLLBACK")
-            raise
-        else:
-            self._conn.execute("COMMIT")
+        with self._lock:
+            if self._in_transaction:
+                raise RuntimeError(
+                    "nested SQLite transactions are not supported; use an in-transaction method"
+                )
+            self._conn.execute("BEGIN IMMEDIATE")
+            self._in_transaction = True
+            try:
+                yield
+            except Exception:
+                self._conn.execute("ROLLBACK")
+                raise
+            else:
+                self._conn.execute("COMMIT")
+            finally:
+                self._in_transaction = False
+
+    def next_sequence(self, tenant_id: str, name: str) -> int:
+        with self._lock:
+            row = self._conn.execute(
+                "INSERT INTO sequences(tenant_id, name, value) VALUES (?, ?, 1) "
+                "ON CONFLICT(tenant_id, name) DO UPDATE SET value = value + 1 "
+                "RETURNING value",
+                (tenant_id, name),
+            ).fetchone()
+        return int(row[0])
 
     # ------------------------------------------------------------------ seed
     def seed(self, data: Mapping[str, Any]) -> None:
@@ -291,6 +358,31 @@ class SQLiteAdapter:
                         ticket["created_at"],
                     ),
                 )
+            tenant_id = data["tenant_id"]
+            self._seed_sequence(
+                tenant_id, "customer", [item["customer_id"] for item in data.get("customers", [])]
+            )
+            self._seed_sequence(
+                tenant_id, "booking", [item["booking_id"] for item in data.get("bookings", [])]
+            )
+            self._seed_sequence(
+                tenant_id, "ticket", [item["ticket_id"] for item in data.get("tickets", [])]
+            )
+
+    def _seed_sequence(self, tenant_id: str, name: str, ids: list[str]) -> None:
+        prefix = {"customer": "cus", "booking": "bk", "ticket": "em", "callback": "cb"}[name]
+        pattern = re.compile(rf"^{re.escape(prefix)}_{re.escape(tenant_id)}_(\d+)$")
+        maximum = 0
+        for identifier in ids:
+            match = pattern.match(identifier)
+            if match:
+                maximum = max(maximum, int(match.group(1)))
+        if maximum:
+            self._conn.execute(
+                "INSERT INTO sequences(tenant_id, name, value) VALUES (?, ?, ?) "
+                "ON CONFLICT(tenant_id, name) DO UPDATE SET value = MAX(value, excluded.value)",
+                (tenant_id, name, maximum),
+            )
 
     # -------------------------------------------------------------- customers
     def _insert_customer(self, record: CustomerRecord) -> None:
@@ -367,6 +459,21 @@ class SQLiteAdapter:
             "SELECT * FROM slots WHERE tenant_id = ? AND slot_id = ?", (tenant_id, slot_id)
         ).fetchone()
         return self._slot(row) if row else None
+
+    def insert_slot(self, record: SlotRecord) -> SlotRecord:
+        self._conn.execute(
+            "INSERT INTO slots VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                record.slot_id,
+                record.tenant_id,
+                record.service_id,
+                record.technician_id,
+                _iso(record.start),
+                _iso(record.end),
+                record.status,
+            ),
+        )
+        return record
 
     def list_open_slots(
         self,
@@ -488,16 +595,19 @@ class SQLiteAdapter:
         *,
         slot: SlotRecord,
         updated_at: datetime,
+        reason: str | None = None,
     ) -> None:
         self._conn.execute(
             "UPDATE bookings SET slot_id = ?, technician_id = ?, start = ?, end = ?, "
-            "updated_at = ? WHERE tenant_id = ? AND booking_id = ?",
+            "updated_at = ?, reason = COALESCE(?, reason) "
+            "WHERE tenant_id = ? AND booking_id = ?",
             (
                 slot.slot_id,
                 slot.technician_id,
                 _iso(slot.start),
                 _iso(slot.end),
                 _iso(updated_at),
+                reason,
                 tenant_id,
                 booking_id,
             ),
@@ -532,34 +642,38 @@ class SQLiteAdapter:
         )
 
     # --------------------------------------------------------------- tickets
+    def insert_ticket(self, record: TicketRecord) -> TicketRecord:
+        self._conn.execute(
+            "INSERT INTO tickets VALUES "
+            "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                record.ticket_id,
+                record.tenant_id,
+                record.call_id,
+                record.customer_id,
+                record.customer_name,
+                record.customer_phone,
+                record.address.line1 if record.address else None,
+                record.address.city if record.address else None,
+                record.address.state if record.address else None,
+                record.address.zip if record.address else None,
+                record.category,
+                record.severity,
+                record.description,
+                json.dumps(record.safety_instructions_given),
+                record.transfer_mode,
+                record.transfer_id,
+                record.on_call_target,
+                record.callback_sla_minutes,
+                record.status,
+                _iso(record.created_at),
+            ),
+        )
+        return record
+
     def create_ticket(self, record: TicketRecord) -> TicketRecord:
         with self.transaction():
-            self._conn.execute(
-                "INSERT INTO tickets VALUES "
-                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (
-                    record.ticket_id,
-                    record.tenant_id,
-                    record.call_id,
-                    record.customer_id,
-                    record.customer_name,
-                    record.customer_phone,
-                    record.address.line1 if record.address else None,
-                    record.address.city if record.address else None,
-                    record.address.state if record.address else None,
-                    record.address.zip if record.address else None,
-                    record.category,
-                    record.severity,
-                    record.description,
-                    json.dumps(record.safety_instructions_given),
-                    record.transfer_mode,
-                    record.transfer_id,
-                    record.on_call_target,
-                    record.callback_sla_minutes,
-                    record.status,
-                    _iso(record.created_at),
-                ),
-            )
+            self.insert_ticket(record)
         return record
 
     def get_ticket(self, tenant_id: str, ticket_id: str) -> TicketRecord | None:
@@ -584,31 +698,41 @@ class SQLiteAdapter:
         self, tenant_id: str, ticket_id: str, *, transfer_id: str, status: str = "assigned"
     ) -> None:
         with self.transaction():
-            self._conn.execute(
-                "UPDATE tickets SET transfer_id = ?, status = ? "
-                "WHERE tenant_id = ? AND ticket_id = ?",
-                (transfer_id, status, tenant_id, ticket_id),
+            self.set_ticket_transfer_in_transaction(
+                tenant_id, ticket_id, transfer_id=transfer_id, status=status
             )
 
+    def set_ticket_transfer_in_transaction(
+        self, tenant_id: str, ticket_id: str, *, transfer_id: str, status: str = "assigned"
+    ) -> None:
+        self._conn.execute(
+            "UPDATE tickets SET transfer_id = ?, status = ? WHERE tenant_id = ? AND ticket_id = ?",
+            (transfer_id, status, tenant_id, ticket_id),
+        )
+
     # -------------------------------------------------------------- callbacks
+    def insert_callback(self, record: CallbackRecord) -> CallbackRecord:
+        self._conn.execute(
+            "INSERT INTO callbacks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                record.callback_id,
+                record.tenant_id,
+                record.call_id,
+                record.name,
+                record.phone,
+                record.reason,
+                _iso(record.window_start),
+                _iso(record.window_end),
+                record.sla,
+                record.status,
+                _iso(record.created_at),
+            ),
+        )
+        return record
+
     def create_callback(self, record: CallbackRecord) -> CallbackRecord:
         with self.transaction():
-            self._conn.execute(
-                "INSERT INTO callbacks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (
-                    record.callback_id,
-                    record.tenant_id,
-                    record.call_id,
-                    record.name,
-                    record.phone,
-                    record.reason,
-                    _iso(record.window_start),
-                    _iso(record.window_end),
-                    record.sla,
-                    record.status,
-                    _iso(record.created_at),
-                ),
-            )
+            self.insert_callback(record)
         return record
 
     def get_callback(self, tenant_id: str, callback_id: str) -> CallbackRecord | None:
@@ -694,7 +818,7 @@ class SQLiteAdapter:
 
     def put_idempotency(self, record: IdempotencyRecord) -> None:
         self._conn.execute(
-            "INSERT INTO idempotency VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO idempotency VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 record.key,
                 record.tenant_id,
@@ -704,6 +828,7 @@ class SQLiteAdapter:
                 record.payload_hash,
                 record.result_json,
                 _iso(record.created_at),
+                record.token,
             ),
         )
 
@@ -716,20 +841,55 @@ class SQLiteAdapter:
     # ------------------------------------------------------------ confirmations
     def add_confirmation(self, record: ConfirmationRecord) -> ConfirmationRecord:
         with self.transaction():
-            self._conn.execute(
-                "INSERT INTO confirmations VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                (
-                    record.message_id,
-                    record.tenant_id,
-                    record.booking_id,
-                    record.to,
-                    record.channel,
-                    record.template,
-                    record.status,
-                    _iso(record.created_at),
-                ),
-            )
+            self.insert_confirmation(record)
         return record
+
+    def insert_confirmation(self, record: ConfirmationRecord) -> ConfirmationRecord:
+        self._conn.execute(
+            "INSERT INTO confirmations "
+            "(message_id, tenant_id, booking_id, to_number, channel, template, status, "
+            "created_at, drained_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)",
+            (
+                record.message_id,
+                record.tenant_id,
+                record.booking_id,
+                record.to,
+                record.channel,
+                record.template,
+                record.status,
+                _iso(record.created_at),
+            ),
+        )
+        return record
+
+    def list_undrained_confirmations(
+        self, tenant_id: str | None = None
+    ) -> list[ConfirmationRecord]:
+        if tenant_id is None:
+            rows = self._conn.execute(
+                "SELECT * FROM confirmations WHERE drained_at IS NULL "
+                "ORDER BY created_at, message_id"
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                "SELECT * FROM confirmations WHERE tenant_id = ? AND drained_at IS NULL "
+                "ORDER BY created_at, message_id",
+                (tenant_id,),
+            ).fetchall()
+        return [self._confirmation(row) for row in rows]
+
+    def mark_confirmation_drained(self, message_id: str, at: datetime) -> None:
+        self._conn.execute(
+            "UPDATE confirmations SET drained_at = ? WHERE message_id = ?",
+            (_iso(at), message_id),
+        )
+
+    def list_confirmations(self, tenant_id: str) -> list[ConfirmationRecord]:
+        rows = self._conn.execute(
+            "SELECT * FROM confirmations WHERE tenant_id = ? ORDER BY created_at, message_id",
+            (tenant_id,),
+        ).fetchall()
+        return [self._confirmation(row) for row in rows]
 
     def count_confirmations(self, tenant_id: str, *, booking_id: str | None = None) -> int:
         if booking_id:
@@ -744,10 +904,39 @@ class SQLiteAdapter:
         return int(row[0])
 
     def next_message_id(self, tenant_id: str) -> str:
+        return f"sms_{tenant_id}_{self.next_sequence(tenant_id, 'sms'):04d}"
+
+    # ------------------------------------------------------------ tokens
+    def insert_token(self, record: TokenRecord) -> TokenRecord:
+        self._conn.execute(
+            "INSERT INTO confirmation_tokens VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                record.token,
+                record.tenant_id,
+                record.call_id,
+                record.intent,
+                record.target,
+                record.payload_hash,
+                _iso(record.issued_at),
+                _iso(record.expires_at),
+                _iso(record.used_at) if record.used_at else None,
+            ),
+        )
+        return record
+
+    def get_token(self, token: str) -> TokenRecord | None:
         row = self._conn.execute(
-            "SELECT COUNT(*) FROM confirmations WHERE tenant_id = ?", (tenant_id,)
+            "SELECT * FROM confirmation_tokens WHERE token = ?", (token,)
         ).fetchone()
-        return f"sms_{tenant_id}_{int(row[0]) + 1:04d}"
+        return self._token(row) if row else None
+
+    def consume_token(self, token: str, at: datetime) -> bool:
+        cursor = self._conn.execute(
+            "UPDATE confirmation_tokens SET used_at = ? "
+            "WHERE token = ? AND used_at IS NULL AND expires_at > ?",
+            (_iso(at), token, _iso(at)),
+        )
+        return cursor.rowcount == 1
 
     # ------------------------------------------------------------------ calls
     def save_call(
@@ -905,4 +1094,32 @@ class SQLiteAdapter:
             payload_hash=row["payload_hash"],
             result_json=row["result_json"],
             created_at=row["created_at"],
+            token=row["token"],
+        )
+
+    @staticmethod
+    def _confirmation(row: sqlite3.Row) -> ConfirmationRecord:
+        return ConfirmationRecord(
+            message_id=row["message_id"],
+            tenant_id=row["tenant_id"],
+            booking_id=row["booking_id"],
+            to=row["to_number"],
+            channel=row["channel"],
+            template=row["template"],
+            status=row["status"],
+            created_at=row["created_at"],
+        )
+
+    @staticmethod
+    def _token(row: sqlite3.Row) -> TokenRecord:
+        return TokenRecord(
+            token=row["token"],
+            tenant_id=row["tenant_id"],
+            call_id=row["call_id"],
+            intent=row["intent"],
+            target=row["target"],
+            payload_hash=row["payload_hash"],
+            issued_at=row["issued_at"],
+            expires_at=row["expires_at"],
+            used_at=row["used_at"],
         )

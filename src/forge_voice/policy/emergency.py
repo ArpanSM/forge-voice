@@ -118,8 +118,6 @@ def triage_emergency(tenant: TenantConfig, text: str) -> EmergencyTriage | None:
     requires_911 = category.severity == "life_safety" or (
         vulnerable and bool(LIFE_SAFETY_HINT_RE.search(text))
     )
-    if category.severity == "life_safety":
-        requires_911 = True
     return EmergencyTriage(
         category=category,
         severity=category.severity,

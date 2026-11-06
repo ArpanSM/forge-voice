@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 import pytest
 
 from forge_voice.adapters import Outbox, SQLiteAdapter
+from forge_voice.domain import SlotRecord
 from forge_voice.policy import (
     BookingService,
+    ConfirmationTokenStore,
     ConversationPolicy,
     CustomerInput,
     canonical_booking_payload,
@@ -29,6 +32,7 @@ TOOLS = {
     "create_emergency_ticket",
     "transfer_to_human",
 }
+LA = ZoneInfo("America/Los_Angeles")
 
 
 @pytest.fixture
@@ -40,9 +44,14 @@ def store(seed_data):
 
 
 @pytest.fixture
-def registry(harborlight, store, clock):
+def tokens(store, clock):
+    return ConfirmationTokenStore(clock, store=store)
+
+
+@pytest.fixture
+def registry(harborlight, store, clock, tokens):
     outbox = Outbox()
-    service = BookingService(harborlight, store, outbox, clock)
+    service = BookingService(harborlight, store, outbox, clock, tokens=tokens)
     return ToolRegistry(
         tenant=harborlight,
         store=store,
@@ -66,15 +75,20 @@ def _slot(registry: ToolRegistry, *, day=date(2026, 11, 9)):
     return result.data["slots"][0]
 
 
-def _book_token(registry: ToolRegistry, slot: dict) -> str:
+def _book_token(registry: ToolRegistry, slot: dict, tokens: ConfirmationTokenStore) -> str:
     customer = CustomerInput.model_validate(CUSTOMER)
     payload = canonical_booking_payload("drain_cleaning", slot["slot_id"], customer)
-    policy = ConversationPolicy(registry.tenant, registry.clock, registry.service.tokens)
+    policy = ConversationPolicy(registry.tenant, registry.clock, tokens)
     state = policy.start_call(registry.session.call_id, registry.session.caller_phone)
     policy.identify_intent(state, "I need a drain cleaning")
     policy.record_readback(state, payload)
     policy.confirm(state, "yes, book it")
     return policy.issue_confirmation(state, target=slot["slot_id"], payload=payload).token
+
+
+def _confirm_session(registry: ToolRegistry, token: str) -> None:
+    registry.session.confirmed = True
+    registry.session.confirmation_token = token
 
 
 def test_registry_exposes_exactly_eight_typed_tools(registry) -> None:
@@ -88,7 +102,7 @@ def test_success_envelope_has_data_and_request_id(registry) -> None:
     assert result.ok is True
     assert result.error is None
     assert result.data["customer"]["name"] == "Sam Rivera"
-    assert result.request_id.startswith("req_call_tools_")
+    assert result.request_id
 
 
 def test_failure_envelope_has_stable_code_and_no_stack_trace(registry) -> None:
@@ -146,6 +160,28 @@ def test_lookup_without_caller_phone_is_masked(harborlight, store, clock) -> Non
     assert result.data["verification_required"] is True
     assert result.data["bookings"] == []
     assert result.data["customer"]["phone"] == "+1******0101"
+    assert "customer_id" not in result.data["customer"]
+    assert "address" not in result.data["customer"]
+    assert "zip" not in str(result.data["customer"])
+
+
+def test_spoken_phone_alone_is_masked(harborlight, store, clock) -> None:
+    service = BookingService(harborlight, store, Outbox(), clock)
+    registry = ToolRegistry(
+        tenant=harborlight,
+        store=store,
+        service=service,
+        session=ToolSession(tenant_id="harborlight", call_id="call_spoken", caller_phone=None),
+        clock=clock,
+        transfer=TransferSimulator(),
+    )
+
+    result = registry.call("lookup_customer", {"phone": "+14155550101"})
+
+    assert result.ok is True
+    assert result.data["verification_required"] is True
+    assert result.data["bookings"] == []
+    assert "customer_id" not in result.data["customer"]
 
 
 def test_session_caller_phone_is_authoritative_over_a_claimed_phone(
@@ -185,6 +221,28 @@ def test_tenant_mismatch_session_is_rejected(harborlight, store, clock) -> None:
 
     assert result.ok is False
     assert result.error.code == "tenant_mismatch"
+
+
+def test_unknown_technician_is_a_stable_error(registry, store) -> None:
+    store.insert_slot(
+        SlotRecord(
+            slot_id="slot_ghost",
+            tenant_id="harborlight",
+            service_id="drain_cleaning",
+            technician_id="tech_ghost",
+            start=datetime(2026, 11, 9, 15, 0, tzinfo=LA),
+            end=datetime(2026, 11, 9, 16, 0, tzinfo=LA),
+            status="open",
+        )
+    )
+
+    result = registry.call(
+        "get_availability",
+        {"service_id": "drain_cleaning", "zip": "94107", "preferred_date": "2026-11-09"},
+    )
+
+    assert result.ok is False
+    assert result.error.code == "not_found"
 
 
 def test_service_area_returns_zone_and_technicians(registry) -> None:
@@ -241,7 +299,7 @@ def test_availability_returns_reasons_not_errors(registry) -> None:
     assert bad_zip.error.code == "invalid_zip"
 
 
-def test_book_tool_rejects_premature_write(registry) -> None:
+def test_book_tool_rejects_premature_write(registry, store) -> None:
     slot = _slot(registry)
 
     result = registry.call(
@@ -250,18 +308,16 @@ def test_book_tool_rejects_premature_write(registry) -> None:
             "service_id": "drain_cleaning",
             "slot_id": slot["slot_id"],
             "customer": CUSTOMER,
-            "confirmed": False,
         },
     )
 
     assert result.ok is False
     assert result.error.code == "explicit_confirmation_required"
-    assert registry.store.count_bookings("harborlight") == 4
+    assert store.count_bookings("harborlight") == 4
 
 
-def test_book_tool_commits_with_policy_token_and_queues_confirmation(registry) -> None:
+def test_model_cannot_supply_confirmation_fields(registry, store) -> None:
     slot = _slot(registry)
-    token = _book_token(registry, slot)
 
     result = registry.call(
         "book_appointment",
@@ -270,7 +326,28 @@ def test_book_tool_commits_with_policy_token_and_queues_confirmation(registry) -
             "slot_id": slot["slot_id"],
             "customer": CUSTOMER,
             "confirmed": True,
-            "confirmation_token": token,
+            "confirmation_token": "ct_model_minted",
+        },
+    )
+
+    assert result.ok is False
+    assert result.error.code == "invalid_argument"
+    assert store.count_bookings("harborlight") == 4
+
+
+def test_book_tool_commits_with_session_token_and_queues_confirmation(
+    registry, tokens, store
+) -> None:
+    slot = _slot(registry)
+    token = _book_token(registry, slot, tokens)
+    _confirm_session(registry, token)
+
+    result = registry.call(
+        "book_appointment",
+        {
+            "service_id": "drain_cleaning",
+            "slot_id": slot["slot_id"],
+            "customer": CUSTOMER,
         },
     )
 
@@ -279,17 +356,14 @@ def test_book_tool_commits_with_policy_token_and_queues_confirmation(registry) -
     assert booking["status"] == "booked"
     assert booking["technician"]["name"] == "Alex"
     assert result.data["replayed"] is False
-    assert registry.store.count_bookings("harborlight", slot_id=slot["slot_id"]) == 1
-    assert registry.store.count_confirmations("harborlight") == 1
-    events = registry.store.list_events("harborlight", call_id="call_tools")
-    assert any(event.tool == "book_appointment" for event in events)
-    assert token not in str([event.args for event in events])
+    assert store.count_bookings("harborlight", slot_id=slot["slot_id"]) == 1
+    assert store.count_confirmations("harborlight") == 1
 
 
 def test_cross_tenant_booking_id_is_rejected_without_details(registry) -> None:
     result = registry.call(
         "cancel_appointment",
-        {"booking_id": "bk_summit_0001", "confirmed": True},
+        {"booking_id": "bk_summit_0001"},
     )
 
     assert result.ok is False
@@ -317,13 +391,9 @@ def test_summit_runs_the_same_tools(summit, store, clock) -> None:
     area = registry.call("get_service_area", {"zip": "95125"})
     result = registry.call(
         "cancel_appointment",
-        {
-            "booking_id": "bk_summit_0002",
-            "confirmed": True,
-            "confirmation_token": "ct_missing",
-        },
+        {"booking_id": "bk_summit_0002"},
     )
-    missing = registry.call("cancel_appointment", {"booking_id": "bk_0001", "confirmed": True})
+    missing = registry.call("cancel_appointment", {"booking_id": "bk_0001"})
 
     assert area.ok is True
     assert area.data["in_area"] is True

@@ -112,6 +112,7 @@ class IdempotencyRecord(StrictModel):
     payload_hash: str
     result_json: str
     created_at: datetime
+    token: str | None = None
 
 
 class ConfirmationRecord(StrictModel):
@@ -123,3 +124,15 @@ class ConfirmationRecord(StrictModel):
     template: Literal["booking_confirmation"] = "booking_confirmation"
     status: Literal["queued", "failed"] = "queued"
     created_at: datetime
+
+
+class TokenRecord(StrictModel):
+    token: str
+    tenant_id: str
+    call_id: str
+    intent: str
+    target: str
+    payload_hash: str
+    issued_at: datetime
+    expires_at: datetime
+    used_at: datetime | None = None

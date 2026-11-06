@@ -2,12 +2,24 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pydantic import Field, model_validator
 
 from forge_voice.errors import ErrorCode
 from forge_voice.models import StrictModel
+
+
+def sanitize_args(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {
+            key: ("[redacted]" if key == "confirmation_token" else sanitize_args(item))
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [sanitize_args(item) for item in value]
+    return value
 
 
 class ToolError(StrictModel):

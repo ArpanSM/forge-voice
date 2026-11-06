@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Mapping
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -40,9 +40,11 @@ from forge_voice.runtime.models import (
     TranscriptTurn,
 )
 from forge_voice.scenarios.models import TextScenario
+from forge_voice.scheduling import next_business_day_window
 from forge_voice.tenants import TenantConfig, load_all_tenants
 from forge_voice.tenants.errors import UnknownTenantError
 from forge_voice.tools import ToolRegistry, ToolSession
+from forge_voice.tools.envelope import sanitize_args
 from forge_voice.tools.registry import LATENCY_MS
 from forge_voice.transfer import TransferSimulator
 
@@ -214,10 +216,13 @@ class _Run:
         if triage is not None:
             self.state.intent = CallIntent.emergency
             self._emergency(triage)
+        elif intent is CallIntent.emergency:
+            self.state.intent = CallIntent.emergency
+            self._emergency_unconfirmed()
         elif self.facts.injection:
             self._injection()
         elif intent is CallIntent.human or self.facts.wants_human:
-            self._handoff()
+            self._handoff(booking_id=self._booking_id_from_text())
         elif intent is CallIntent.pricing_faq:
             self._pricing()
         elif intent is CallIntent.status:
@@ -263,19 +268,17 @@ class _Run:
         service = self.tenant.require_service(self.facts.service_id or slot["service_id"])
         self.state.service_id = service.id
         payload = canonical_booking_payload(service.id, slot["slot_id"], customer)
-        self.policy.record_readback(self.state, payload)
-        self._say(self._readback(service.name, slot, customer, service.id))
-        if not self.facts.confirmation_yes:
-            self._refuse()
+        if (
+            self._authorize_write(
+                payload, slot["slot_id"], self._readback(service.name, slot, customer, service.id)
+            )
+            is None
+        ):
             return
-        self.policy.confirm(self.state, "yes")
-        token = self.policy.issue_confirmation(self.state, target=slot["slot_id"], payload=payload)
         args = {
             "service_id": service.id,
             "slot_id": slot["slot_id"],
             "customer": customer.model_dump(mode="json"),
-            "confirmed": True,
-            "confirmation_token": token.token,
         }
         result = self._tool("book_appointment", args)
         if not result.ok and result.error.code in {
@@ -286,21 +289,16 @@ class _Run:
             if slots:
                 slot = self._choose_slot(slots)
                 payload = canonical_booking_payload(service.id, slot["slot_id"], customer)
-                self.policy.record_readback(self.state, payload)
-                self._say(self._readback(service.name, slot, customer, service.id))
-                if not self.facts.confirmation_yes:
-                    self._refuse()
+                if (
+                    self._authorize_write(
+                        payload,
+                        slot["slot_id"],
+                        self._readback(service.name, slot, customer, service.id),
+                    )
+                    is None
+                ):
                     return
-                self.policy.confirm(self.state, "yes")
-                token = self.policy.issue_confirmation(
-                    self.state, target=slot["slot_id"], payload=payload
-                )
-                args.update(
-                    {
-                        "slot_id": slot["slot_id"],
-                        "confirmation_token": token.token,
-                    }
-                )
+                args["slot_id"] = slot["slot_id"]
                 result = self._tool("book_appointment", args)
         if not result.ok:
             if result.error.code is ErrorCode.timeout:
@@ -310,6 +308,8 @@ class _Run:
                     intent="book",
                     target=args["slot_id"],
                     payload=payload,
+                    confirmed=True,
+                    token=self.registry.session.confirmation_token,
                 )
                 if replay is not None:
                     self._record_booking(replay.booking.booking_id, replayed=True)
@@ -328,6 +328,9 @@ class _Run:
         booking = self._find_booking()
         if booking is None:
             self._callback(reason="caller_request")
+            return
+        if self.policy.is_after_hours(self.now):
+            self._callback(reason="after_hours", booking_id=booking.booking_id)
             return
         if not self.policy.can_change(self.state):
             self._handoff(
@@ -361,23 +364,20 @@ class _Run:
         self.state.service_id = booking.service_id
         slots = self._availability(zip_code=booking.address.zip, service_id=booking.service_id)
         if not slots:
-            self._callback(reason="caller_request")
+            self._callback(reason="caller_request", booking_id=booking.booking_id)
             return
         slot = self._choose_slot(slots)
         payload = canonical_reschedule_payload(booking.booking_id, slot["slot_id"])
-        self.policy.record_readback(self.state, payload)
-        self._say(self._readback(booking.service_id, slot, None, booking.service_id))
-        if not self.facts.confirmation_yes:
-            self._refuse()
+        if (
+            self._authorize_write(payload, slot["slot_id"], self._booking_readback(booking, slot))
+            is None
+        ):
             return
-        self.policy.confirm(self.state, "yes")
-        token = self.policy.issue_confirmation(self.state, target=slot["slot_id"], payload=payload)
         old_slot = self.store.get_slot(self.tenant.tenant_id, booking.slot_id)
         args = {
             "booking_id": booking.booking_id,
             "new_slot_id": slot["slot_id"],
-            "confirmed": True,
-            "confirmation_token": token.token,
+            "reason": "Caller requested a new time.",
         }
         result = self._tool("reschedule_appointment", args)
         if not result.ok and result.error.code in {
@@ -392,21 +392,19 @@ class _Run:
             if slots:
                 slot = self._choose_slot(slots)
                 payload = canonical_reschedule_payload(booking.booking_id, slot["slot_id"])
-                self.policy.record_readback(self.state, payload)
-                self._say(self._readback(booking.service_id, slot, None, booking.service_id))
-                if not self.facts.confirmation_yes:
-                    self._refuse()
+                if (
+                    self._authorize_write(
+                        payload, slot["slot_id"], self._booking_readback(booking, slot)
+                    )
+                    is None
+                ):
                     return
-                self.policy.confirm(self.state, "yes")
-                token = self.policy.issue_confirmation(
-                    self.state, target=slot["slot_id"], payload=payload
-                )
-                args.update({"new_slot_id": slot["slot_id"], "confirmation_token": token.token})
+                args["new_slot_id"] = slot["slot_id"]
                 result = self._tool("reschedule_appointment", args)
         if not result.ok:
             if result.error.code is ErrorCode.timeout:
                 self._flag("tool_timeout")
-            self._callback(reason="tool_failure")
+            self._callback(reason="tool_failure", booking_id=booking.booking_id)
             return
         self.booking_id = booking.booking_id
         self.booking_ids.append(booking.booking_id)
@@ -425,6 +423,9 @@ class _Run:
         booking = self._find_booking()
         if booking is None:
             self._callback(reason="caller_request")
+            return
+        if self.policy.is_after_hours(self.now):
+            self._callback(reason="after_hours", booking_id=booking.booking_id)
             return
         if not self.policy.can_change(self.state):
             self._handoff(
@@ -455,31 +456,22 @@ class _Run:
             )
             return
         self.state.intent = CallIntent.cancel
-        self._say(
+        payload = canonical_cancel_payload(booking.booking_id)
+        readback = (
             f"Just to confirm: cancel the {booking.service_id.replace('_', ' ')} on "
             f"{self._format(booking.start)} at {booking.address.line1}. Should I cancel it?"
         )
-        if not self.facts.confirmation_yes:
-            self._refuse()
+        if self._authorize_write(payload, booking.booking_id, readback) is None:
             return
-        self.policy.record_readback(self.state, canonical_cancel_payload(booking.booking_id))
-        self.policy.confirm(self.state, "yes")
-        token = self.policy.issue_confirmation(
-            self.state,
-            target=booking.booking_id,
-            payload=canonical_cancel_payload(booking.booking_id),
-        )
         result = self._tool(
             "cancel_appointment",
             {
                 "booking_id": booking.booking_id,
-                "confirmed": True,
-                "confirmation_token": token.token,
                 "reason": self._cancel_reason(),
             },
         )
         if not result.ok:
-            self._callback(reason="tool_failure")
+            self._callback(reason="tool_failure", booking_id=booking.booking_id)
             return
         self.booking_id = booking.booking_id
         self.booking_ids.append(booking.booking_id)
@@ -557,6 +549,15 @@ class _Run:
         )
         self.outcome = CallOutcome.emergency_ticket
 
+    def _emergency_unconfirmed(self) -> None:
+        self._flag("emergency_unconfirmed")
+        self._say(
+            "If anyone is in danger or there is a medical emergency, call 911 now. "
+            "I won't book or quote anything for this. I'll have someone call you back to "
+            "triage the safety issue."
+        )
+        self._callback(reason="caller_request")
+
     def _injection(self) -> None:
         self._flag("prompt_injection_blocked")
         if self.facts.mentions_other_tenant:
@@ -601,6 +602,9 @@ class _Run:
             if booking_id not in self.booking_ids:
                 self.booking_ids.append(booking_id)
         self.handoff_packet = packet
+        if mode == "live" and not packet.complete:
+            self._flag("handoff_packet_incomplete")
+            mode = "callback"
         args: dict[str, Any] = {
             "reason": reason,
             "urgency": urgency,
@@ -636,8 +640,14 @@ class _Run:
                     "someone will call you back."
                 )
 
-    def _callback(self, *, reason: str) -> None:
-        self._handoff(reason=reason, urgency="normal")
+    def _callback(
+        self,
+        *,
+        reason: str,
+        booking_id: str | None = None,
+        summary: str | None = None,
+    ) -> None:
+        self._handoff(reason=reason, urgency="normal", booking_id=booking_id, summary=summary)
         if (
             self.outcome is not CallOutcome.failed
             and self.transfer_status is not TransferStatus.connected
@@ -651,6 +661,18 @@ class _Run:
         self.outcome = CallOutcome.abandoned
 
     # ------------------------------------------------------------------ helpers
+    def _authorize_write(self, payload: dict[str, Any], target: str, readback: str) -> str | None:
+        self.policy.record_readback(self.state, payload)
+        self._say(readback)
+        if self.facts.confirmation_utterance is None or self.facts.confirmation_refused:
+            self._refuse()
+            return None
+        self.policy.confirm(self.state, self.facts.confirmation_utterance or "")
+        token = self.policy.issue_confirmation(self.state, target=target, payload=payload)
+        self.registry.session.confirmed = True
+        self.registry.session.confirmation_token = token.token
+        return token.token
+
     def _say(self, text: str) -> None:
         self.responses.append(text)
         self.transcript.append(TranscriptTurn(role="assistant", text=text))
@@ -662,7 +684,7 @@ class _Run:
         self.tool_events.append(
             ToolCallRecord(
                 name=name,
-                args=_redact(args),
+                args=sanitize_args(args),
                 result=result,
                 latency_ms=LATENCY_MS.get(name, 0),
                 at=self.now,
@@ -743,18 +765,29 @@ class _Run:
             )
         return filtered[0]
 
+    def _booking_id_from_text(self) -> str | None:
+        match = re.search(r"\b(bk_[a-z0-9_]+)\b", self.facts.text)
+        return match.group(1) if match else None
+
     def _find_booking(self) -> Any:
         match = re.search(r"\b(bk_[a-z0-9_]+)\b", self.facts.text)
         if match:
             return self.store.get_booking(self.tenant.tenant_id, match.group(1))
-        result = self._lookup(include_bookings=True)
-        if not result.ok:
-            return None
-        bookings = [
-            self.store.get_booking(self.tenant.tenant_id, summary["booking_id"])
-            for summary in result.data["bookings"]
-        ]
-        bookings = [booking for booking in bookings if booking is not None]
+        customers = []
+        if self.facts.phone:
+            customers = self.store.find_customers(self.tenant.tenant_id, phone=self.facts.phone)
+        if not customers and self.facts.name != "Caller" and self.facts.address is not None:
+            customers = self.store.find_customers(
+                self.tenant.tenant_id,
+                name=self.facts.name,
+                zip_code=self.facts.address.zip,
+                line1=self.facts.address.line1,
+            )
+        bookings = []
+        for customer in customers:
+            bookings.extend(
+                self.store.list_bookings(self.tenant.tenant_id, customer_id=customer.customer_id)
+            )
         if self.facts.service_id:
             matching = [
                 booking for booking in bookings if booking.service_id == self.facts.service_id
@@ -765,9 +798,6 @@ class _Run:
 
     def _verify_ownership(self, booking: Any) -> bool:
         if self.registry.session.caller_phone == booking.contact_phone:
-            self.registry.session.ownership_verified = True
-            return True
-        if self.facts.phone and self.facts.phone == booking.contact_phone:
             self.registry.session.ownership_verified = True
             return True
         if self.facts.address is None:
@@ -804,28 +834,41 @@ class _Run:
         ticket_id: str | None = None,
         summary: str | None = None,
     ) -> HandoffPacket:
+        booking = (
+            self.store.get_booking(self.tenant.tenant_id, booking_id)
+            if booking_id is not None
+            else None
+        )
         phone = (
-            self.facts.phone
+            (booking.contact_phone if booking else None)
+            or self.facts.phone
             or self.registry.session.caller_phone
             or DEFAULT_CALLER_PHONE[self.tenant.tenant_id]
         )
+        service_id = booking.service_id if booking else self.facts.service_id
+        address = booking.address if booking else self.facts.address
+        name = self.facts.name
+        if booking is not None and name == "Caller":
+            customer = self.store.get_customer(self.tenant.tenant_id, booking.customer_id)
+            if customer is not None:
+                name = customer.name
         service = None
-        if self.facts.service_id and self.facts.service_id in {
-            item.id for item in self.tenant.services
-        }:
-            configured = self.tenant.require_service(self.facts.service_id)
+        if service_id and service_id in {item.id for item in self.tenant.services}:
+            configured = self.tenant.require_service(service_id)
             service = HandoffService(id=configured.id, name=configured.name)
+        if service is None and ticket_id is not None:
+            service = HandoffService(id="emergency_response", name="Emergency response")
         return HandoffPacket(
             tenant_id=self.tenant.tenant_id,
             call_id=self.registry.session.call_id,
             caller=HandoffCaller(
-                name=None if self.facts.name == "Caller" else self.facts.name,
+                name=name,
                 phone=phone,
                 verified=self.registry.session.ownership_verified,
             ),
             intent=intent,
             service=service,
-            address=self.facts.address,
+            address=address,
             urgency=urgency,
             booking_id=booking_id,
             emergency_ticket_id=ticket_id,
@@ -890,6 +933,17 @@ class _Run:
             f"with {technician} at {location}, for {name} at {phone}. Should I book that?"
         )
 
+    def _booking_readback(self, booking: Any, slot: dict[str, Any]) -> str:
+        service = self.tenant.require_service(booking.service_id)
+        technician = slot["technician"]["name"]
+        new_when = self._format(datetime.fromisoformat(slot["start"]))
+        old_when = self._format(booking.start)
+        return (
+            f"Just to confirm: move your {service.name} from {old_when} to {new_when} "
+            f"with {technician} at {booking.address.line1}, {booking.address.city} "
+            f"{booking.address.zip}, for {booking.contact_phone}. Should I move it?"
+        )
+
     def _record_booking(self, booking_id: str, *, replayed: bool = False) -> None:
         if booking_id not in self.booking_ids:
             self.booking_ids.append(booking_id)
@@ -911,12 +965,7 @@ class _Run:
             return self.now, self.now + timedelta(
                 minutes=self.tenant.emergency.on_call.callback_sla_minutes
             )
-        zone = ZoneInfo(self.tenant.timezone)
-        candidate = self.now.astimezone(zone).date() + timedelta(days=1)
-        while candidate.weekday() >= 5 or candidate in self.tenant.holidays:
-            candidate += timedelta(days=1)
-        start = datetime.combine(candidate, time(8, 0), tzinfo=zone)
-        return start, start + timedelta(hours=4)
+        return next_business_day_window(self.tenant, self.now)
 
     def _cancel_reason(self) -> str:
         text = self.facts.text.lower()
@@ -1011,9 +1060,6 @@ class _Run:
             error_code=self.error_code,
         )
 
-    def _cancel_happened(self) -> bool:
-        return self.outcome is CallOutcome.cancelled and not self.already_cancelled
-
 
 class _MissingLookup:
     ok = False
@@ -1028,14 +1074,3 @@ class _MissingLookup:
 def _call_id(tenant_id: str, scenario_id: str) -> str:
     safe = re.sub(r"[^a-z0-9_]+", "_", scenario_id.lower()).strip("_")
     return f"call_{tenant_id}_{safe}"
-
-
-def _redact(value: Any) -> Any:
-    if isinstance(value, Mapping):
-        return {
-            key: ("[redacted]" if key == "confirmation_token" else _redact(item))
-            for key, item in value.items()
-        }
-    if isinstance(value, list):
-        return [_redact(item) for item in value]
-    return value

@@ -46,7 +46,7 @@ SCENARIOS = (
         tenant="harborlight",
         turns=[
             "I want to talk to a person.",
-            "It's about a panel upgrade and a permit.",
+            "It's Riley Chen about a panel upgrade and a permit at 21 Harbor Blvd, 94118.",
             "Yes, transfer me.",
         ],
     ),

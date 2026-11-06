@@ -82,6 +82,20 @@ def test_idempotency_round_trip_is_tenant_scoped(store, clock) -> None:
     assert store.get_idempotency("summit", record.key) is None
 
 
+def test_nested_transactions_fail_cleanly(store) -> None:
+    with (  # noqa: SIM117 - the inner transaction must fail
+        pytest.raises(RuntimeError, match="nested"),
+        store.transaction(),
+    ):
+        with store.transaction():
+            pass
+
+    with store.transaction():
+        store.next_sequence("harborlight", "after_nested")
+
+    assert store.next_sequence("harborlight", "after_nested") == 2
+
+
 def test_transaction_rolls_back_a_failed_write(store) -> None:
     before = store.count_bookings("harborlight")
 

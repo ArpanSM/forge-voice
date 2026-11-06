@@ -83,7 +83,7 @@ class CallerFacts:
     preferred_window: str | None
     preferred_hour: int | None
     day_flexible: bool
-    confirmation_yes: bool
+    confirmation_utterance: str | None
     confirmation_refused: bool
     asks_again: bool
     injection: bool
@@ -111,17 +111,18 @@ def extract_facts(
     if phone is None:
         phone = caller_phone
     name = known.name if known else _find_name(text)
-    polarity: bool | None = None
-    saw_refusal = False
-    for turn in turns:
+    decision: bool | None = None
+    decision_turn: str | None = None
+    for turn in turns[_readiness_index(turns) :]:
         lowered = turn.lower()
         if EXPLICIT_NO_RE.search(lowered):
-            polarity = False
-            saw_refusal = True
+            decision = False
+            decision_turn = turn
         elif EXPLICIT_YES_RE.search(lowered):
-            polarity = True
-    confirmation_yes = polarity is True
-    confirmation_refused = polarity is False and saw_refusal
+            decision = True
+            decision_turn = turn
+    confirmation_utterance = decision_turn if decision is True else None
+    confirmation_refused = decision is False
     preferred_day = _preferred_day(text, now)
     preferred_window = _preferred_window(text)
     preferred_hour = _preferred_hour(text)
@@ -137,7 +138,7 @@ def extract_facts(
         day_flexible=bool(
             re.search(r"next weekday|next available|this week|next week", text, re.I)
         ),
-        confirmation_yes=confirmation_yes,
+        confirmation_utterance=confirmation_utterance,
         confirmation_refused=confirmation_refused,
         asks_again=bool(re.search(r"\bagain\b|\bonce more\b|\bto be sure\b", text, re.I)),
         injection=bool(INJECTION_RE.search(text)),
@@ -148,6 +149,13 @@ def extract_facts(
         human_mode="live" if re.search(r"\btransfer me\b", text, re.I) else "callback",
         emergency_text=text,
     )
+
+
+def _readiness_index(turns: list[str]) -> int:
+    for index, turn in enumerate(turns):
+        if _find_zip(turn) is not None or ADDRESS_RE.search(turn):
+            return index
+    return 0
 
 
 def _known_customer(text: str, customers: list[CustomerRecord]) -> CustomerRecord | None:

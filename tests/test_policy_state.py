@@ -101,6 +101,50 @@ def test_refusal_never_issues_a_token(harborlight, clock) -> None:
         policy.issue_confirmation(state, target="slot_hl_00001", payload={"slot_id": "x"})
 
 
+def test_confirm_before_readback_is_ignored(harborlight, clock) -> None:
+    policy = ConversationPolicy(harborlight, clock)
+    state = policy.start_call("call_1")
+
+    assert policy.confirm(state, "yes, book it") is False
+    assert state.explicit_yes is False
+
+    policy.identify_intent(state, "I need a drain cleaning")
+    policy.record_readback(state, {"slot_id": "slot_hl_00001"})
+    assert state.awaiting_confirmation is True
+    with pytest.raises(ConfirmationRequiredError):
+        policy.issue_confirmation(state, target="slot_hl_00001", payload={"slot_id": "x"})
+
+
+def test_confirm_after_readback_authorizes_one_decision(harborlight, clock) -> None:
+    policy = ConversationPolicy(harborlight, clock)
+    state = policy.start_call("call_1")
+    policy.identify_intent(state, "I need a drain cleaning")
+    policy.record_readback(state, {"slot_id": "slot_hl_00001"})
+
+    assert policy.confirm(state, "yes, book it") is True
+    assert state.awaiting_confirmation is False
+    assert state.explicit_yes is True
+    assert policy.confirm(state, "no") is False
+    assert state.explicit_yes is False
+
+
+def test_new_readback_resets_the_confirmation(harborlight, clock) -> None:
+    policy = ConversationPolicy(harborlight, clock)
+    state = policy.start_call("call_1")
+    policy.identify_intent(state, "I need a drain cleaning")
+    policy.record_readback(state, {"slot_id": "slot_hl_00001"})
+    policy.confirm(state, "yes")
+
+    policy.record_readback(state, {"slot_id": "slot_hl_00002"})
+
+    assert state.awaiting_confirmation is True
+    assert state.explicit_yes is False
+    with pytest.raises(ConfirmationRequiredError):
+        policy.issue_confirmation(
+            state, target="slot_hl_00002", payload={"slot_id": "slot_hl_00002"}
+        )
+
+
 def test_token_payload_must_match_the_readback_payload(harborlight, clock) -> None:
     policy = ConversationPolicy(harborlight, clock)
     state = policy.start_call("call_1")
@@ -116,7 +160,7 @@ def test_token_payload_must_match_the_readback_payload(harborlight, clock) -> No
         )
 
 
-def test_token_is_one_use_and_expires_after_120_seconds(harborlight, clock) -> None:
+def test_token_is_one_use(harborlight, clock) -> None:
     policy = ConversationPolicy(harborlight, clock)
     state = policy.start_call("call_1")
     policy.identify_intent(state, "I need a drain cleaning")
@@ -128,13 +172,19 @@ def test_token_is_one_use_and_expires_after_120_seconds(harborlight, clock) -> N
     assert policy.tokens.consume(token.token, token.binding).status is TokenStatus.valid
     assert policy.tokens.validate(token.token, token.binding).status is TokenStatus.used
 
-    second_payload = {"service_id": "drain_cleaning", "slot_id": "slot_hl_00002"}
-    policy.record_readback(state, second_payload)
-    policy.confirm(state, "yes, that one")
-    second = policy.issue_confirmation(state, target="slot_hl_00002", payload=second_payload)
+
+def test_token_expires_after_120_seconds(harborlight, clock) -> None:
+    policy = ConversationPolicy(harborlight, clock)
+    state = policy.start_call("call_1")
+    policy.identify_intent(state, "I need a drain cleaning")
+    payload = {"service_id": "drain_cleaning", "slot_id": "slot_hl_00001"}
+    policy.record_readback(state, payload)
+    policy.confirm(state, "yes")
+    token = policy.issue_confirmation(state, target="slot_hl_00001", payload=payload)
     later = clock.now + timedelta(seconds=121)
+
     assert (
-        policy.tokens.validate(second.token, second.binding, at=later).status is TokenStatus.expired
+        policy.tokens.validate(token.token, token.binding, at=later).status is TokenStatus.expired
     )
 
 
@@ -154,16 +204,24 @@ def test_token_is_bound_to_tenant_call_intent_target_and_payload(harborlight, cl
     assert forged.status is TokenStatus.unknown
 
 
-def test_policy_classifies_after_hours_and_cutoff(harborlight, clock) -> None:
+def test_policy_classifies_after_hours(harborlight, clock) -> None:
     policy = ConversationPolicy(harborlight, clock)
 
     assert policy.is_after_hours(clock.now) is False
-    late = clock.now.replace(hour=21)
-    assert policy.is_after_hours(late) is True
+    assert policy.is_after_hours(clock.now.replace(hour=21)) is True
+
+
+def test_policy_classifies_the_change_cutoff(harborlight, clock) -> None:
+    policy = ConversationPolicy(harborlight, clock)
+
     assert policy.within_change_cutoff(clock.now + timedelta(minutes=119), clock.now) is True
     assert policy.within_change_cutoff(clock.now + timedelta(minutes=121), clock.now) is False
 
+
+def test_policy_allows_one_self_serve_change(harborlight, clock) -> None:
+    policy = ConversationPolicy(harborlight, clock)
     state = policy.start_call("call_1")
+
     assert policy.can_change(state) is True
     policy.record_change(state)
     assert policy.can_change(state) is False

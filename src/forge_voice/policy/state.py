@@ -96,6 +96,7 @@ class CallState(StrictModel):
     confirmed_slot_id: str | None = None
     readback_done: bool = False
     readback_payload: dict[str, object] | None = None
+    awaiting_confirmation: bool = False
     explicit_yes: bool = False
     confirmation_token: str | None = None
     change_count: int = 0
@@ -106,9 +107,6 @@ class CallState(StrictModel):
     ticket_id: str | None = None
     callback_id: str | None = None
     after_hours: bool = False
-    recording_opted_out: bool = False
-    prompt_injection_attempted: bool = False
-    notes: list[str] = Field(default_factory=list)
 
     @property
     def service(self) -> str | None:

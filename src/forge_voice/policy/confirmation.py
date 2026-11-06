@@ -2,13 +2,15 @@
 
 The model never receives an API to mint a token. A token is created only after the policy has
 recorded a read-back and an explicit yes, and it is bound to the tenant, call, intent, target
-and canonical payload hash.
+and canonical payload hash. When a SQLite adapter is supplied the token rows are durable and
+consumption is one atomic UPDATE.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import secrets
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -16,7 +18,9 @@ from typing import Any
 
 from pydantic import Field
 
+from forge_voice.adapters.sqlite import SQLiteAdapter
 from forge_voice.clock import Clock
+from forge_voice.domain import TokenRecord
 from forge_voice.models import StrictModel
 
 
@@ -54,10 +58,11 @@ class TokenCheck(StrictModel):
 
 
 class ConfirmationTokenStore:
-    """In-memory one-use token registry; deterministic for a fixed issue sequence."""
+    """Token registry; SQLite-backed when a database is supplied."""
 
-    def __init__(self, clock: Clock) -> None:
+    def __init__(self, clock: Clock, store: SQLiteAdapter | None = None) -> None:
         self._clock = clock
+        self._store = store
         self._records: dict[str, ConfirmationToken] = {}
         self._used: set[str] = set()
         self._counter = 0
@@ -90,6 +95,7 @@ class ConfirmationTokenStore:
                 binding.payload_hash,
                 issued_at.isoformat(),
                 str(self._counter),
+                secrets.token_hex(8),
             ]
         )
         token = "ct_" + hashlib.sha256(material.encode("utf-8")).hexdigest()[:32]
@@ -99,7 +105,21 @@ class ConfirmationTokenStore:
             issued_at=issued_at,
             expires_at=issued_at + timedelta(seconds=ttl_seconds),
         )
-        self._records[token] = record
+        if self._store is not None:
+            self._store.insert_token(
+                TokenRecord(
+                    token=token,
+                    tenant_id=tenant_id,
+                    call_id=call_id,
+                    intent=intent,
+                    target=target,
+                    payload_hash=binding.payload_hash,
+                    issued_at=record.issued_at,
+                    expires_at=record.expires_at,
+                )
+            )
+        else:
+            self._records[token] = record
         return record
 
     def validate(
@@ -109,12 +129,12 @@ class ConfirmationTokenStore:
         *,
         at: datetime | None = None,
     ) -> TokenCheck:
-        record = self._records.get(token)
+        record = self._lookup(token)
         if record is None:
             return TokenCheck(status=TokenStatus.unknown)
         if record.binding != binding:
             return TokenCheck(status=TokenStatus.binding_mismatch, token=record)
-        if token in self._used:
+        if self._is_used(token, record, at=at):
             return TokenCheck(status=TokenStatus.used, token=record)
         if (at or self._clock.now) >= record.expires_at:
             return TokenCheck(status=TokenStatus.expired, token=record)
@@ -123,5 +143,49 @@ class ConfirmationTokenStore:
     def consume(self, token: str, binding: TokenBinding) -> TokenCheck:
         check = self.validate(token, binding)
         if check.status is TokenStatus.valid:
+            if self._store is not None and not self._store.consume_token(token, self._clock.now):
+                return TokenCheck(status=TokenStatus.used, token=check.token)
             self._used.add(token)
+            return TokenCheck(status=TokenStatus.valid, token=check.token)
         return check
+
+    def consume_in_transaction(self, token: str, binding: TokenBinding) -> TokenCheck:
+        """Consume on the caller's open transaction; a failed UPDATE rolls the writes back."""
+        check = self.validate(token, binding)
+        if check.status is not TokenStatus.valid:
+            return check
+        if self._store is not None:
+            consumed = self._store.consume_token(token, self._clock.now)
+            return TokenCheck(
+                status=TokenStatus.valid if consumed else TokenStatus.used,
+                token=check.token,
+            )
+        self._used.add(token)
+        return TokenCheck(status=TokenStatus.valid, token=check.token)
+
+    def _lookup(self, token: str) -> ConfirmationToken | None:
+        if self._store is not None:
+            row = self._store.get_token(token)
+            if row is None:
+                return None
+            return ConfirmationToken(
+                token=row.token,
+                binding=TokenBinding(
+                    tenant_id=row.tenant_id,
+                    call_id=row.call_id,
+                    intent=row.intent,
+                    target=row.target,
+                    payload_hash=row.payload_hash,
+                ),
+                issued_at=row.issued_at,
+                expires_at=row.expires_at,
+            )
+        return self._records.get(token)
+
+    def _is_used(
+        self, token: str, record: ConfirmationToken, *, at: datetime | None = None
+    ) -> bool:
+        if self._store is not None:
+            row = self._store.get_token(token)
+            return row is not None and row.used_at is not None
+        return token in self._used

@@ -1,11 +1,17 @@
-"""File-backed outbox for synthetic SMS/email confirmations."""
+"""File-backed outbox for synthetic SMS/email confirmations.
+
+The database row is the durable queue. `drain` writes rows in order, fsyncs each line, and only
+then marks the row drained. A partial trailing line from a crashed write is ignored on reload.
+"""
 
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 
+from forge_voice.adapters.sqlite import SQLiteAdapter
 from forge_voice.domain import ConfirmationRecord
 
 
@@ -16,21 +22,39 @@ class Outbox:
         self.path = Path(path) if path is not None else None
         self._messages: list[ConfirmationRecord] = []
         if self.path is not None and self.path.is_file():
-            for line in self.path.read_text(encoding="utf-8").splitlines():
-                if line.strip():
+            lines = self.path.read_text(encoding="utf-8").splitlines()
+            for index, line in enumerate(lines):
+                if not line.strip():
+                    continue
+                try:
                     self._messages.append(ConfirmationRecord.model_validate_json(line))
+                except ValueError:
+                    if index != len(lines) - 1:
+                        raise
+                    # A crash can leave a partial trailing line; keep earlier messages.
 
     @property
     def messages(self) -> list[ConfirmationRecord]:
         return list(self._messages)
 
     def send(self, record: ConfirmationRecord) -> ConfirmationRecord:
-        self._messages.append(record)
         if self.path is not None:
             self.path.parent.mkdir(parents=True, exist_ok=True)
+            line = json.dumps(record.model_dump(mode="json"), sort_keys=True) + "\n"
             with self.path.open("a", encoding="utf-8") as handle:
-                handle.write(json.dumps(record.model_dump(mode="json"), sort_keys=True) + "\n")
+                handle.write(line)
+                handle.flush()
+                os.fsync(handle.fileno())
+        self._messages.append(record)
         return record
+
+    def drain(self, store: SQLiteAdapter, at: datetime, tenant_id: str | None = None) -> int:
+        drained = 0
+        for record in store.list_undrained_confirmations(tenant_id):
+            self.send(record)
+            store.mark_confirmation_drained(record.message_id, at)
+            drained += 1
+        return drained
 
     def __len__(self) -> int:
         return len(self._messages)

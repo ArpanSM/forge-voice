@@ -2,22 +2,30 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Mapping
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from pydantic import ValidationError
 
 from forge_voice.adapters.sqlite import SQLiteAdapter
 from forge_voice.clock import Clock
-from forge_voice.domain import Address, BookingRecord, CallbackRecord, TicketRecord
+from forge_voice.domain import (
+    Address,
+    BookingRecord,
+    CallbackRecord,
+    IdempotencyRecord,
+    TicketRecord,
+)
 from forge_voice.errors import ErrorCode, StableError
 from forge_voice.models import StrictModel
 from forge_voice.policy.booking import BookingService, CustomerInput
+from forge_voice.policy.confirmation import payload_digest
 from forge_voice.policy.handoff import HandoffPacket
+from forge_voice.scheduling import next_business_day_window
 from forge_voice.tenants.models import Technician, TenantConfig
-from forge_voice.tools.envelope import ToolResult
+from forge_voice.tools.envelope import ToolResult, sanitize_args
 from forge_voice.tools.models import (
     AvailabilityArgs,
     BookAppointmentArgs,
@@ -60,6 +68,8 @@ class ToolSession(StrictModel):
     caller_phone: str | None = None
     ownership_verified: bool = False
     change_count: int = 0
+    confirmed: bool = False
+    confirmation_token: str | None = None
 
 
 class ToolRegistry:
@@ -168,12 +178,10 @@ class ToolRegistry:
         if not verified:
             return {
                 "customer": {
-                    "customer_id": customer.customer_id,
-                    "name": customer.name.split()[0],
+                    "name": "Verified caller only",
                     "phone": self._mask_phone(customer.phone),
-                    "address": {"zip": customer.address.zip},
                 },
-                "match": "exact",
+                "match": "masked",
                 "verification_required": True,
                 "bookings": [],
             }
@@ -265,8 +273,8 @@ class ToolRegistry:
             customer=self._customer_input(args.customer),
             service_id=args.service_id,
             slot_id=args.slot_id,
-            confirmed=args.confirmed,
-            token=args.confirmation_token,
+            confirmed=self.session.confirmed,
+            token=self.session.confirmation_token,
         )
         return {
             "booking": self._booking_dict(write.booking),
@@ -282,8 +290,8 @@ class ToolRegistry:
             new_slot_id=args.new_slot_id,
             caller_phone=self.session.caller_phone,
             ownership_verified=self.session.ownership_verified,
-            confirmed=args.confirmed,
-            token=args.confirmation_token,
+            confirmed=self.session.confirmed,
+            token=self.session.confirmation_token,
             reason=args.reason,
         )
         return {
@@ -307,8 +315,8 @@ class ToolRegistry:
             booking_id=args.booking_id,
             caller_phone=self.session.caller_phone,
             ownership_verified=self.session.ownership_verified,
-            confirmed=args.confirmed,
-            token=args.confirmation_token,
+            confirmed=self.session.confirmed,
+            token=self.session.confirmation_token,
             reason=args.reason,
         )
         return {
@@ -340,36 +348,72 @@ class ToolRegistry:
                 "That emergency category is not configured for this business.",
             )
         customer = self._customer_input(args.customer)
-        existing = self.store.find_customers(self.tenant.tenant_id, phone=customer.phone)
-        ticket_number = len(self.store.list_tickets(self.tenant.tenant_id)) + 1
-        ticket_id = f"em_{self.tenant.tenant_id}_{ticket_number:04d}"
-        ticket = TicketRecord(
-            ticket_id=ticket_id,
-            tenant_id=self.tenant.tenant_id,
-            call_id=self.session.call_id,
-            customer_id=existing[0].customer_id if existing else None,
-            customer_name=customer.name,
-            customer_phone=customer.phone,
-            address=customer.address,
-            category=category.id,
-            severity=category.severity,
-            description=args.description,
-            safety_instructions_given=args.safety_instructions_given,
-            transfer_mode=args.transfer_mode,
-            on_call_target=category.transfer_target,
-            callback_sla_minutes=self.tenant.emergency.on_call.callback_sla_minutes,
-            created_at=self.clock.now,
-        )
-        self.store.create_ticket(ticket)
-        return {
-            "ticket_id": ticket.ticket_id,
-            "status": ticket.status,
-            "severity": ticket.severity,
-            "category": ticket.category,
-            "on_call_target": ticket.on_call_target,
-            "callback_sla_minutes": ticket.callback_sla_minutes,
-            "transfer_id": None,
-        }
+        existing_customer = self.store.find_customers(self.tenant.tenant_id, phone=customer.phone)
+        request = args.model_dump(mode="json")
+        request_hash = payload_digest(request)
+        key = f"{self.tenant.tenant_id}:{self.session.call_id}:ticket:{category.id}"
+        existing = self.store.get_idempotency(self.tenant.tenant_id, key)
+        if existing is not None:
+            if existing.payload_hash != request_hash:
+                raise StableError(
+                    ErrorCode.idempotency_conflict,
+                    "That retry does not match the original emergency ticket.",
+                )
+            return json.loads(existing.result_json)
+
+        with self.store.transaction():
+            existing = self.store.get_idempotency(self.tenant.tenant_id, key)
+            if existing is not None:
+                if existing.payload_hash != request_hash:
+                    raise StableError(
+                        ErrorCode.idempotency_conflict,
+                        "That retry does not match the original emergency ticket.",
+                    )
+                return json.loads(existing.result_json)
+            ticket_id = (
+                f"em_{self.tenant.tenant_id}_"
+                f"{self.store.next_sequence(self.tenant.tenant_id, 'ticket'):04d}"
+            )
+            ticket = TicketRecord(
+                ticket_id=ticket_id,
+                tenant_id=self.tenant.tenant_id,
+                call_id=self.session.call_id,
+                customer_id=existing_customer[0].customer_id if existing_customer else None,
+                customer_name=customer.name,
+                customer_phone=customer.phone,
+                address=customer.address,
+                category=category.id,
+                severity=category.severity,
+                description=args.description,
+                safety_instructions_given=args.safety_instructions_given,
+                transfer_mode=args.transfer_mode,
+                on_call_target=category.transfer_target,
+                callback_sla_minutes=self.tenant.emergency.on_call.callback_sla_minutes,
+                created_at=self.clock.now,
+            )
+            self.store.insert_ticket(ticket)
+            data = {
+                "ticket_id": ticket.ticket_id,
+                "status": ticket.status,
+                "severity": ticket.severity,
+                "category": ticket.category,
+                "on_call_target": ticket.on_call_target,
+                "callback_sla_minutes": ticket.callback_sla_minutes,
+                "transfer_id": None,
+            }
+            self.store.put_idempotency(
+                IdempotencyRecord(
+                    key=key,
+                    tenant_id=self.tenant.tenant_id,
+                    call_id=self.session.call_id,
+                    intent="emergency_ticket",
+                    target=category.id,
+                    payload_hash=request_hash,
+                    result_json=json.dumps(data, sort_keys=True),
+                    created_at=self.clock.now,
+                )
+            )
+        return data
 
     def _transfer_to_human(self, payload: dict[str, Any], _: str) -> dict[str, Any]:
         args = TransferToHumanArgs.model_validate(payload)
@@ -384,6 +428,26 @@ class ToolRegistry:
                 ErrorCode.invalid_argument,
                 "The handoff packet does not match this call.",
             )
+        if args.mode == "live" and not packet.complete:
+            raise StableError(
+                ErrorCode.invalid_argument,
+                "The handoff packet is incomplete; queue a callback instead.",
+            )
+        request = args.model_dump(mode="json")
+        request_hash = payload_digest(request)
+        key = (
+            f"{self.tenant.tenant_id}:{self.session.call_id}:transfer:"
+            f"{args.reason}:{args.mode}:{packet.caller.phone}"
+        )
+        existing = self.store.get_idempotency(self.tenant.tenant_id, key)
+        if existing is not None:
+            if existing.payload_hash != request_hash:
+                raise StableError(
+                    ErrorCode.idempotency_conflict,
+                    "That retry does not match the original handoff.",
+                )
+            return json.loads(existing.result_json)
+
         emergency = args.reason == "emergency" or args.urgency == "emergency"
         target_id = (
             self.tenant.emergency.on_call.target
@@ -396,8 +460,6 @@ class ToolRegistry:
         )
         if target is None:
             raise StableError(ErrorCode.no_target, "No handoff target is configured.")
-        transfers = len(self.store.list_events(self.tenant.tenant_id, tool="transfer_to_human"))
-        transfer_id = f"tr_{self.tenant.tenant_id}_{transfers + 1:04d}"
         callback_id: str | None = None
         connected_at: datetime | None = None
         if args.mode == "callback":
@@ -409,30 +471,68 @@ class ToolRegistry:
         else:
             status = "no_answer"
             callback_id = self._create_callback(packet, args, emergency=emergency)
-        if packet.emergency_ticket_id:
-            self.store.set_ticket_transfer(
-                self.tenant.tenant_id,
-                packet.emergency_ticket_id,
-                transfer_id=transfer_id,
-                status="assigned" if status == "connected" else "open",
+
+        with self.store.transaction():
+            transfer_id = (
+                f"tr_{self.tenant.tenant_id}_"
+                f"{self.store.next_sequence(self.tenant.tenant_id, 'transfer'):04d}"
             )
-        return {
-            "transfer_id": transfer_id,
-            "status": status,
-            "target": {
-                "id": target.id,
-                "name": target.name,
-                "phone": target.phone,
-            },
-            "connected_at": connected_at.isoformat() if connected_at else None,
-            "callback_id": callback_id,
-            "packet_complete": packet.complete,
-        }
+            if packet.emergency_ticket_id:
+                self.store.set_ticket_transfer_in_transaction(
+                    self.tenant.tenant_id,
+                    packet.emergency_ticket_id,
+                    transfer_id=transfer_id,
+                    status="assigned" if status == "connected" else "open",
+                )
+            data = {
+                "transfer_id": transfer_id,
+                "status": status,
+                "target": {
+                    "id": target.id,
+                    "name": target.name,
+                    "phone": target.phone,
+                },
+                "connected_at": connected_at.isoformat() if connected_at else None,
+                "callback_id": callback_id,
+                "packet_complete": packet.complete,
+            }
+            self.store.put_idempotency(
+                IdempotencyRecord(
+                    key=key,
+                    tenant_id=self.tenant.tenant_id,
+                    call_id=self.session.call_id,
+                    intent="transfer",
+                    target=f"{args.reason}:{args.mode}",
+                    payload_hash=request_hash,
+                    result_json=json.dumps(data, sort_keys=True),
+                    created_at=self.clock.now,
+                )
+            )
+        return data
 
     # ----------------------------------------------------------------- helpers
     def _create_callback(
         self, packet: HandoffPacket, args: TransferToHumanArgs, *, emergency: bool
     ) -> str:
+        key = (
+            f"{self.tenant.tenant_id}:{self.session.call_id}:callback:"
+            f"{args.reason}:{packet.caller.phone}"
+        )
+        request = {
+            "reason": args.reason,
+            "phone": packet.caller.phone,
+            "mode": args.mode,
+        }
+        request_hash = payload_digest(request)
+        existing = self.store.get_idempotency(self.tenant.tenant_id, key)
+        if existing is not None:
+            if existing.payload_hash != request_hash:
+                raise StableError(
+                    ErrorCode.idempotency_conflict,
+                    "That retry does not match the original callback.",
+                )
+            return json.loads(existing.result_json)["callback_id"]
+
         if args.callback_window is not None:
             window_start = args.callback_window.start
             window_end = args.callback_window.end
@@ -442,35 +542,47 @@ class ToolRegistry:
                 minutes=self.tenant.emergency.on_call.callback_sla_minutes
             )
         else:
-            window_start, window_end = self._next_business_day_window()
-        callback_id = (
-            f"cb_{self.tenant.tenant_id}_"
-            f"{len(self.store.list_callbacks(self.tenant.tenant_id)) + 1:04d}"
-        )
-        self.store.create_callback(
-            CallbackRecord(
-                callback_id=callback_id,
-                tenant_id=self.tenant.tenant_id,
-                call_id=self.session.call_id,
-                name=packet.caller.name or "Caller",
-                phone=packet.caller.phone,
-                reason=args.reason,
-                window_start=window_start,
-                window_end=window_end,
-                sla="15_minutes" if emergency else "next_business_day",
-                created_at=self.clock.now,
+            window_start, window_end = next_business_day_window(self.tenant, self.clock.now)
+        with self.store.transaction():
+            existing = self.store.get_idempotency(self.tenant.tenant_id, key)
+            if existing is not None:
+                if existing.payload_hash != request_hash:
+                    raise StableError(
+                        ErrorCode.idempotency_conflict,
+                        "That retry does not match the original callback.",
+                    )
+                return json.loads(existing.result_json)["callback_id"]
+            callback_id = (
+                f"cb_{self.tenant.tenant_id}_"
+                f"{self.store.next_sequence(self.tenant.tenant_id, 'callback'):04d}"
             )
-        )
+            self.store.insert_callback(
+                CallbackRecord(
+                    callback_id=callback_id,
+                    tenant_id=self.tenant.tenant_id,
+                    call_id=self.session.call_id,
+                    name=packet.caller.name or "Caller",
+                    phone=packet.caller.phone,
+                    reason=args.reason,
+                    window_start=window_start,
+                    window_end=window_end,
+                    sla="15_minutes" if emergency else "next_business_day",
+                    created_at=self.clock.now,
+                )
+            )
+            self.store.put_idempotency(
+                IdempotencyRecord(
+                    key=key,
+                    tenant_id=self.tenant.tenant_id,
+                    call_id=self.session.call_id,
+                    intent="callback",
+                    target=f"{args.reason}:{packet.caller.phone}",
+                    payload_hash=request_hash,
+                    result_json=json.dumps({"callback_id": callback_id}),
+                    created_at=self.clock.now,
+                )
+            )
         return callback_id
-
-    def _next_business_day_window(self) -> tuple[datetime, datetime]:
-        zone = ZoneInfo(self.tenant.timezone)
-        local = self.clock.now.astimezone(zone)
-        candidate = local.date() + timedelta(days=1)
-        while candidate.weekday() >= 5 or candidate in self.tenant.holidays:
-            candidate += timedelta(days=1)
-        start = datetime.combine(candidate, time(8, 0), tzinfo=zone)
-        return start, start + timedelta(hours=4)
 
     def _customer_input(self, args: Any) -> CustomerInput:
         return CustomerInput(
@@ -487,11 +599,11 @@ class ToolRegistry:
     def _customer_verified(self, customer: Any, args: LookupCustomerArgs) -> bool:
         if self.session.ownership_verified:
             return True
-        if self.session.caller_phone:
-            return self.session.caller_phone == customer.phone
+        if not self.session.caller_phone or self.session.caller_phone != customer.phone:
+            return False
         if args.phone:
             return normalize_phone(args.phone) == customer.phone
-        return False
+        return True
 
     def _require_service(self, service_id: str) -> None:
         try:
@@ -510,7 +622,10 @@ class ToolRegistry:
         for technician in self.tenant.dispatch.technicians:
             if technician.id == technician_id:
                 return technician
-        return Technician(id=technician_id, name=technician_id, skills=["other"], zips=["00000"])
+        raise StableError(
+            ErrorCode.not_found,
+            "That technician is not configured for this business.",
+        )
 
     def _booking_dict(self, booking: BookingRecord) -> dict[str, Any]:
         return {
@@ -548,18 +663,7 @@ class ToolRegistry:
             tool=name,
             result_code=("ok" if result.ok and result.error is None else result.error.code.value),
             latency_ms=LATENCY_MS.get(name, 0),
-            args=self._sanitize(args),
+            args=sanitize_args(args),
             result=result.model_dump(mode="json"),
             created_at=self.clock.now,
         )
-
-    @classmethod
-    def _sanitize(cls, value: Any) -> Any:
-        if isinstance(value, Mapping):
-            return {
-                key: ("[redacted]" if key == "confirmation_token" else cls._sanitize(item))
-                for key, item in value.items()
-            }
-        if isinstance(value, list):
-            return [cls._sanitize(item) for item in value]
-        return value

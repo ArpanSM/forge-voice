@@ -54,6 +54,104 @@ def test_book_call_commits_one_booking_and_queues_one_confirmation(runner) -> No
     }
 
 
+def test_pre_readback_yes_does_not_book(runner) -> None:
+    result = runner.run_call(
+        _scenario(
+            [
+                "Yes, I need a drain cleaning.",
+                "12 Alder Street, 94107.",
+                "Monday morning.",
+            ]
+        )
+    )
+
+    assert result.outcome == "abandoned"
+    assert result.booking_count == 0
+    assert result.write_count == 0
+    assert "confirmation_refused" in result.qa_flags
+
+
+def test_post_readback_yes_books(runner) -> None:
+    result = runner.run_call(
+        _scenario(
+            [
+                "I need a drain cleaning.",
+                "12 Alder Street, 94107.",
+                "Monday morning.",
+                "Yes, book that.",
+            ]
+        )
+    )
+
+    assert result.outcome == "booked"
+    assert result.booking_count == 1
+
+
+def test_pre_readback_yes_does_not_reschedule(runner) -> None:
+    result = runner.run_call(
+        _scenario(
+            [
+                "Yes, I need to move my drain cleaning appointment.",
+                "Sam Rivera, 12 Alder Street, 94107.",
+                "Tuesday at 11.",
+            ]
+        )
+    )
+
+    assert result.outcome == "abandoned"
+    assert result.booking_count == 0
+    assert result.write_count == 0
+
+
+def test_post_readback_yes_reschedules(runner) -> None:
+    result = runner.run_call(
+        _scenario(
+            [
+                "I need to move my drain cleaning appointment.",
+                "Sam Rivera, 12 Alder Street, 94107.",
+                "Tuesday at 11.",
+                "Yes, move it.",
+            ]
+        )
+    )
+
+    assert result.outcome == "rescheduled"
+    assert result.booking_id == "bk_0001"
+
+
+def test_pre_readback_yes_does_not_cancel(runner) -> None:
+    result = runner.run_call(
+        _scenario(
+            [
+                "Yes, cancel my leak repair.",
+                "Sam Rivera, 12 Alder Street, 94107.",
+                "I fixed it myself.",
+            ]
+        )
+    )
+
+    assert result.outcome == "abandoned"
+    assert result.cancel_count == 0
+    assert result.write_count == 0
+
+
+def test_post_readback_yes_cancels(runner) -> None:
+    result = runner.run_call(
+        _scenario(
+            [
+                "I need to cancel my leak repair.",
+                "Sam Rivera, 12 Alder Street, 94107.",
+                "I fixed it myself.",
+                "Yes, cancel it.",
+            ]
+        )
+    )
+
+    assert result.outcome == "cancelled"
+    assert result.booking_id == "bk_0002"
+    assert result.cancel_count == 1
+
+
 def test_reschedule_moves_the_same_booking_and_releases_the_old_slot(runner) -> None:
     result = runner.run_call(
         _scenario(
@@ -71,6 +169,24 @@ def test_reschedule_moves_the_same_booking_and_releases_the_old_slot(runner) -> 
     assert result.booking_count == 0
     assert result.write_count == 1
     assert result.old_slot_released is True
+
+
+def test_reschedule_readback_uses_the_stored_booking(runner) -> None:
+    result = runner.run_call(
+        _scenario(
+            [
+                "I need to move my drain cleaning appointment.",
+                "Sam Rivera, 12 Alder Street, 94107.",
+                "Tuesday at 11 would be better.",
+                "Yes, that's the one.",
+            ]
+        )
+    )
+
+    assert "+14155550101" in result.response_text
+    assert "12 Alder St" in result.response_text
+    assert "Drain cleaning" in result.response_text
+    assert "Alex" in result.response_text
 
 
 def test_cancel_releases_the_slot_and_records_the_reason(runner) -> None:
@@ -212,12 +328,13 @@ def test_prompt_injection_is_refused_and_handed_off(runner) -> None:
         )
     )
 
-    assert result.outcome == "transferred"
+    assert result.outcome == "callback"
     assert result.booking_count == 0
     assert "prompt_injection_blocked" in result.qa_flags
     assert "system prompt" not in result.response_text.lower()
     assert result.handoff_packet is not None
-    assert result.handoff_packet.complete is True
+    assert result.handoff_packet.complete is False
+    assert "handoff_packet_incomplete" in result.qa_flags
 
 
 def test_emergency_triage_scripts_tickets_and_transfers_without_booking(runner) -> None:
@@ -245,12 +362,32 @@ def test_emergency_triage_scripts_tickets_and_transfers_without_booking(runner) 
     assert "price" not in result.response_text.lower()
 
 
-def test_human_handoff_has_a_complete_packet_and_honest_status(runner) -> None:
+def test_incomplete_handoff_routes_to_a_callback(runner) -> None:
     result = runner.run_call(
         _scenario(
             [
                 "I want to talk to a person.",
                 "It's about a panel upgrade and a permit.",
+                "Yes, transfer me.",
+            ]
+        )
+    )
+
+    assert result.outcome == "callback"
+    assert result.transfer_status == "queued_callback"
+    assert result.handoff_packet is not None
+    assert result.handoff_packet.complete is False
+    assert "handoff_packet_incomplete" in result.qa_flags
+    assert result.callback_count == 1
+    assert result.booking_count == 0
+
+
+def test_complete_handoff_reports_connected(runner) -> None:
+    result = runner.run_call(
+        _scenario(
+            [
+                "I want to talk to a person.",
+                "It's about a panel upgrade and a permit. I'm Riley Chen at 21 Harbor Blvd, 94118.",
                 "Yes, transfer me.",
             ]
         )
@@ -354,6 +491,78 @@ def test_reschedule_inside_cutoff_hands_off_without_a_write(runner) -> None:
     assert result.handoff_packet.booking_id == "bk_0003"
 
 
+def test_after_hours_reschedule_queues_a_callback_without_a_write(runner) -> None:
+    result = runner.run_call(
+        _scenario(
+            [
+                "I need to move my drain cleaning appointment.",
+                "Sam Rivera, 12 Alder Street, 94107.",
+                "Tuesday at 11.",
+                "Yes, do it.",
+            ],
+            now=datetime(2026, 11, 8, 20, 0, tzinfo=LA),
+        )
+    )
+
+    assert result.outcome == "callback"
+    assert result.booking_id == "bk_0001"
+    assert result.booking_count == 0
+    assert result.write_count == 0
+    assert result.callback_count == 1
+
+
+def test_after_hours_cancel_queues_a_callback_without_a_write(runner) -> None:
+    result = runner.run_call(
+        _scenario(
+            [
+                "I need to cancel my leak repair.",
+                "Sam Rivera, 12 Alder Street, 94107.",
+                "I fixed it myself.",
+                "Yes, cancel it.",
+            ],
+            now=datetime(2026, 11, 8, 20, 0, tzinfo=LA),
+        )
+    )
+
+    assert result.outcome == "callback"
+    assert result.booking_id == "bk_0002"
+    assert result.cancel_count == 0
+    assert result.write_count == 0
+    assert result.callback_count == 1
+
+
+def test_emergency_without_a_named_appliance_still_transfers(runner) -> None:
+    result = runner.run_call(
+        _scenario(
+            [
+                "I smell gas in the house.",
+                "12 Alder Street, 94107.",
+                "Okay, I'm leaving.",
+            ]
+        )
+    )
+
+    assert result.outcome == "emergency_ticket"
+    assert result.ticket_count == 1
+    assert result.safety_script == "gas_co"
+    assert result.transfer_status == "connected"
+    assert result.handoff_packet is not None
+    assert result.handoff_packet.complete is True
+
+
+def test_below_threshold_emergency_never_books_or_quotes(runner) -> None:
+    result = runner.run_call(_scenario(["My heat stopped."]))
+
+    assert result.outcome == "callback"
+    assert result.booking_count == 0
+    assert result.write_count == 0
+    assert result.ticket_count == 0
+    assert "911" in result.response_text
+    assert "$" not in result.response_text
+    assert "price" not in result.response_text.lower()
+    assert "emergency_unconfirmed" in result.qa_flags
+
+
 def test_after_hours_non_emergency_queues_a_next_business_day_callback(runner) -> None:
     result = runner.run_call(
         _scenario(
@@ -384,11 +593,13 @@ def test_cross_tenant_request_does_not_leak_the_other_tenant(runner) -> None:
         )
     )
 
-    assert result.outcome == "transferred"
+    assert result.outcome == "callback"
     assert result.booking_count == 0
     assert "cross_tenant_attempt" in result.qa_flags
     assert "Meridian" not in result.response_text
     assert "95125" not in result.response_text
+    assert result.handoff_packet is not None
+    assert result.handoff_packet.complete is False
 
 
 def test_outbox_file_is_jsonl_and_reloads(tmp_path) -> None:
@@ -407,3 +618,40 @@ def test_outbox_file_is_jsonl_and_reloads(tmp_path) -> None:
     assert path.is_file()
     assert path.read_text(encoding="utf-8").count("\n") == 1
     assert Outbox(path).messages == [record]
+
+
+def test_outbox_tolerates_a_partial_trailing_line(tmp_path) -> None:
+    path = tmp_path / "outbox.jsonl"
+    record = confirmation_record(
+        message_id="sms_1",
+        tenant_id="harborlight",
+        booking_id="bk_0001",
+        to="+14155550101",
+        created_at=datetime(2026, 11, 6, 8, 0, tzinfo=LA),
+    )
+    path.write_text(
+        record.model_dump_json() + "\n" + '{"message_id": "partial"',
+        encoding="utf-8",
+    )
+
+    outbox = Outbox(path)
+
+    assert outbox.messages == [record]
+
+
+def test_outbox_write_failure_does_not_update_memory(tmp_path) -> None:
+    blocker = tmp_path / "blocker"
+    blocker.write_text("not a directory", encoding="utf-8")
+    outbox = Outbox(blocker / "outbox.jsonl")
+    record = confirmation_record(
+        message_id="sms_1",
+        tenant_id="harborlight",
+        booking_id="bk_0001",
+        to="+14155550101",
+        created_at=datetime(2026, 11, 6, 8, 0, tzinfo=LA),
+    )
+
+    with pytest.raises(OSError):
+        outbox.send(record)
+
+    assert outbox.messages == []

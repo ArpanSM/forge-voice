@@ -152,6 +152,19 @@ def test_emergency_ticket_is_structured_and_does_not_book(harborlight, store, cl
     assert store.count_bookings("harborlight") == 4
 
 
+def test_emergency_ticket_retry_returns_the_same_ticket(harborlight, store, clock) -> None:
+    registry = _registry(harborlight, store, clock)
+
+    first = _ticket(registry, clock)
+    second = _ticket(registry, clock)
+
+    assert first["ticket_id"] == second["ticket_id"]
+    tickets = [
+        ticket for ticket in store.list_tickets("harborlight") if ticket.call_id == "call_em"
+    ]
+    assert len(tickets) == 1
+
+
 def test_invalid_emergency_category_is_rejected(harborlight, store, clock) -> None:
     registry = _registry(harborlight, store, clock)
 
@@ -197,6 +210,60 @@ def test_live_transfer_never_claims_connected_without_a_human(harborlight, store
     stored = store.get_ticket("harborlight", ticket["ticket_id"])
     assert stored is not None
     assert stored.transfer_id == result.data["transfer_id"]
+
+
+def test_transfer_retry_returns_the_same_callback(harborlight, store, clock) -> None:
+    registry = _registry(harborlight, store, clock, answered=set())
+    ticket = _ticket(registry, clock)
+    packet = _packet("harborlight", "call_em", clock, ticket_id=ticket["ticket_id"])
+    args = {
+        "reason": "emergency",
+        "urgency": "emergency",
+        "mode": "live",
+        "packet": packet.model_dump(mode="json"),
+    }
+
+    first = registry.call("transfer_to_human", args)
+    second = registry.call("transfer_to_human", args)
+
+    assert first.ok is True
+    assert second.ok is True
+    assert first.data["transfer_id"] == second.data["transfer_id"]
+    assert first.data["callback_id"] == second.data["callback_id"]
+    callbacks = [
+        callback
+        for callback in store.list_callbacks("harborlight")
+        if callback.call_id == "call_em"
+    ]
+    assert len(callbacks) == 1
+
+
+def test_live_transfer_rejects_an_incomplete_packet(harborlight, store, clock) -> None:
+    registry = _registry(harborlight, store, clock)
+    packet = HandoffPacket(
+        tenant_id="harborlight",
+        call_id="call_em",
+        caller=HandoffCaller(name="Sam Rivera", phone="+14155550101"),
+        intent="human",
+        urgency="normal",
+        summary="Caller wants a person.",
+        reason="caller_request",
+        requested_at=clock.now,
+    )
+
+    result = registry.call(
+        "transfer_to_human",
+        {
+            "reason": "caller_request",
+            "urgency": "normal",
+            "mode": "live",
+            "packet": packet.model_dump(mode="json"),
+        },
+    )
+
+    assert result.ok is False
+    assert result.error.code == "invalid_argument"
+    assert packet.complete is False
 
 
 def test_answered_transfer_reports_connected_and_complete_packet(harborlight, store, clock) -> None:

@@ -56,16 +56,12 @@ class BookAppointmentArgs(StrictModel):
     service_id: str = Field(min_length=1)
     slot_id: str = Field(min_length=1)
     customer: CustomerArgs
-    confirmed: bool = False
-    confirmation_token: str | None = None
 
 
 class RescheduleAppointmentArgs(StrictModel):
     booking_id: str = Field(min_length=1)
     new_slot_id: str = Field(min_length=1)
     reason: str | None = Field(default=None, max_length=200)
-    confirmed: bool = False
-    confirmation_token: str | None = None
 
 
 CANCEL_REASONS = {
@@ -81,8 +77,6 @@ CANCEL_REASONS = {
 class CancelAppointmentArgs(StrictModel):
     booking_id: str = Field(min_length=1)
     reason: str | None = Field(default=None, max_length=200)
-    confirmed: bool = False
-    confirmation_token: str | None = None
 
     @model_validator(mode="after")
     def reason_is_supported(self) -> CancelAppointmentArgs:

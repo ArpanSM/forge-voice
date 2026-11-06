@@ -73,3 +73,14 @@ make test     # offline tests
 make lint     # ruff check + ruff format --check
 make format   # apply formatting while developing
 ```
+
+## Accepted first-slice choices (#4)
+
+- One `SQLiteAdapter` owns all synthetic ports (calendar, CRM, bookings, tickets, callbacks,
+  confirmations and events) behind tenant-scoped methods. Separate databases would add ports
+  without changing behavior at this size.
+- The text-mode `CallRunner` uses a deterministic rule interpreter instead of an LLM; audio
+  transport replaces entity extraction, not policy, tools or confirmation.
+- Public adapter methods are serialized by one `RLock`; a nested `transaction()` is rejected
+  explicitly rather than emulated with savepoints. Call inside the outer transaction through
+  the documented in-transaction methods.

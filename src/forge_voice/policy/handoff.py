@@ -43,12 +43,22 @@ class HandoffPacket(StrictModel):
             missing.append("tenant_id")
         if not self.call_id:
             missing.append("call_id")
+        if not self.caller.name:
+            missing.append("caller.name")
         if not self.caller.phone:
             missing.append("caller.phone")
+        if self.address is None:
+            missing.append("address")
+        if self.service is None:
+            missing.append("service")
         if not self.summary:
             missing.append("summary")
         if not self.reason:
             missing.append("reason")
+        if self.intent in {CallIntent.reschedule, CallIntent.cancel} and not self.booking_id:
+            missing.append("booking_id")
+        if self.intent == CallIntent.emergency and not self.emergency_ticket_id:
+            missing.append("emergency_ticket_id")
         return missing
 
     @property
