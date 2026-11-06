@@ -1,0 +1,206 @@
+# Summit Heating & Air — synthetic tenant config for the forge-voice demo.
+# All names, numbers, addresses, customers and calendars are fictional.
+tenant_id: summit
+display_name: Summit Heating & Air
+legal_name: Summit Heating & Air Inc. (synthetic)
+timezone: America/Los_Angeles
+locale: en-US
+currency: USD
+
+persona:
+  name: Maya
+  role: virtual assistant
+  voice_id: demo-maya
+  greeting: "Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help?"
+  disclosure: "I'm an AI assistant. You can ask for a person at any time."
+
+business_hours:
+  monday: ["07:00-18:00"]
+  tuesday: ["07:00-18:00"]
+  wednesday: ["07:00-18:00"]
+  thursday: ["07:00-18:00"]
+  friday: ["07:00-18:00"]
+  saturday: ["08:00-14:00"]
+  sunday: []
+holidays:
+  - "2026-11-26"
+  - "2026-12-25"
+  - "2027-01-01"
+
+services:
+  - id: ac_repair
+    name: Air conditioning repair
+    duration_minutes: 90
+    price_range: {min: 99, max: 149, currency: USD}
+    after_hours_eligible: true
+    emergency_eligible: true
+  - id: furnace_repair
+    name: Furnace repair
+    duration_minutes: 90
+    price_range: {min: 129, max: 349, currency: USD}
+    after_hours_eligible: true
+    emergency_eligible: true
+  - id: heat_pump_service
+    name: Heat pump service
+    duration_minutes: 120
+    price_range: {min: 250, max: 900, currency: USD}
+    after_hours_eligible: true
+    emergency_eligible: true
+  - id: duct_cleaning
+    name: Duct cleaning
+    duration_minutes: 180
+    price_range: {min: 299, max: 699, currency: USD}
+    after_hours_eligible: false
+    emergency_eligible: false
+  - id: maintenance_plan
+    name: Annual maintenance plan
+    duration_minutes: 60
+    price_range: {min: 199, max: 199, currency: USD}
+    after_hours_eligible: false
+    emergency_eligible: false
+
+service_area:
+  zip_allowlist: ["95110", "95112", "95125", "95126", "95128", "95131", "95134"]
+  zip_exclusions: []
+  dispatch_zones:
+    "95110": downtown
+    "95112": downtown
+    "95125": west
+    "95126": west
+    "95128": west
+    "95131": north
+    "95134": north
+  notes: "Synthetic coverage only; no real dispatch."
+
+dispatch:
+  strategy: nearest_skill_match
+  max_drive_minutes: 40
+  technicians:
+    - id: tech_casey
+      name: Casey
+      skills: [ac_repair, furnace_repair, heat_pump_service]
+      zips: ["95110", "95112", "95125", "95126", "95128"]
+    - id: tech_dana
+      name: Dana
+      skills: [ac_repair, heat_pump_service, duct_cleaning, maintenance_plan]
+      zips: ["95131", "95134", "95125", "95128"]
+
+policies:
+  change_cutoff_minutes: 120
+  booking_horizon_days: 14
+  offer_ttl_seconds: 300
+  confirmation_ttl_seconds: 120
+  tool_timeout_ms: 2500
+  max_slots_offered: 3
+  max_reprompts: 2
+  recording: disclose_and_allow_opt_out
+  data_retention_days: 30
+
+emergency:
+  categories:
+    - id: gas_or_co
+      label: Gas smell or CO alarm
+      severity: life_safety
+      triggers: ["gas smell", "CO alarm", "carbon monoxide", "gas furnace smell"]
+      safety_script: gas_co
+      transfer_target: summit_on_call
+    - id: fire_or_smoke
+      label: Fire, smoke or burning electrical smell
+      severity: life_safety
+      triggers: ["fire", "smoke", "burning smell", "burning furnace"]
+      safety_script: fire_smoke
+      transfer_target: summit_on_call
+    - id: no_heat
+      label: No heat in cold weather
+      severity: urgent
+      threshold: "outdoor_temp_f < 40 or vulnerable_occupant"
+      safety_script: no_heat
+      transfer_target: summit_on_call
+    - id: no_cooling
+      label: No cooling in hot weather
+      severity: urgent
+      threshold: "outdoor_temp_f > 95 or vulnerable_occupant"
+      safety_script: no_cooling
+      transfer_target: summit_on_call
+  on_call:
+    target: summit_on_call
+    ring_seconds: 25
+    callback_sla_minutes: 15
+  after_hours:
+    emergency: on_call
+    non_emergency: next_business_day_callback
+
+handoff:
+  targets:
+    - id: summit_front_desk
+      name: Summit front desk
+      phone: "+14085550100"
+      hours: business_hours
+    - id: summit_on_call
+      name: Summit on-call
+      phone: "+14085550188"
+      hours: after_hours_and_emergency
+  default_target: summit_front_desk
+  callback_sla_minutes:
+    emergency: 15
+    non_emergency: next_business_day
+
+integrations:
+  calendar:
+    adapter: synthetic_sqlite
+    config: {path: "data/summit/calendar.db"}
+  crm:
+    adapter: synthetic_sqlite
+    config: {path: "data/summit/crm.db"}
+  messaging:
+    adapter: outbox_file
+    config: {path: "data/summit/outbox.jsonl", channels: [sms, email]}
+
+knowledge_base:
+  faq:
+    - id: hours
+      question: "What are your hours?"
+      answer: "We answer calls Monday to Friday 7 am to 6 pm and Saturday 8 am to 2 pm. After hours, emergencies go to the on-call technician."
+    - id: service_area
+      question: "Do you serve my ZIP code?"
+      answer: "We serve 95110, 95112, 95125, 95126, 95128, 95131 and 95134. I can check your address."
+    - id: diagnostic
+      question: "Is there a diagnostic fee?"
+      answer: "The diagnostic visit is $99 to $149. The fee is credited toward the repair if you approve it."
+    - id: maintenance
+      question: "What does the maintenance plan include?"
+      answer: "The annual plan is $199 and includes two seasonal tune-ups, filter reminders and priority scheduling."
+    - id: warranty
+      question: "Is the work warranted?"
+      answer: "Workmanship is warranted for one year. Parts follow the manufacturer's warranty."
+  pricing:
+    - service_id: ac_repair
+      range: {min: 99, max: 149, currency: USD}
+      includes: ["diagnostic visit"]
+      excludes: ["repair parts", "refrigerant"]
+      caveat: "Diagnostic fee is credited toward the repair if approved."
+    - service_id: furnace_repair
+      range: {min: 129, max: 349, currency: USD}
+      includes: ["diagnostic visit", "standard repair labor"]
+      excludes: ["parts", "permits"]
+      caveat: "Final price after an on-site assessment."
+    - service_id: heat_pump_service
+      range: {min: 250, max: 900, currency: USD}
+      includes: ["diagnosis", "standard service labor"]
+      excludes: ["parts", "refrigerant", "permits"]
+      caveat: "Final price after an on-site assessment."
+    - service_id: duct_cleaning
+      range: {min: 299, max: 699, currency: USD}
+      includes: ["standard duct cleaning", "before/after photos"]
+      excludes: ["duct repair", "mold remediation"]
+      caveat: "Final price after an on-site assessment."
+    - service_id: maintenance_plan
+      range: {min: 199, max: 199, currency: USD}
+      includes: ["two seasonal tune-ups", "filter reminders", "priority scheduling"]
+      excludes: ["repairs", "parts"]
+      caveat: "Annual plan; no automatic renewal in the demo."
+  policies:
+    - id: cancellation
+      answer: "You can change or cancel up to two hours before the appointment at no charge."
+    - id: after_hours
+      answer: "After-hours emergencies go to the on-call technician. Non-emergencies get a callback the next business day."

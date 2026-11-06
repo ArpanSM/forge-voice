@@ -1,0 +1,5 @@
+fixture: fixtures/audio/silence_01.wav
+method: livekit_simulation
+note: 'Not an audio file. Ticket #5 generates the real fixture.'
+scenario_id: audio_silence_01
+status: placeholder

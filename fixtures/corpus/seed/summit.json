@@ -1,0 +1,2959 @@
+{
+  "anchor": "2026-11-09T08:00:00-08:00",
+  "bookings": [
+    {
+      "address": {
+        "city": "San Jose",
+        "line1": "88 Meridian Way",
+        "state": "CA",
+        "zip": "95125"
+      },
+      "booking_id": "bk_summit_0001",
+      "confirmation": {
+        "email": "not_requested",
+        "sms": "queued"
+      },
+      "contact_phone": "+14085550101",
+      "customer_id": "cus_summit_0001",
+      "end": "2026-11-11T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00057",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "booked",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "address": {
+        "city": "San Jose",
+        "line1": "88 Meridian Way",
+        "state": "CA",
+        "zip": "95125"
+      },
+      "booking_id": "bk_summit_0002",
+      "confirmation": {
+        "email": "not_requested",
+        "sms": "queued"
+      },
+      "contact_phone": "+14085550101",
+      "customer_id": "cus_summit_0001",
+      "end": "2026-11-13T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00115",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "booked",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    }
+  ],
+  "calendar": {
+    "booked_slot_ids": [
+      "slot_sm_00057",
+      "slot_sm_00115"
+    ],
+    "open_slot_ids": [
+      "slot_sm_00001",
+      "slot_sm_00002",
+      "slot_sm_00003",
+      "slot_sm_00004",
+      "slot_sm_00005",
+      "slot_sm_00006",
+      "slot_sm_00007",
+      "slot_sm_00008",
+      "slot_sm_00009",
+      "slot_sm_00010",
+      "slot_sm_00011",
+      "slot_sm_00012",
+      "slot_sm_00013",
+      "slot_sm_00014",
+      "slot_sm_00015",
+      "slot_sm_00016",
+      "slot_sm_00017",
+      "slot_sm_00018",
+      "slot_sm_00019",
+      "slot_sm_00020",
+      "slot_sm_00021",
+      "slot_sm_00022",
+      "slot_sm_00023",
+      "slot_sm_00024",
+      "slot_sm_00025",
+      "slot_sm_00026",
+      "slot_sm_00027",
+      "slot_sm_00028",
+      "slot_sm_00029",
+      "slot_sm_00030",
+      "slot_sm_00031",
+      "slot_sm_00032",
+      "slot_sm_00033",
+      "slot_sm_00034",
+      "slot_sm_00035",
+      "slot_sm_00036",
+      "slot_sm_00037",
+      "slot_sm_00038",
+      "slot_sm_00039",
+      "slot_sm_00040",
+      "slot_sm_00041",
+      "slot_sm_00042",
+      "slot_sm_00043",
+      "slot_sm_00044",
+      "slot_sm_00045",
+      "slot_sm_00046",
+      "slot_sm_00047",
+      "slot_sm_00048",
+      "slot_sm_00049",
+      "slot_sm_00050",
+      "slot_sm_00051",
+      "slot_sm_00052",
+      "slot_sm_00053",
+      "slot_sm_00054",
+      "slot_sm_00055",
+      "slot_sm_00056",
+      "slot_sm_00058",
+      "slot_sm_00059",
+      "slot_sm_00060",
+      "slot_sm_00061",
+      "slot_sm_00062",
+      "slot_sm_00063",
+      "slot_sm_00064",
+      "slot_sm_00065",
+      "slot_sm_00066",
+      "slot_sm_00067",
+      "slot_sm_00068",
+      "slot_sm_00069",
+      "slot_sm_00070",
+      "slot_sm_00071",
+      "slot_sm_00072",
+      "slot_sm_00073",
+      "slot_sm_00074",
+      "slot_sm_00075",
+      "slot_sm_00076",
+      "slot_sm_00077",
+      "slot_sm_00078",
+      "slot_sm_00079",
+      "slot_sm_00080",
+      "slot_sm_00081",
+      "slot_sm_00082",
+      "slot_sm_00083",
+      "slot_sm_00084",
+      "slot_sm_00085",
+      "slot_sm_00086",
+      "slot_sm_00087",
+      "slot_sm_00088",
+      "slot_sm_00089",
+      "slot_sm_00090",
+      "slot_sm_00091",
+      "slot_sm_00092",
+      "slot_sm_00093",
+      "slot_sm_00094",
+      "slot_sm_00095",
+      "slot_sm_00096",
+      "slot_sm_00097",
+      "slot_sm_00098",
+      "slot_sm_00099",
+      "slot_sm_00100",
+      "slot_sm_00101",
+      "slot_sm_00102",
+      "slot_sm_00103",
+      "slot_sm_00104",
+      "slot_sm_00105",
+      "slot_sm_00106",
+      "slot_sm_00107",
+      "slot_sm_00108",
+      "slot_sm_00109",
+      "slot_sm_00110",
+      "slot_sm_00111",
+      "slot_sm_00112",
+      "slot_sm_00113",
+      "slot_sm_00114",
+      "slot_sm_00116",
+      "slot_sm_00117",
+      "slot_sm_00118",
+      "slot_sm_00119",
+      "slot_sm_00120",
+      "slot_sm_00121",
+      "slot_sm_00122",
+      "slot_sm_00123",
+      "slot_sm_00124",
+      "slot_sm_00125",
+      "slot_sm_00126",
+      "slot_sm_00127",
+      "slot_sm_00128",
+      "slot_sm_00129",
+      "slot_sm_00130",
+      "slot_sm_00131",
+      "slot_sm_00132",
+      "slot_sm_00133",
+      "slot_sm_00134",
+      "slot_sm_00135",
+      "slot_sm_00136",
+      "slot_sm_00137",
+      "slot_sm_00138",
+      "slot_sm_00139",
+      "slot_sm_00140",
+      "slot_sm_00141",
+      "slot_sm_00142",
+      "slot_sm_00143",
+      "slot_sm_00144",
+      "slot_sm_00145",
+      "slot_sm_00146",
+      "slot_sm_00147",
+      "slot_sm_00148",
+      "slot_sm_00149",
+      "slot_sm_00150",
+      "slot_sm_00151",
+      "slot_sm_00152",
+      "slot_sm_00153",
+      "slot_sm_00154",
+      "slot_sm_00155",
+      "slot_sm_00156",
+      "slot_sm_00157",
+      "slot_sm_00158",
+      "slot_sm_00159",
+      "slot_sm_00160",
+      "slot_sm_00161",
+      "slot_sm_00162",
+      "slot_sm_00163",
+      "slot_sm_00164",
+      "slot_sm_00165",
+      "slot_sm_00166",
+      "slot_sm_00167",
+      "slot_sm_00168",
+      "slot_sm_00169",
+      "slot_sm_00170",
+      "slot_sm_00171",
+      "slot_sm_00172",
+      "slot_sm_00173",
+      "slot_sm_00174",
+      "slot_sm_00175",
+      "slot_sm_00176",
+      "slot_sm_00177",
+      "slot_sm_00178",
+      "slot_sm_00179",
+      "slot_sm_00180",
+      "slot_sm_00181",
+      "slot_sm_00182",
+      "slot_sm_00183",
+      "slot_sm_00184",
+      "slot_sm_00185",
+      "slot_sm_00186",
+      "slot_sm_00187",
+      "slot_sm_00188",
+      "slot_sm_00189",
+      "slot_sm_00190",
+      "slot_sm_00191",
+      "slot_sm_00192",
+      "slot_sm_00193",
+      "slot_sm_00194",
+      "slot_sm_00195",
+      "slot_sm_00196",
+      "slot_sm_00197",
+      "slot_sm_00198",
+      "slot_sm_00199",
+      "slot_sm_00200",
+      "slot_sm_00201",
+      "slot_sm_00202",
+      "slot_sm_00203",
+      "slot_sm_00204",
+      "slot_sm_00205",
+      "slot_sm_00206",
+      "slot_sm_00207",
+      "slot_sm_00208",
+      "slot_sm_00209",
+      "slot_sm_00210",
+      "slot_sm_00211",
+      "slot_sm_00212",
+      "slot_sm_00213",
+      "slot_sm_00214",
+      "slot_sm_00215",
+      "slot_sm_00216",
+      "slot_sm_00217",
+      "slot_sm_00218",
+      "slot_sm_00219",
+      "slot_sm_00220",
+      "slot_sm_00221",
+      "slot_sm_00222",
+      "slot_sm_00223",
+      "slot_sm_00224",
+      "slot_sm_00225",
+      "slot_sm_00226",
+      "slot_sm_00227",
+      "slot_sm_00228",
+      "slot_sm_00229",
+      "slot_sm_00230",
+      "slot_sm_00231",
+      "slot_sm_00232",
+      "slot_sm_00233",
+      "slot_sm_00234",
+      "slot_sm_00235",
+      "slot_sm_00236",
+      "slot_sm_00237",
+      "slot_sm_00238",
+      "slot_sm_00239",
+      "slot_sm_00240",
+      "slot_sm_00241",
+      "slot_sm_00242",
+      "slot_sm_00243",
+      "slot_sm_00244",
+      "slot_sm_00245",
+      "slot_sm_00246",
+      "slot_sm_00247",
+      "slot_sm_00248",
+      "slot_sm_00249",
+      "slot_sm_00250",
+      "slot_sm_00251",
+      "slot_sm_00252",
+      "slot_sm_00253",
+      "slot_sm_00254",
+      "slot_sm_00255",
+      "slot_sm_00256",
+      "slot_sm_00257",
+      "slot_sm_00258",
+      "slot_sm_00259",
+      "slot_sm_00260",
+      "slot_sm_00261",
+      "slot_sm_00262",
+      "slot_sm_00263",
+      "slot_sm_00264",
+      "slot_sm_00265",
+      "slot_sm_00266",
+      "slot_sm_00267",
+      "slot_sm_00268",
+      "slot_sm_00269",
+      "slot_sm_00270",
+      "slot_sm_00271",
+      "slot_sm_00272",
+      "slot_sm_00273",
+      "slot_sm_00274",
+      "slot_sm_00275",
+      "slot_sm_00276",
+      "slot_sm_00277",
+      "slot_sm_00278",
+      "slot_sm_00279",
+      "slot_sm_00280"
+    ],
+    "timezone": "America/Los_Angeles"
+  },
+  "calls": [
+    {
+      "booking_id": "bk_summit_0001",
+      "call_id": "call_sm_0001",
+      "caller_phone": "+14085550101",
+      "intent": "book",
+      "outcome": "booked",
+      "qa_flags": [],
+      "recording_ref": "text_only",
+      "started_at": "2026-11-06T08:00:00-08:00",
+      "tenant_id": "summit",
+      "ticket_id": null
+    },
+    {
+      "booking_id": null,
+      "call_id": "call_sm_0002",
+      "caller_phone": "+14085550102",
+      "intent": "human",
+      "outcome": "callback",
+      "qa_flags": [],
+      "recording_ref": "text_only",
+      "started_at": "2026-11-06T07:43:00-08:00",
+      "tenant_id": "summit",
+      "ticket_id": null
+    },
+    {
+      "booking_id": null,
+      "call_id": "call_sm_0003",
+      "caller_phone": "+14085550101",
+      "intent": "pricing_faq",
+      "outcome": "info_only",
+      "qa_flags": [],
+      "recording_ref": "text_only",
+      "started_at": "2026-11-06T07:26:00-08:00",
+      "tenant_id": "summit",
+      "ticket_id": null
+    }
+  ],
+  "crm": {
+    "customer_ids": [
+      "cus_summit_0001",
+      "cus_summit_0002"
+    ],
+    "notes": [
+      "Synthetic CRM seed; no real customer data."
+    ]
+  },
+  "customers": [
+    {
+      "address": {
+        "city": "San Jose",
+        "line1": "88 Meridian Way",
+        "state": "CA",
+        "zip": "95125"
+      },
+      "created_at": "2026-10-10T08:00:00-07:00",
+      "customer_id": "cus_summit_0001",
+      "name": "Priya Shah",
+      "phone": "+14085550101",
+      "tenant_id": "summit"
+    },
+    {
+      "address": {
+        "city": "San Jose",
+        "line1": "14 Guadalupe Pkwy",
+        "state": "CA",
+        "zip": "95110"
+      },
+      "created_at": "2026-10-10T08:00:00-07:00",
+      "customer_id": "cus_summit_0002",
+      "name": "Noah Kim",
+      "phone": "+14085550102",
+      "tenant_id": "summit"
+    }
+  ],
+  "schema_version": 1,
+  "slots": [
+    {
+      "end": "2026-11-09T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00001",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00002",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00003",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00004",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00005",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00006",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00007",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00008",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00009",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00010",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00011",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00012",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00013",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00014",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00015",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00016",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00017",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00018",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00019",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00020",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T12:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00021",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T14:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00022",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T16:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00023",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T18:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00024",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T10:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00025",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T12:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00026",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T14:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00027",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-09T16:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00028",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00029",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00030",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00031",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00032",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00033",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00034",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00035",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00036",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00037",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00038",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00039",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00040",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00041",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00042",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00043",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00044",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00045",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00046",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00047",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00048",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T12:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00049",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T14:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00050",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T16:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00051",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T18:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00052",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T10:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00053",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T12:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00054",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T14:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00055",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-10T16:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00056",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00057",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "booked",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00058",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00059",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00060",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00061",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00062",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00063",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00064",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00065",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00066",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00067",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00068",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00069",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00070",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00071",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00072",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00073",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00074",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00075",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00076",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T12:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00077",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T14:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00078",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T16:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00079",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T18:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00080",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T10:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00081",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T12:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00082",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T14:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00083",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-11T16:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00084",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00085",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00086",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00087",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00088",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00089",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00090",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00091",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00092",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00093",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00094",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00095",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00096",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00097",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00098",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00099",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00100",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00101",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00102",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00103",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00104",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T12:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00105",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T14:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00106",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T16:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00107",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T18:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00108",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T10:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00109",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T12:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00110",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T14:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00111",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-12T16:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00112",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00113",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00114",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00115",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "booked",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00116",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00117",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00118",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00119",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00120",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00121",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00122",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00123",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00124",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00125",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00126",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00127",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00128",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00129",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00130",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00131",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00132",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T12:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00133",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T14:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00134",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T16:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00135",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T18:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00136",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T10:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00137",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T12:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00138",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T14:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00139",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-13T16:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00140",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00141",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00142",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00143",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00144",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00145",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00146",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00147",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00148",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00149",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00150",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00151",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00152",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00153",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00154",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00155",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00156",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00157",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00158",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00159",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00160",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T12:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00161",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T14:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00162",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T16:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00163",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T18:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00164",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T10:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00165",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T12:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00166",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T14:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00167",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-16T16:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00168",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00169",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00170",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00171",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00172",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00173",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00174",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00175",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00176",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00177",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00178",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00179",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00180",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00181",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00182",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00183",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00184",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00185",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00186",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00187",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00188",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T12:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00189",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T14:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00190",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T16:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00191",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T18:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00192",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T10:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00193",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T12:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00194",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T14:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00195",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-17T16:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00196",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00197",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00198",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00199",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00200",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00201",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00202",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00203",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00204",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00205",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00206",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00207",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00208",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00209",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00210",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00211",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00212",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00213",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00214",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00215",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00216",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T12:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00217",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T14:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00218",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T16:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00219",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T18:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00220",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T10:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00221",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T12:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00222",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T14:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00223",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-18T16:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00224",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00225",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00226",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00227",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00228",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00229",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00230",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00231",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00232",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00233",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00234",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00235",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00236",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00237",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00238",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00239",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00240",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00241",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00242",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00243",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00244",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T12:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00245",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T14:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00246",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T16:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00247",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T18:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00248",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T10:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00249",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T12:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00250",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T14:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00251",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-19T16:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00252",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00253",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00254",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00255",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00256",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00257",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00258",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00259",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_sm_00260",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00261",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00262",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00263",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_sm_00264",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00265",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00266",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00267",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00268",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_casey",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T11:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00269",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T13:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00270",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T15:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00271",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T17:00:00-08:00",
+      "service_id": "heat_pump_service",
+      "slot_id": "slot_sm_00272",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T12:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00273",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T14:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00274",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T16:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00275",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T18:00:00-08:00",
+      "service_id": "duct_cleaning",
+      "slot_id": "slot_sm_00276",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T10:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00277",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T12:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00278",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T14:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00279",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    },
+    {
+      "end": "2026-11-20T16:00:00-08:00",
+      "service_id": "maintenance_plan",
+      "slot_id": "slot_sm_00280",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_dana",
+      "tenant_id": "summit"
+    }
+  ],
+  "sms": {
+    "messages": [
+      {
+        "booking_id": "bk_summit_0001",
+        "channel": "sms",
+        "created_at": "2026-11-08T08:00:00-08:00",
+        "message_id": "sms_sm_0001",
+        "status": "queued",
+        "template": "booking_confirmation",
+        "tenant_id": "summit",
+        "to": "+14085550101"
+      },
+      {
+        "booking_id": "bk_summit_0002",
+        "channel": "sms",
+        "created_at": "2026-11-08T07:49:00-08:00",
+        "message_id": "sms_sm_0002",
+        "status": "queued",
+        "template": "booking_confirmation",
+        "tenant_id": "summit",
+        "to": "+14085550101"
+      }
+    ]
+  },
+  "tenant_id": "summit"
+}

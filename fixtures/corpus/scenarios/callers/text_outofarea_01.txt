@@ -1,0 +1,9 @@
+# scenario: text_outofarea_01
+# persona: Caller with an out-of-area address
+# goal: Ask for a drain cleaning at a 10001 ZIP; no booking; offer a callback only if the address is wrong.
+# max_turns: 6
+
+I need a drain cleaning.
+It's 300 East 42nd Street, 10001.
+No, that's the right address.
+Okay, thanks.

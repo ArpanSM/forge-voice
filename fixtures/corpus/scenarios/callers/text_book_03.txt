@@ -1,0 +1,9 @@
+# scenario: text_book_03
+# persona: Priya Shah, homeowner, warm but direct
+# goal: Book an AC repair at 88 Meridian Way, 95125, Wednesday morning.
+# max_turns: 8
+
+My AC is running but the house is not cooling.
+Priya Shah, 88 Meridian Way, 95125.
+Wednesday morning works.
+Yes, that's right.

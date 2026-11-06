@@ -1,0 +1,9 @@
+# scenario: text_noavail_03
+# persona: Priya Shah, homeowner, prefers a human
+# goal: Ask for AC repair; no slots; ask for a human.
+# max_turns: 8
+
+I need my AC looked at this week.
+Priya Shah, 88 Meridian Way, 95125.
+Nothing works. Can I talk to someone?
+Yes, transfer me.

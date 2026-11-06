@@ -1,0 +1,9 @@
+# scenario: text_book_04
+# persona: Dana Whitfield, returning caller, precise
+# goal: Book a water heater repair at 9 Juniper Ct, 94117, Thursday morning.
+# max_turns: 9
+
+My water heater is leaking from the bottom.
+Dana Whitfield, 9 Juniper Court, 94117.
+Thursday morning is best.
+Yes, please book that.

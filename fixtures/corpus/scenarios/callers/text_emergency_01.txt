@@ -1,0 +1,9 @@
+# scenario: text_emergency_01
+# persona: Frightened caller, smells gas
+# goal: Report a gas smell; get the 911 script, a ticket and an on-call transfer.
+# max_turns: 8
+
+I smell gas near my furnace.
+No one is hurt, but it's strong.
+12 Alder Street, 94107.
+Okay, I'm leaving the house.

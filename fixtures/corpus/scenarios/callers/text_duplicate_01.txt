@@ -1,0 +1,9 @@
+# scenario: text_duplicate_01
+# persona: Caller retries after a dropped confirmation
+# goal: Replay the same booking write; the idempotency key returns the same booking, not a second one.
+# max_turns: 9
+
+I booked a drain cleaning but didn't get a text. Can you check?
+Sam Rivera, 12 Alder Street, 94107.
+Yes, that's the one. Can you book it again?
+Okay, so it's already booked.

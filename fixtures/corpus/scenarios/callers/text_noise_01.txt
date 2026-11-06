@@ -1,0 +1,8 @@
+# scenario: text_noise_01
+# persona: Caller in a noisy household
+# goal: Book a drain cleaning while repeating ZIP and phone over background noise.
+# max_turns: 10
+
+Sorry, the dog is barking. I need a drain cleaning.
+It's 12 Alder Street. Nine-four-one-zero-seven.
+Monday morning. Yes, that's right.

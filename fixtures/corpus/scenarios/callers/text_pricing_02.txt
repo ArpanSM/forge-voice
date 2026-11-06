@@ -1,0 +1,8 @@
+# scenario: text_pricing_02
+# persona: Caller checking the cancellation policy
+# goal: Ask about changing an appointment; get the two-hour policy; no booking.
+# max_turns: 4
+
+How late can I change an appointment?
+So two hours before is fine?
+Great.

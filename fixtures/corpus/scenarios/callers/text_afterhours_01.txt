@@ -1,0 +1,9 @@
+# scenario: text_afterhours_01
+# persona: Caller with a non-emergency after hours
+# goal: Ask for a drain cleaning after hours; get a next-business-day callback, not an on-call transfer.
+# max_turns: 6
+
+I know it's late, but my sink is slow.
+12 Alder Street, 94107.
+Tomorrow morning is fine.
+Yes, call me then.

@@ -1,0 +1,8 @@
+# scenario: text_handoff_01
+# persona: Caller who wants a person
+# goal: Ask for a human; transfer with a complete packet.
+# max_turns: 5
+
+I want to talk to a person.
+It's about a panel upgrade and a permit.
+Yes, transfer me.

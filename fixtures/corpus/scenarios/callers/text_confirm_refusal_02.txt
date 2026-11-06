@@ -1,0 +1,9 @@
+# scenario: text_confirm_refusal_02
+# persona: Caller hesitates, then confirms
+# goal: Say 'not yet', hear the read-back again, then say yes and book.
+# max_turns: 9
+
+I need a drain cleaning.
+12 Alder Street, 94107.
+Not yet. What day was that again?
+Okay, yes, book it.

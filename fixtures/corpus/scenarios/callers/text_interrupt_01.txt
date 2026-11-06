@@ -1,0 +1,9 @@
+# scenario: text_interrupt_01
+# persona: Caller changes their mind mid-read-back
+# goal: Interrupt a read-back to change the day; the agent recovers and books the new day.
+# max_turns: 8
+
+I need a drain cleaning.
+12 Alder Street, 94107.
+Wait, not Monday. Can you do Tuesday?
+Yes, Tuesday at 11 is right.

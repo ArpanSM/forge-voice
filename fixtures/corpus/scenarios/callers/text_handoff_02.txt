@@ -1,0 +1,9 @@
+# scenario: text_handoff_02
+# persona: Caller with a complex electrical request
+# goal: Ask for a panel upgrade with permit questions; hand off to a human.
+# max_turns: 6
+
+I need a panel upgrade and I have permit questions.
+The house is 21 Harbor Boulevard, 94118.
+Can I talk to someone who handles permits?
+Yes, transfer me.

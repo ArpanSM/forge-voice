@@ -1,0 +1,3073 @@
+{
+  "anchor": "2026-11-09T08:00:00-08:00",
+  "bookings": [
+    {
+      "address": {
+        "city": "San Francisco",
+        "line1": "12 Alder St",
+        "state": "CA",
+        "zip": "94107"
+      },
+      "booking_id": "bk_0001",
+      "confirmation": {
+        "email": "not_requested",
+        "sms": "queued"
+      },
+      "contact_phone": "+14155550101",
+      "customer_id": "cus_0001",
+      "end": "2026-11-09T10:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00001",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "booked",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "address": {
+        "city": "San Francisco",
+        "line1": "12 Alder St",
+        "state": "CA",
+        "zip": "94107"
+      },
+      "booking_id": "bk_0002",
+      "confirmation": {
+        "email": "not_requested",
+        "sms": "queued"
+      },
+      "contact_phone": "+14155550101",
+      "customer_id": "cus_0001",
+      "end": "2026-11-10T14:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00035",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "booked",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "address": {
+        "city": "San Francisco",
+        "line1": "21 Harbor Blvd",
+        "state": "CA",
+        "zip": "94118"
+      },
+      "booking_id": "bk_0003",
+      "confirmation": {
+        "email": "not_requested",
+        "sms": "queued"
+      },
+      "contact_phone": "+14155550112",
+      "customer_id": "cus_0003",
+      "end": "2026-11-09T11:00:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_special_0001",
+      "start": "2026-11-09T09:30:00-08:00",
+      "status": "booked",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "address": {
+        "city": "San Francisco",
+        "line1": "9 Juniper Ct",
+        "state": "CA",
+        "zip": "94117"
+      },
+      "booking_id": "bk_0004",
+      "confirmation": {
+        "email": "not_requested",
+        "sms": "queued"
+      },
+      "contact_phone": "+14155550104",
+      "customer_id": "cus_0002",
+      "end": "2026-11-12T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00102",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "booked",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    }
+  ],
+  "calendar": {
+    "booked_slot_ids": [
+      "slot_hl_00001",
+      "slot_hl_00035",
+      "slot_hl_00102",
+      "slot_hl_special_0001"
+    ],
+    "open_slot_ids": [
+      "slot_hl_00002",
+      "slot_hl_00003",
+      "slot_hl_00004",
+      "slot_hl_00005",
+      "slot_hl_00006",
+      "slot_hl_00007",
+      "slot_hl_00008",
+      "slot_hl_00009",
+      "slot_hl_00010",
+      "slot_hl_00011",
+      "slot_hl_00012",
+      "slot_hl_00013",
+      "slot_hl_00014",
+      "slot_hl_00015",
+      "slot_hl_00016",
+      "slot_hl_00017",
+      "slot_hl_00018",
+      "slot_hl_00019",
+      "slot_hl_00020",
+      "slot_hl_00021",
+      "slot_hl_00022",
+      "slot_hl_00023",
+      "slot_hl_00024",
+      "slot_hl_00025",
+      "slot_hl_00026",
+      "slot_hl_00027",
+      "slot_hl_00028",
+      "slot_hl_00029",
+      "slot_hl_00030",
+      "slot_hl_00031",
+      "slot_hl_00032",
+      "slot_hl_00033",
+      "slot_hl_00034",
+      "slot_hl_00036",
+      "slot_hl_00037",
+      "slot_hl_00038",
+      "slot_hl_00039",
+      "slot_hl_00040",
+      "slot_hl_00041",
+      "slot_hl_00042",
+      "slot_hl_00043",
+      "slot_hl_00044",
+      "slot_hl_00045",
+      "slot_hl_00046",
+      "slot_hl_00047",
+      "slot_hl_00048",
+      "slot_hl_00049",
+      "slot_hl_00050",
+      "slot_hl_00051",
+      "slot_hl_00052",
+      "slot_hl_00053",
+      "slot_hl_00054",
+      "slot_hl_00055",
+      "slot_hl_00056",
+      "slot_hl_00057",
+      "slot_hl_00058",
+      "slot_hl_00059",
+      "slot_hl_00060",
+      "slot_hl_00061",
+      "slot_hl_00062",
+      "slot_hl_00063",
+      "slot_hl_00064",
+      "slot_hl_00065",
+      "slot_hl_00066",
+      "slot_hl_00067",
+      "slot_hl_00068",
+      "slot_hl_00069",
+      "slot_hl_00070",
+      "slot_hl_00071",
+      "slot_hl_00072",
+      "slot_hl_00073",
+      "slot_hl_00074",
+      "slot_hl_00075",
+      "slot_hl_00076",
+      "slot_hl_00077",
+      "slot_hl_00078",
+      "slot_hl_00079",
+      "slot_hl_00080",
+      "slot_hl_00081",
+      "slot_hl_00082",
+      "slot_hl_00083",
+      "slot_hl_00084",
+      "slot_hl_00085",
+      "slot_hl_00086",
+      "slot_hl_00087",
+      "slot_hl_00088",
+      "slot_hl_00089",
+      "slot_hl_00090",
+      "slot_hl_00091",
+      "slot_hl_00092",
+      "slot_hl_00093",
+      "slot_hl_00094",
+      "slot_hl_00095",
+      "slot_hl_00096",
+      "slot_hl_00097",
+      "slot_hl_00098",
+      "slot_hl_00099",
+      "slot_hl_00100",
+      "slot_hl_00101",
+      "slot_hl_00103",
+      "slot_hl_00104",
+      "slot_hl_00105",
+      "slot_hl_00106",
+      "slot_hl_00107",
+      "slot_hl_00108",
+      "slot_hl_00109",
+      "slot_hl_00110",
+      "slot_hl_00111",
+      "slot_hl_00112",
+      "slot_hl_00113",
+      "slot_hl_00114",
+      "slot_hl_00115",
+      "slot_hl_00116",
+      "slot_hl_00117",
+      "slot_hl_00118",
+      "slot_hl_00119",
+      "slot_hl_00120",
+      "slot_hl_00121",
+      "slot_hl_00122",
+      "slot_hl_00123",
+      "slot_hl_00124",
+      "slot_hl_00125",
+      "slot_hl_00126",
+      "slot_hl_00127",
+      "slot_hl_00128",
+      "slot_hl_00129",
+      "slot_hl_00130",
+      "slot_hl_00131",
+      "slot_hl_00132",
+      "slot_hl_00133",
+      "slot_hl_00134",
+      "slot_hl_00135",
+      "slot_hl_00136",
+      "slot_hl_00137",
+      "slot_hl_00138",
+      "slot_hl_00139",
+      "slot_hl_00140",
+      "slot_hl_00141",
+      "slot_hl_00142",
+      "slot_hl_00143",
+      "slot_hl_00144",
+      "slot_hl_00145",
+      "slot_hl_00146",
+      "slot_hl_00147",
+      "slot_hl_00148",
+      "slot_hl_00149",
+      "slot_hl_00150",
+      "slot_hl_00151",
+      "slot_hl_00152",
+      "slot_hl_00153",
+      "slot_hl_00154",
+      "slot_hl_00155",
+      "slot_hl_00156",
+      "slot_hl_00157",
+      "slot_hl_00158",
+      "slot_hl_00159",
+      "slot_hl_00160",
+      "slot_hl_00161",
+      "slot_hl_00162",
+      "slot_hl_00163",
+      "slot_hl_00164",
+      "slot_hl_00165",
+      "slot_hl_00166",
+      "slot_hl_00167",
+      "slot_hl_00168",
+      "slot_hl_00169",
+      "slot_hl_00170",
+      "slot_hl_00171",
+      "slot_hl_00172",
+      "slot_hl_00173",
+      "slot_hl_00174",
+      "slot_hl_00175",
+      "slot_hl_00176",
+      "slot_hl_00177",
+      "slot_hl_00178",
+      "slot_hl_00179",
+      "slot_hl_00180",
+      "slot_hl_00181",
+      "slot_hl_00182",
+      "slot_hl_00183",
+      "slot_hl_00184",
+      "slot_hl_00185",
+      "slot_hl_00186",
+      "slot_hl_00187",
+      "slot_hl_00188",
+      "slot_hl_00189",
+      "slot_hl_00190",
+      "slot_hl_00191",
+      "slot_hl_00192",
+      "slot_hl_00193",
+      "slot_hl_00194",
+      "slot_hl_00195",
+      "slot_hl_00196",
+      "slot_hl_00197",
+      "slot_hl_00198",
+      "slot_hl_00199",
+      "slot_hl_00200",
+      "slot_hl_00201",
+      "slot_hl_00202",
+      "slot_hl_00203",
+      "slot_hl_00204",
+      "slot_hl_00205",
+      "slot_hl_00206",
+      "slot_hl_00207",
+      "slot_hl_00208",
+      "slot_hl_00209",
+      "slot_hl_00210",
+      "slot_hl_00211",
+      "slot_hl_00212",
+      "slot_hl_00213",
+      "slot_hl_00214",
+      "slot_hl_00215",
+      "slot_hl_00216",
+      "slot_hl_00217",
+      "slot_hl_00218",
+      "slot_hl_00219",
+      "slot_hl_00220",
+      "slot_hl_00221",
+      "slot_hl_00222",
+      "slot_hl_00223",
+      "slot_hl_00224",
+      "slot_hl_00225",
+      "slot_hl_00226",
+      "slot_hl_00227",
+      "slot_hl_00228",
+      "slot_hl_00229",
+      "slot_hl_00230",
+      "slot_hl_00231",
+      "slot_hl_00232",
+      "slot_hl_00233",
+      "slot_hl_00234",
+      "slot_hl_00235",
+      "slot_hl_00236",
+      "slot_hl_00237",
+      "slot_hl_00238",
+      "slot_hl_00239",
+      "slot_hl_00240",
+      "slot_hl_00241",
+      "slot_hl_00242",
+      "slot_hl_00243",
+      "slot_hl_00244",
+      "slot_hl_00245",
+      "slot_hl_00246",
+      "slot_hl_00247",
+      "slot_hl_00248",
+      "slot_hl_00249",
+      "slot_hl_00250",
+      "slot_hl_00251",
+      "slot_hl_00252",
+      "slot_hl_00253",
+      "slot_hl_00254",
+      "slot_hl_00255",
+      "slot_hl_00256",
+      "slot_hl_00257",
+      "slot_hl_00258",
+      "slot_hl_00259",
+      "slot_hl_00260",
+      "slot_hl_00261",
+      "slot_hl_00262",
+      "slot_hl_00263",
+      "slot_hl_00264",
+      "slot_hl_00265",
+      "slot_hl_00266",
+      "slot_hl_00267",
+      "slot_hl_00268",
+      "slot_hl_00269",
+      "slot_hl_00270",
+      "slot_hl_00271",
+      "slot_hl_00272",
+      "slot_hl_00273",
+      "slot_hl_00274",
+      "slot_hl_00275",
+      "slot_hl_00276",
+      "slot_hl_00277",
+      "slot_hl_00278",
+      "slot_hl_00279",
+      "slot_hl_00280"
+    ],
+    "timezone": "America/Los_Angeles"
+  },
+  "calls": [
+    {
+      "booking_id": "bk_0001",
+      "call_id": "call_hl_0001",
+      "caller_phone": "+14155550101",
+      "intent": "book",
+      "outcome": "booked",
+      "qa_flags": [],
+      "recording_ref": "text_only",
+      "started_at": "2026-11-06T08:00:00-08:00",
+      "tenant_id": "harborlight",
+      "ticket_id": null
+    },
+    {
+      "booking_id": "bk_0003",
+      "call_id": "call_hl_0002",
+      "caller_phone": "+14155550112",
+      "intent": "reschedule",
+      "outcome": "transferred",
+      "qa_flags": [],
+      "recording_ref": "text_only",
+      "started_at": "2026-11-06T07:43:00-08:00",
+      "tenant_id": "harborlight",
+      "ticket_id": null
+    },
+    {
+      "booking_id": null,
+      "call_id": "call_hl_0003",
+      "caller_phone": "+14155550104",
+      "intent": "emergency",
+      "outcome": "emergency_ticket",
+      "qa_flags": [],
+      "recording_ref": "text_only",
+      "started_at": "2026-11-06T07:26:00-08:00",
+      "tenant_id": "harborlight",
+      "ticket_id": "em_0001"
+    },
+    {
+      "booking_id": null,
+      "call_id": "call_hl_0004",
+      "caller_phone": null,
+      "intent": "pricing_faq",
+      "outcome": "info_only",
+      "qa_flags": [],
+      "recording_ref": "text_only",
+      "started_at": "2026-11-06T07:09:00-08:00",
+      "tenant_id": "harborlight",
+      "ticket_id": null
+    }
+  ],
+  "crm": {
+    "customer_ids": [
+      "cus_0001",
+      "cus_0002",
+      "cus_0003",
+      "cus_0004"
+    ],
+    "notes": [
+      "Synthetic CRM seed; no real customer data."
+    ]
+  },
+  "customers": [
+    {
+      "address": {
+        "city": "San Francisco",
+        "line1": "12 Alder St",
+        "state": "CA",
+        "zip": "94107"
+      },
+      "created_at": "2026-10-10T08:00:00-07:00",
+      "customer_id": "cus_0001",
+      "name": "Sam Rivera",
+      "phone": "+14155550101",
+      "tenant_id": "harborlight"
+    },
+    {
+      "address": {
+        "city": "San Francisco",
+        "line1": "9 Juniper Ct",
+        "state": "CA",
+        "zip": "94117"
+      },
+      "created_at": "2026-10-10T08:00:00-07:00",
+      "customer_id": "cus_0002",
+      "name": "Dana Whitfield",
+      "phone": "+14155550104",
+      "tenant_id": "harborlight"
+    },
+    {
+      "address": {
+        "city": "San Francisco",
+        "line1": "21 Harbor Blvd",
+        "state": "CA",
+        "zip": "94118"
+      },
+      "created_at": "2026-10-10T08:00:00-07:00",
+      "customer_id": "cus_0003",
+      "name": "Riley Chen",
+      "phone": "+14155550112",
+      "tenant_id": "harborlight"
+    },
+    {
+      "address": {
+        "city": "San Francisco",
+        "line1": "44 Cypress Ave",
+        "state": "CA",
+        "zip": "94110"
+      },
+      "created_at": "2026-10-10T08:00:00-07:00",
+      "customer_id": "cus_0004",
+      "name": "Morgan Lee",
+      "phone": "+14155550113",
+      "tenant_id": "harborlight"
+    }
+  ],
+  "schema_version": 1,
+  "slots": [
+    {
+      "end": "2026-11-09T10:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00001",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "booked",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T12:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00002",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T14:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00003",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T16:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00004",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T10:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00005",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T12:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00006",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T14:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00007",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T16:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00008",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T11:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00009",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T13:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00010",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T15:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00011",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T17:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00012",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00013",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00014",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00015",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00016",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00017",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00018",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00019",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00020",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T10:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00021",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T12:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00022",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T14:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00023",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T16:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00024",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T13:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00025",
+      "start": "2026-11-09T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T15:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00026",
+      "start": "2026-11-09T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T17:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00027",
+      "start": "2026-11-09T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T19:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00028",
+      "start": "2026-11-09T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T10:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00029",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T12:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00030",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T14:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00031",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T16:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00032",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T10:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00033",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T12:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00034",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T14:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00035",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "booked",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T16:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00036",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T11:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00037",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T13:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00038",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T15:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00039",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T17:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00040",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00041",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00042",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00043",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00044",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00045",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00046",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00047",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00048",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T10:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00049",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T12:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00050",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T14:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00051",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T16:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00052",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T13:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00053",
+      "start": "2026-11-10T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T15:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00054",
+      "start": "2026-11-10T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T17:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00055",
+      "start": "2026-11-10T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-10T19:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00056",
+      "start": "2026-11-10T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T10:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00057",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T12:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00058",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T14:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00059",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T16:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00060",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T10:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00061",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T12:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00062",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T14:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00063",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T16:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00064",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T11:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00065",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T13:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00066",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T15:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00067",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T17:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00068",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00069",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00070",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00071",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00072",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00073",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00074",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00075",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00076",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T10:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00077",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T12:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00078",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T14:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00079",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T16:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00080",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T13:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00081",
+      "start": "2026-11-11T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T15:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00082",
+      "start": "2026-11-11T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T17:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00083",
+      "start": "2026-11-11T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-11T19:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00084",
+      "start": "2026-11-11T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T10:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00085",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T12:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00086",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T14:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00087",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T16:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00088",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T10:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00089",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T12:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00090",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T14:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00091",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T16:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00092",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T11:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00093",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T13:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00094",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T15:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00095",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T17:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00096",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00097",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00098",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00099",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00100",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00101",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00102",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "booked",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00103",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00104",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T10:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00105",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T12:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00106",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T14:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00107",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T16:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00108",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T13:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00109",
+      "start": "2026-11-12T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T15:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00110",
+      "start": "2026-11-12T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T17:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00111",
+      "start": "2026-11-12T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-12T19:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00112",
+      "start": "2026-11-12T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T10:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00113",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T12:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00114",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T14:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00115",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T16:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00116",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T10:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00117",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T12:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00118",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T14:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00119",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T16:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00120",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T11:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00121",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T13:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00122",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T15:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00123",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T17:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00124",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00125",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00126",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00127",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00128",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00129",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00130",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00131",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00132",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T10:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00133",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T12:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00134",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T14:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00135",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T16:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00136",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T13:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00137",
+      "start": "2026-11-13T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T15:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00138",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T17:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00139",
+      "start": "2026-11-13T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-13T19:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00140",
+      "start": "2026-11-13T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T10:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00141",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T12:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00142",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T14:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00143",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T16:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00144",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T10:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00145",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T12:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00146",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T14:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00147",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T16:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00148",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T11:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00149",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T13:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00150",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T15:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00151",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T17:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00152",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00153",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00154",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00155",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00156",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00157",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00158",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00159",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00160",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T10:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00161",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T12:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00162",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T14:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00163",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T16:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00164",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T13:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00165",
+      "start": "2026-11-16T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T15:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00166",
+      "start": "2026-11-16T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T17:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00167",
+      "start": "2026-11-16T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-16T19:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00168",
+      "start": "2026-11-16T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T10:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00169",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T12:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00170",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T14:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00171",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T16:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00172",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T10:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00173",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T12:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00174",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T14:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00175",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T16:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00176",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T11:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00177",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T13:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00178",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T15:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00179",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T17:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00180",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00181",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00182",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00183",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00184",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00185",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00186",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00187",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00188",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T10:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00189",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T12:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00190",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T14:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00191",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T16:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00192",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T13:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00193",
+      "start": "2026-11-17T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T15:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00194",
+      "start": "2026-11-17T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T17:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00195",
+      "start": "2026-11-17T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-17T19:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00196",
+      "start": "2026-11-17T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T10:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00197",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T12:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00198",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T14:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00199",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T16:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00200",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T10:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00201",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T12:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00202",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T14:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00203",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T16:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00204",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T11:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00205",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T13:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00206",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T15:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00207",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T17:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00208",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00209",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00210",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00211",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00212",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00213",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00214",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00215",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00216",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T10:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00217",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T12:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00218",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T14:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00219",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T16:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00220",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T13:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00221",
+      "start": "2026-11-18T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T15:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00222",
+      "start": "2026-11-18T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T17:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00223",
+      "start": "2026-11-18T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-18T19:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00224",
+      "start": "2026-11-18T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T10:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00225",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T12:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00226",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T14:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00227",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T16:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00228",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T10:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00229",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T12:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00230",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T14:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00231",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T16:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00232",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T11:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00233",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T13:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00234",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T15:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00235",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T17:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00236",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00237",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00238",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00239",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00240",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00241",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00242",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00243",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00244",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T10:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00245",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T12:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00246",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T14:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00247",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T16:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00248",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T13:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00249",
+      "start": "2026-11-19T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T15:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00250",
+      "start": "2026-11-19T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T17:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00251",
+      "start": "2026-11-19T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-19T19:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00252",
+      "start": "2026-11-19T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T10:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00253",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T12:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00254",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T14:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00255",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T16:00:00-08:00",
+      "service_id": "drain_cleaning",
+      "slot_id": "slot_hl_00256",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T10:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00257",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T12:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00258",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T14:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00259",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T16:30:00-08:00",
+      "service_id": "leak_repair",
+      "slot_id": "slot_hl_00260",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T11:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00261",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T13:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00262",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T15:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00263",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T17:00:00-08:00",
+      "service_id": "water_heater_repair",
+      "slot_id": "slot_hl_00264",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_alex",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T10:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00265",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T12:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00266",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T14:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00267",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T16:30:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_00268",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T10:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00269",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T12:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00270",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T14:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00271",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T16:30:00-08:00",
+      "service_id": "furnace_repair",
+      "slot_id": "slot_hl_00272",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T10:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00273",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T12:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00274",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T14:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00275",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T16:00:00-08:00",
+      "service_id": "electrical_outlet",
+      "slot_id": "slot_hl_00276",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T13:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00277",
+      "start": "2026-11-20T09:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T15:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00278",
+      "start": "2026-11-20T11:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T17:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00279",
+      "start": "2026-11-20T13:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-20T19:00:00-08:00",
+      "service_id": "panel_upgrade",
+      "slot_id": "slot_hl_00280",
+      "start": "2026-11-20T15:00:00-08:00",
+      "status": "open",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    },
+    {
+      "end": "2026-11-09T11:00:00-08:00",
+      "service_id": "ac_repair",
+      "slot_id": "slot_hl_special_0001",
+      "start": "2026-11-09T09:30:00-08:00",
+      "status": "booked",
+      "technician_id": "tech_blair",
+      "tenant_id": "harborlight"
+    }
+  ],
+  "sms": {
+    "messages": [
+      {
+        "booking_id": "bk_0001",
+        "channel": "sms",
+        "created_at": "2026-11-08T08:00:00-08:00",
+        "message_id": "sms_hl_0001",
+        "status": "queued",
+        "template": "booking_confirmation",
+        "tenant_id": "harborlight",
+        "to": "+14155550101"
+      },
+      {
+        "booking_id": "bk_0002",
+        "channel": "sms",
+        "created_at": "2026-11-08T07:49:00-08:00",
+        "message_id": "sms_hl_0002",
+        "status": "queued",
+        "template": "booking_confirmation",
+        "tenant_id": "harborlight",
+        "to": "+14155550101"
+      },
+      {
+        "booking_id": "bk_0003",
+        "channel": "sms",
+        "created_at": "2026-11-08T07:38:00-08:00",
+        "message_id": "sms_hl_0003",
+        "status": "queued",
+        "template": "booking_confirmation",
+        "tenant_id": "harborlight",
+        "to": "+14155550112"
+      },
+      {
+        "booking_id": "bk_0004",
+        "channel": "sms",
+        "created_at": "2026-11-08T07:27:00-08:00",
+        "message_id": "sms_hl_0004",
+        "status": "queued",
+        "template": "booking_confirmation",
+        "tenant_id": "harborlight",
+        "to": "+14155550104"
+      }
+    ]
+  },
+  "tenant_id": "harborlight"
+}

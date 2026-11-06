@@ -1,0 +1,9 @@
+# scenario: text_reschedule_01
+# persona: Sam Rivera, returning caller, calm
+# goal: Move booking bk_0001 from Monday 9:00 to Tuesday 11:00.
+# max_turns: 8
+
+I need to move my appointment.
+Sam Rivera, 12 Alder Street, 94107.
+Tuesday at 11 would be better.
+Yes, that's the one.

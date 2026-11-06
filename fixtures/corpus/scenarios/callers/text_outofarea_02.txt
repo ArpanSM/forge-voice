@@ -1,0 +1,8 @@
+# scenario: text_outofarea_02
+# persona: Caller in Harborlight's ZIP calling Summit
+# goal: Ask Summit for AC repair at 94107; no booking; explain the service area.
+# max_turns: 6
+
+Can Summit come out to 12 Alder Street, 94107?
+Yes, that's the service address.
+Okay, I'll call someone else.

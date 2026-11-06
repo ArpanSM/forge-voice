@@ -1,0 +1,9 @@
+# scenario: text_timeout_01
+# persona: Caller books, then the booking tool times out
+# goal: Attempt a booking; the write times out; replay-check and fall back to a callback/human; no duplicate.
+# max_turns: 10
+
+I need a drain cleaning.
+12 Alder Street, 94107.
+Monday morning, yes.
+Okay, have someone call me.

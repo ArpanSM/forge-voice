@@ -1,0 +1,9 @@
+# scenario: text_emergency_04
+# persona: Caller reports smoke from an outlet
+# goal: Report smoke/burning at an outlet; get the 911 script, ticket and on-call transfer.
+# max_turns: 8
+
+There's smoke coming from an outlet in the hallway.
+No flames yet, but it smells like burning plastic.
+9 Juniper Court, 94117.
+I'm leaving now.

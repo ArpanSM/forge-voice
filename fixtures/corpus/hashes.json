@@ -1,0 +1,280 @@
+{
+  "anchor_date": "2026-11-09",
+  "artifacts": [
+    {
+      "path": "scenarios/audio/audio_badline_01.placeholder.yaml",
+      "sha256": "536ed9108c649d4072ca670d2ae1b282b09ad0210f477be782356c94f1dc80af"
+    },
+    {
+      "path": "scenarios/audio/audio_bargein_01.placeholder.yaml",
+      "sha256": "e791051601291705dd049befcd2856c5b9b63353a9602f70c635be6feb85a66d"
+    },
+    {
+      "path": "scenarios/audio/audio_emergency_01.placeholder.yaml",
+      "sha256": "70e3d534b7572e6a1205de7d5c61c1a1e78bd928ab69690a97b54dc7619c9b7d"
+    },
+    {
+      "path": "scenarios/audio/audio_entities_01.placeholder.yaml",
+      "sha256": "98c6bb273c249a1fed1fa22f96806e2f92787d15149beeb4dea5522636f5b445"
+    },
+    {
+      "path": "scenarios/audio/audio_lowmic_01.placeholder.yaml",
+      "sha256": "1dc5c6c63cd30c1b788d22606a211d30f9ab58aeb0bcd5ec1c79c0dae723468a"
+    },
+    {
+      "path": "scenarios/audio/audio_multilingual_01.placeholder.yaml",
+      "sha256": "a2d4216d031c4d685226f5dbd6769011faf775749e06e9eaba3db18f1732e4c1"
+    },
+    {
+      "path": "scenarios/audio/audio_noisy_01.placeholder.yaml",
+      "sha256": "e300c4e1488d1824683030d86b3248003fe5c0c024213b2455921d2a458afce3"
+    },
+    {
+      "path": "scenarios/audio/audio_packetloss_01.placeholder.yaml",
+      "sha256": "9a1cf18d309ac31663c3c5c4633df4258f719f368c8b14377f8b99d2ef5edfe9"
+    },
+    {
+      "path": "scenarios/audio/audio_readback_01.placeholder.yaml",
+      "sha256": "07f913700f46ef802832cafc5e88643d8f665b5e42d36658f70e7ecb59699745"
+    },
+    {
+      "path": "scenarios/audio/audio_silence_01.placeholder.yaml",
+      "sha256": "3fc80507bf002c9c6a67f7e12f11d95144f1b79005aa85792017a83e50f1533c"
+    },
+    {
+      "path": "scenarios/callers/text_accent_01.txt",
+      "sha256": "e17bb7a952f051d6136f0229d4e6d47d3047eb443fe44fed891a9b1954e75d6c"
+    },
+    {
+      "path": "scenarios/callers/text_afterhours_01.txt",
+      "sha256": "617eb79678b15d505a4e13e01cfa07119209043369bc82bf7db177c51c555677"
+    },
+    {
+      "path": "scenarios/callers/text_afterhours_02.txt",
+      "sha256": "cd778cacf75ba36659929f91afe7ce78f4f71890c528bacc3ed0d0d71a90c1ae"
+    },
+    {
+      "path": "scenarios/callers/text_angry_01.txt",
+      "sha256": "64946a58d99fbba0af45f7b1b50b5643241b568b5be333bddfe36160c09e26c6"
+    },
+    {
+      "path": "scenarios/callers/text_book_01.txt",
+      "sha256": "58ec1a3e074efeda6f1793ee217fa7a49ff8b86b847050483a84733823b102fb"
+    },
+    {
+      "path": "scenarios/callers/text_book_02.txt",
+      "sha256": "b68a5463f79b84fb91bbd4ac3b03ccf9597db70c58594e903e346583c19cf77e"
+    },
+    {
+      "path": "scenarios/callers/text_book_03.txt",
+      "sha256": "812c96dece1a257cefaf4890abdf31a3b934257a47369fc9f140b382be61b876"
+    },
+    {
+      "path": "scenarios/callers/text_book_04.txt",
+      "sha256": "1db3005e8c92795a7a064bfcd5f022d215ef9ae8dd30b11ae5c440b374227a3c"
+    },
+    {
+      "path": "scenarios/callers/text_cancel_01.txt",
+      "sha256": "5ff28e46825a075b340ab532658805d5d055034742a5bc090c77632268d22845"
+    },
+    {
+      "path": "scenarios/callers/text_cancel_02.txt",
+      "sha256": "59e3d39a0efd2e25592986fb43bbce97280c0d6c41701b9a62f09978ab91029a"
+    },
+    {
+      "path": "scenarios/callers/text_cancel_03.txt",
+      "sha256": "7b9dfc267cfc263081ae3f194b042b69d7cd322d14afb733db0090cf2625f361"
+    },
+    {
+      "path": "scenarios/callers/text_confirm_refusal_01.txt",
+      "sha256": "8ad02a827e9cb49bb0c0475b4542e15c084d9fa4518968c16ec7bdddb35d21b6"
+    },
+    {
+      "path": "scenarios/callers/text_confirm_refusal_02.txt",
+      "sha256": "73265a9f29e94accdaae0a186e40330b8492a4ed0809dd420abddfe8ad0019a6"
+    },
+    {
+      "path": "scenarios/callers/text_duplicate_01.txt",
+      "sha256": "3a17c1e73ae22459fc6267ef4fe656784ef352eef97c740dd18186272d0888a7"
+    },
+    {
+      "path": "scenarios/callers/text_duplicate_02.txt",
+      "sha256": "acfded6121d8ea403a7c4243306a27d78a3eb7f0031e12c7f8988423e7b650c6"
+    },
+    {
+      "path": "scenarios/callers/text_emergency_01.txt",
+      "sha256": "a6fde55087e233218db84a03c194494f53360ca7138bf42ad4b81db76d7a7335"
+    },
+    {
+      "path": "scenarios/callers/text_emergency_02.txt",
+      "sha256": "f31536f07bd998e44654577f2e4c34c4be5f42937409757e1b06106b639d50c9"
+    },
+    {
+      "path": "scenarios/callers/text_emergency_03.txt",
+      "sha256": "8f09568b12cd94ce7a9075219388c3c9eaa554fc3d8c0116033b693c5a74bf95"
+    },
+    {
+      "path": "scenarios/callers/text_emergency_04.txt",
+      "sha256": "444bb41dac668e5d97b4cdf96803ce6d815101764b6dbfa5207e3ee4810f2b5d"
+    },
+    {
+      "path": "scenarios/callers/text_handoff_01.txt",
+      "sha256": "6d826f8691b0ac0b0e341a43a1591ed70e42321b81002f4654c4d38832774fae"
+    },
+    {
+      "path": "scenarios/callers/text_handoff_02.txt",
+      "sha256": "52dd0d530f0ee7a47c200201fff42f7e9294374f568364e83e97b97b26418061"
+    },
+    {
+      "path": "scenarios/callers/text_injection_01.txt",
+      "sha256": "f76954fa8a4ee733ad718424ebc2af36682b45b5f1a997e1df20c43a183979c1"
+    },
+    {
+      "path": "scenarios/callers/text_injection_02.txt",
+      "sha256": "869a486d2cdeead0a1c29ac71feba85549efc8639669b1540853a9a1886d6f08"
+    },
+    {
+      "path": "scenarios/callers/text_interrupt_01.txt",
+      "sha256": "4a94dc538a40f332a29710423c4a6bc98a4e6b80aef1576866a3319167cee7ed"
+    },
+    {
+      "path": "scenarios/callers/text_missing_01.txt",
+      "sha256": "7abc34a304039b0fcd5d2eb719eb297ec02a8a3abc1b6b3a446f87717c4cd339"
+    },
+    {
+      "path": "scenarios/callers/text_noavail_01.txt",
+      "sha256": "7273d2c9cd2f531ae1ac7f0cad1f5b450c067779d7d0edbf6aae75b447e43d2b"
+    },
+    {
+      "path": "scenarios/callers/text_noavail_02.txt",
+      "sha256": "a2ce86f14f2ff2c1e1f18adb1729f7d910f019833ace3b072526690f3004e48c"
+    },
+    {
+      "path": "scenarios/callers/text_noavail_03.txt",
+      "sha256": "430c353fae39634d27505911fdd194cb544b56ba74d6df4d4b6009755b0b72a7"
+    },
+    {
+      "path": "scenarios/callers/text_noise_01.txt",
+      "sha256": "b2e7ddb9431f7f20575678c161cb883e1375a377d43e5c3163042ec42225b287"
+    },
+    {
+      "path": "scenarios/callers/text_outofarea_01.txt",
+      "sha256": "279dba6a06df82303b57d0bf1c9a64fa3c62275bd77b83c8d07aab8ff89d03dd"
+    },
+    {
+      "path": "scenarios/callers/text_outofarea_02.txt",
+      "sha256": "b3cde2cf3969f6d855c55ad0a08b836d6048d446faf2b0dfd415023a1aa59bcd"
+    },
+    {
+      "path": "scenarios/callers/text_pricing_01.txt",
+      "sha256": "acdeabd26cbc9fa1b55db171904859a8121d264e030bca9550e108bc231dd4b3"
+    },
+    {
+      "path": "scenarios/callers/text_pricing_02.txt",
+      "sha256": "c7a8f62afdc2f12c031baa78ff392961e57222607ed6bf6f3665991de8e3cd75"
+    },
+    {
+      "path": "scenarios/callers/text_pricing_03.txt",
+      "sha256": "ca8ba84c21468863f89c6a048e2380b849878d6e4b49e7e845d2cf3dcd817b33"
+    },
+    {
+      "path": "scenarios/callers/text_reschedule_01.txt",
+      "sha256": "e28ee750d54c1ed9955d0b6cdf96497881b1b653c70710d6f4e0d6de657cd77b"
+    },
+    {
+      "path": "scenarios/callers/text_reschedule_02.txt",
+      "sha256": "ce71921b333dafc54cd590db8c25dc2bd36b3733755634173096068cac7d9f2e"
+    },
+    {
+      "path": "scenarios/callers/text_reschedule_03.txt",
+      "sha256": "026eedf0422fa22efcf4faab7e515549b7ee263977103660e9d39278a8d96d22"
+    },
+    {
+      "path": "scenarios/callers/text_reschedule_04.txt",
+      "sha256": "8240880c3d12f5614c9ad8789f78da647d90d8d3c6ed15d25a3c3437a9747b02"
+    },
+    {
+      "path": "scenarios/callers/text_timeout_01.txt",
+      "sha256": "4bbb283e445785e85fdcaae586395c69685ed660598e502100efd98d93ee87f1"
+    },
+    {
+      "path": "scenarios/callers/text_timeout_02.txt",
+      "sha256": "86406c115ad9e867dfabb7dc9e8077a1310ee86ffd78bda9830ed9fe7d8c7a16"
+    },
+    {
+      "path": "scenarios/fixtures/audio/badline_01.wav.placeholder",
+      "sha256": "6a59663590d3fe19702f9eb65c49406e9ae5df5faa786c8936f22b6c449e6ae5"
+    },
+    {
+      "path": "scenarios/fixtures/audio/bargein_01.wav.placeholder",
+      "sha256": "c43a20d9b33ded4de8163ef55e5642297f4e4d44ced590b2e59643b3260e3a69"
+    },
+    {
+      "path": "scenarios/fixtures/audio/emergency_01.wav.placeholder",
+      "sha256": "5e232728f573438241eb701318e8d90f02fea6ef10fab258168a185f4fa6f7cd"
+    },
+    {
+      "path": "scenarios/fixtures/audio/entities_01.wav.placeholder",
+      "sha256": "3f606803c76ac4641ee155028e055864332beaec043ba5d20ad4920bc9f0ab59"
+    },
+    {
+      "path": "scenarios/fixtures/audio/lowmic_01.wav.placeholder",
+      "sha256": "e5d75dc1a99ab63b251dbce3e28be12d8a8860d4606641aae4dc4caef71b9665"
+    },
+    {
+      "path": "scenarios/fixtures/audio/multilingual_01.wav.placeholder",
+      "sha256": "fc66c49026059afe2adb424ba7b8a7809c18f5b8ece86c6424b25c5b11691d9d"
+    },
+    {
+      "path": "scenarios/fixtures/audio/noisy_01.wav.placeholder",
+      "sha256": "c427f16ed19e5bfe5aa92624a8cd1ac693ab79b0ebd0387c9d7d171b9c751cd0"
+    },
+    {
+      "path": "scenarios/fixtures/audio/packetloss_01.wav.placeholder",
+      "sha256": "194603592de8bc5ecb2678d87526fd905d0647ada1b809f511af24870ac7785f"
+    },
+    {
+      "path": "scenarios/fixtures/audio/readback_01.wav.placeholder",
+      "sha256": "f1dd12830b7ae673cfa4e8fe1a85e5b764451959832d6d7076783b6b2de8a4d6"
+    },
+    {
+      "path": "scenarios/fixtures/audio/silence_01.wav.placeholder",
+      "sha256": "3d6faa3427e9463ff961e5a98a55a9b0e94a51840887679ac5303862ec2b9f84"
+    },
+    {
+      "path": "scenarios/manifest.yaml",
+      "sha256": "7d8eecb305ec8c85272d9e3903542c5dba3a9d5967f598c1e29a2f6162fdb47b"
+    },
+    {
+      "path": "seed/harborlight.json",
+      "sha256": "3b084951237ecc8dab913bed7fefa1f97f74a6c0baa93401601511ff6ecab4e5"
+    },
+    {
+      "path": "seed/summit.json",
+      "sha256": "b18e74836ef29eef57c081374ee45eb84bfb97f9a4fdcb38cb152a51cc5b7280"
+    },
+    {
+      "path": "tenants/harborlight.yaml",
+      "sha256": "62ff2342701f38bd37ac209e27d3b555c67037aba59f59d10881a05cf993cc8e"
+    },
+    {
+      "path": "tenants/summit.yaml",
+      "sha256": "e4512e983a16e47befc03524d09e328a091647ed4af576d95c5e69f7c2eec9b7"
+    }
+  ],
+  "counts": {
+    "audio": 10,
+    "audio_dev": 8,
+    "audio_held_out": 2,
+    "audio_local": 6,
+    "audio_smoke": 2,
+    "text": 40,
+    "text_critical_repeat": 10,
+    "text_dev": 32,
+    "text_held_out": 8,
+    "text_smoke": 8
+  },
+  "generator": "forge_voice.corpus",
+  "manifest_id": "voice-eval-2026-11",
+  "schema_version": 1
+}

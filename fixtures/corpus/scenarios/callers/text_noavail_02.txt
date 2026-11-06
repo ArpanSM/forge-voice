@@ -1,0 +1,9 @@
+# scenario: text_noavail_02
+# persona: New caller, needs a specific service quickly
+# goal: Ask for a water heater repair in the next 24 hours; no slots; accept a callback.
+# max_turns: 8
+
+My water heater is out. Can someone come tomorrow?
+21 Harbor Boulevard, 94118.
+Tomorrow is the only day.
+Okay, have someone call me.
