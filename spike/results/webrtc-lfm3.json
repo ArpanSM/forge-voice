@@ -1,0 +1,148 @@
+{
+  "profile": "lfm3",
+  "turns_script": [
+    "Hi, I need a drain cleaning.",
+    "The ZIP is nine four one zero seven.",
+    "My address is 12 Alder Street.",
+    "My name is Sam Rivera.",
+    "My phone is five five five, one two three, four five six seven.",
+    "What times do you have on Monday?",
+    "Is eleven available?",
+    "Let's do eleven.",
+    "Yes, book it.",
+    "Thanks, that's all."
+  ],
+  "latency": {
+    "mode": "latency",
+    "profile": "lfm3",
+    "room": "spike-lfm3-lat-07e466e5",
+    "turns": [
+      {
+        "turn": 1,
+        "caller_text": "Hi, I need a drain cleaning.",
+        "first_audio_ms": 2792,
+        "tool_results": []
+      },
+      {
+        "turn": 2,
+        "caller_text": "The ZIP is nine four one zero seven.",
+        "first_audio_ms": 4285,
+        "tool_results": [
+          {
+            "ts": 1793982160.1383853,
+            "event": "tool_result",
+            "room": "spike-lfm3-lat-07e466e5",
+            "tool": "get_availability",
+            "elapsed_ms": 0,
+            "slot_count": 2
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "caller_text": "My address is 12 Alder Street.",
+        "first_audio_ms": 2925,
+        "tool_results": []
+      },
+      {
+        "turn": 4,
+        "caller_text": "My name is Sam Rivera.",
+        "first_audio_ms": 2094,
+        "tool_results": []
+      },
+      {
+        "turn": 5,
+        "caller_text": "My phone is five five five, one two three, four five six seven.",
+        "first_audio_ms": 5147,
+        "tool_results": [
+          {
+            "ts": 1793982200.685987,
+            "event": "tool_result",
+            "room": "spike-lfm3-lat-07e466e5",
+            "tool": "book_appointment",
+            "elapsed_ms": 0,
+            "ok": false,
+            "error": "explicit_confirmation_required"
+          }
+        ]
+      },
+      {
+        "turn": 6,
+        "caller_text": "What times do you have on Monday?",
+        "first_audio_ms": 2796,
+        "tool_results": []
+      },
+      {
+        "turn": 7,
+        "caller_text": "Is eleven available?",
+        "first_audio_ms": 2437,
+        "tool_results": []
+      },
+      {
+        "turn": 8,
+        "caller_text": "Let's do eleven.",
+        "first_audio_ms": 5019,
+        "tool_results": [
+          {
+            "ts": 1793982236.9151096,
+            "event": "tool_result",
+            "room": "spike-lfm3-lat-07e466e5",
+            "tool": "book_appointment",
+            "elapsed_ms": 0,
+            "ok": false,
+            "error": "explicit_confirmation_required"
+          }
+        ]
+      },
+      {
+        "turn": 9,
+        "caller_text": "Yes, book it.",
+        "first_audio_ms": 5511,
+        "tool_results": [
+          {
+            "ts": 1793982250.9615011,
+            "event": "tool_result",
+            "room": "spike-lfm3-lat-07e466e5",
+            "tool": "book_appointment",
+            "elapsed_ms": 0,
+            "ok": true,
+            "booking_id": "bk_0001",
+            "slot": "Monday 9 November, 11:00 am",
+            "replayed": false
+          }
+        ]
+      },
+      {
+        "turn": 10,
+        "caller_text": "Thanks, that's all.",
+        "first_audio_ms": 2614,
+        "tool_results": []
+      }
+    ],
+    "first_audio_ms": [
+      2792,
+      4285,
+      2925,
+      2094,
+      5147,
+      2796,
+      2437,
+      5019,
+      5511,
+      2614
+    ],
+    "p50_ms": 2860.5,
+    "p95_ms": 5347.2,
+    "false_interruptions": 0
+  },
+  "barge_in": {
+    "mode": "barge-in",
+    "profile": "lfm3",
+    "room": "spike-lfm3-bi-c41449e8",
+    "barge_in_yield_ms": 884,
+    "overlapping_speech": [],
+    "false_interruptions": 0,
+    "recovered": true,
+    "recovered_text": []
+  }
+}
