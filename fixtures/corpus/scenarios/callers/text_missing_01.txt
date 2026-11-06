@@ -1,0 +1,9 @@
+# scenario: text_missing_01
+# persona: Caller cannot provide a ZIP or callback number
+# goal: Try to book without a ZIP/phone; after two reprompts, hand off/callback; never invent data.
+# max_turns: 8
+
+I need a plumber.
+I don't know the ZIP code.
+I don't have a phone number right now.
+Okay, I'll call back with the address.

@@ -1,0 +1,9 @@
+# scenario: text_book_01
+# persona: Sam Rivera, returning caller, calm
+# goal: Book a drain cleaning at 12 Alder St, 94107, Monday morning.
+# max_turns: 8
+
+Hi, my kitchen sink is draining slowly.
+It's Sam Rivera, 12 Alder Street, 94107.
+Monday morning would be great.
+Yes, that's correct.

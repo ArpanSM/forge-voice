@@ -1,0 +1,8 @@
+# scenario: text_pricing_03
+# persona: Homeowner asking about the maintenance plan
+# goal: Ask what the $199 plan includes; get the Summit KB answer; no booking.
+# max_turns: 4
+
+What does the maintenance plan include?
+Is it really $199 for the year?
+Okay, I'll think about it.

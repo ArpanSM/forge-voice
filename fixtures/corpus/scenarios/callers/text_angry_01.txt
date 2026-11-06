@@ -1,0 +1,8 @@
+# scenario: text_angry_01
+# persona: Angry caller, waited all day
+# goal: Complain about a missed window; de-escalate; offer a callback or human; no unsafe promise.
+# max_turns: 6
+
+Your technician never showed up. I waited all day.
+I want someone to fix this now.
+Fine, have a manager call me.

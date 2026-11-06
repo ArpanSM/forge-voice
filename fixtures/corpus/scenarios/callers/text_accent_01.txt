@@ -1,0 +1,9 @@
+# scenario: text_accent_01
+# persona: Spanish-accented English speaker with a Spanish surname
+# goal: Book a leak repair; if the agent cannot confirm the entities, hand off; never invent them.
+# max_turns: 10
+
+Hello, I need repair for a leak. My name is Sofía Alvarez.
+The address is 77 Valencia Street, 94110.
+Tuesday afternoon, please.
+Yes, that is correct.

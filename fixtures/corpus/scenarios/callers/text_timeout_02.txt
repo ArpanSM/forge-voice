@@ -1,0 +1,8 @@
+# scenario: text_timeout_02
+# persona: Caller needs availability; the calendar times out
+# goal: Availability times out; no invented slot; offer a callback.
+# max_turns: 8
+
+I need a drain cleaning this week.
+12 Alder Street, 94107.
+Okay, just call me back.

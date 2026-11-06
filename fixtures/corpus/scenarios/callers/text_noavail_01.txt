@@ -1,0 +1,9 @@
+# scenario: text_noavail_01
+# persona: Returning caller, flexible but wants Saturday
+# goal: Ask for Saturday morning; no slots; decline alternatives; accept a callback.
+# max_turns: 8
+
+I need a drain cleaning Saturday morning.
+Sam Rivera, 12 Alder Street, 94107.
+Saturday is the only day I can do.
+A callback is fine.

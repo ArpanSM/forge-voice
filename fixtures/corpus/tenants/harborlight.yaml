@@ -1,0 +1,234 @@
+# Harborlight Home Services — synthetic tenant config for the forge-voice demo.
+# All names, numbers, addresses, customers and calendars are fictional.
+tenant_id: harborlight
+display_name: Harborlight Home Services
+legal_name: Harborlight Home Services LLC (synthetic)
+timezone: America/Los_Angeles
+locale: en-US
+currency: USD
+
+persona:
+  name: Ava
+  role: virtual assistant
+  voice_id: demo-ava
+  greeting: "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help?"
+  disclosure: "I'm an AI assistant. You can ask for a person at any time."
+
+business_hours:
+  monday: ["07:00-19:00"]
+  tuesday: ["07:00-19:00"]
+  wednesday: ["07:00-19:00"]
+  thursday: ["07:00-19:00"]
+  friday: ["07:00-19:00"]
+  saturday: ["08:00-17:00"]
+  sunday: []
+holidays:
+  - "2026-11-26"
+  - "2026-12-25"
+  - "2027-01-01"
+
+services:
+  - id: drain_cleaning
+    name: Drain cleaning
+    duration_minutes: 60
+    price_range: {min: 149, max: 349, currency: USD}
+    after_hours_eligible: true
+    emergency_eligible: false
+  - id: leak_repair
+    name: Leak repair
+    duration_minutes: 90
+    price_range: {min: 225, max: 650, currency: USD}
+    after_hours_eligible: true
+    emergency_eligible: true
+  - id: water_heater_repair
+    name: Water heater repair or replacement
+    duration_minutes: 120
+    price_range: {min: 350, max: 1800, currency: USD}
+    after_hours_eligible: true
+    emergency_eligible: true
+  - id: ac_repair
+    name: Air conditioning repair
+    duration_minutes: 90
+    price_range: {min: 99, max: 149, currency: USD}
+    after_hours_eligible: true
+    emergency_eligible: true
+  - id: furnace_repair
+    name: Furnace repair
+    duration_minutes: 90
+    price_range: {min: 129, max: 249, currency: USD}
+    after_hours_eligible: true
+    emergency_eligible: true
+  - id: electrical_outlet
+    name: Outlet or switch repair
+    duration_minutes: 60
+    price_range: {min: 125, max: 275, currency: USD}
+    after_hours_eligible: false
+    emergency_eligible: false
+  - id: panel_upgrade
+    name: Electrical panel upgrade
+    duration_minutes: 240
+    price_range: {min: 1200, max: 3500, currency: USD}
+    after_hours_eligible: false
+    emergency_eligible: false
+
+service_area:
+  zip_allowlist: ["94107", "94110", "94117", "94118", "94121", "94123", "94131", "94133"]
+  zip_exclusions: []
+  dispatch_zones:
+    "94107": central
+    "94110": central
+    "94117": north
+    "94118": north
+    "94121": north
+    "94123": north
+    "94131": south
+    "94133": north
+  notes: "Synthetic coverage only; no real dispatch."
+
+dispatch:
+  strategy: nearest_skill_match
+  max_drive_minutes: 45
+  technicians:
+    - id: tech_alex
+      name: Alex
+      skills: [drain_cleaning, leak_repair, water_heater_repair]
+      zips: ["94107", "94110", "94131"]
+    - id: tech_blair
+      name: Blair
+      skills: [ac_repair, furnace_repair, electrical_outlet, panel_upgrade]
+      zips: ["94117", "94118", "94121", "94123", "94133"]
+
+policies:
+  change_cutoff_minutes: 120
+  booking_horizon_days: 14
+  offer_ttl_seconds: 300
+  confirmation_ttl_seconds: 120
+  tool_timeout_ms: 2500
+  max_slots_offered: 3
+  max_reprompts: 2
+  recording: disclose_and_allow_opt_out
+  data_retention_days: 30
+
+emergency:
+  categories:
+    - id: gas_or_co
+      label: Gas smell or CO alarm
+      severity: life_safety
+      triggers: ["gas smell", "CO alarm", "carbon monoxide"]
+      safety_script: gas_co
+      transfer_target: harborlight_on_call
+    - id: fire_or_smoke
+      label: Fire, smoke or burning electrical smell
+      severity: life_safety
+      triggers: ["fire", "smoke", "burning smell", "burning outlet"]
+      safety_script: fire_smoke
+      transfer_target: harborlight_on_call
+    - id: electrical_hazard
+      label: Sparking, downed line or burning panel
+      severity: life_safety
+      triggers: ["sparking", "downed line", "burning panel"]
+      safety_script: electrical_hazard
+      transfer_target: harborlight_on_call
+    - id: active_flooding
+      label: Active flooding or burst pipe
+      severity: urgent
+      triggers: ["flooding", "burst pipe", "water everywhere"]
+      safety_script: active_flooding
+      transfer_target: harborlight_on_call
+    - id: sewage_backup
+      label: Sewage backup
+      severity: urgent
+      triggers: ["sewage", "toilet overflow", "black water"]
+      safety_script: sewage_backup
+      transfer_target: harborlight_on_call
+    - id: no_heat
+      label: No heat in cold weather
+      severity: urgent
+      threshold: "outdoor_temp_f < 40 or vulnerable_occupant"
+      safety_script: no_heat
+      transfer_target: harborlight_on_call
+    - id: no_cooling
+      label: No cooling in hot weather
+      severity: urgent
+      threshold: "outdoor_temp_f > 95 or vulnerable_occupant"
+      safety_script: no_cooling
+      transfer_target: harborlight_on_call
+  on_call:
+    target: harborlight_on_call
+    ring_seconds: 25
+    callback_sla_minutes: 15
+  after_hours:
+    emergency: on_call
+    non_emergency: next_business_day_callback
+
+handoff:
+  targets:
+    - id: harborlight_front_desk
+      name: Harborlight front desk
+      phone: "+14155550100"
+      hours: business_hours
+    - id: harborlight_on_call
+      name: Harborlight on-call
+      phone: "+14155550199"
+      hours: after_hours_and_emergency
+  default_target: harborlight_front_desk
+  callback_sla_minutes:
+    emergency: 15
+    non_emergency: next_business_day
+
+integrations:
+  calendar:
+    adapter: synthetic_sqlite
+    config: {path: "data/harborlight/calendar.db"}
+  crm:
+    adapter: synthetic_sqlite
+    config: {path: "data/harborlight/crm.db"}
+  messaging:
+    adapter: outbox_file
+    config: {path: "data/harborlight/outbox.jsonl", channels: [sms, email]}
+
+knowledge_base:
+  faq:
+    - id: hours
+      question: "What are your hours?"
+      answer: "We answer calls Monday to Friday 7 am to 7 pm and Saturday 8 am to 5 pm. After hours, emergencies go to the on-call technician."
+    - id: service_area
+      question: "Do you serve my ZIP code?"
+      answer: "We serve 94107, 94110, 94117, 94118, 94121, 94123, 94131 and 94133. I can check your address."
+    - id: payment
+      question: "Do you take credit cards?"
+      answer: "We collect payment after the work is complete. The technician will confirm the accepted methods on site."
+    - id: warranty
+      question: "Is the work warranted?"
+      answer: "Workmanship is warranted for 90 days. Parts follow the manufacturer's warranty."
+  pricing:
+    - service_id: drain_cleaning
+      range: {min: 149, max: 349, currency: USD}
+      includes: ["standard drain clearing", "cleanup"]
+      excludes: ["camera inspection", "hydro jetting", "parts"]
+      caveat: "Final price after an on-site assessment."
+    - service_id: leak_repair
+      range: {min: 225, max: 650, currency: USD}
+      includes: ["leak diagnosis", "standard repair"]
+      excludes: ["wall or ceiling repair", "parts"]
+      caveat: "Final price after an on-site assessment."
+    - service_id: water_heater_repair
+      range: {min: 350, max: 1800, currency: USD}
+      includes: ["diagnosis", "standard repair or replacement labor"]
+      excludes: ["permits", "code upgrades", "parts"]
+      caveat: "Final price after an on-site assessment."
+    - service_id: ac_repair
+      range: {min: 99, max: 149, currency: USD}
+      includes: ["diagnostic visit"]
+      excludes: ["repair parts", "refrigerant"]
+      caveat: "Diagnostic fee is credited toward the repair if approved."
+    - service_id: furnace_repair
+      range: {min: 129, max: 249, currency: USD}
+      includes: ["diagnostic visit"]
+      excludes: ["repair parts"]
+      caveat: "Final price after an on-site assessment."
+  policies:
+    - id: cancellation
+      answer: "You can change or cancel up to two hours before the appointment at no charge."
+    - id: after_hours
+      answer: "After-hours emergencies go to the on-call technician. Non-emergencies get a callback the next business day."

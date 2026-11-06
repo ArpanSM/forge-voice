@@ -1,0 +1,5 @@
+fixture: fixtures/audio/bargein_01.wav
+method: livekit_simulation
+note: 'Not an audio file. Ticket #5 generates the real fixture at this path.'
+scenario_id: audio_bargein_01
+status: placeholder

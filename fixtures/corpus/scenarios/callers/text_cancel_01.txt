@@ -1,0 +1,9 @@
+# scenario: text_cancel_01
+# persona: Sam Rivera, returning caller, calm
+# goal: Cancel booking bk_0002 because the work is no longer needed.
+# max_turns: 7
+
+I need to cancel my appointment.
+Sam Rivera, 12 Alder Street, 94107.
+I fixed it myself, so I don't need the visit.
+Yes, cancel it.

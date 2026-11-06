@@ -1,0 +1,9 @@
+# scenario: text_cancel_02
+# persona: Returning caller, unsure whether the cancellation went through
+# goal: Ask to cancel a booking that is already cancelled; no second cancellation or message.
+# max_turns: 7
+
+Did my cancellation go through?
+Sam Rivera, 12 Alder Street, 94107.
+Then cancel it again just to be sure.
+Okay, thanks.

@@ -1,0 +1,9 @@
+# scenario: text_confirm_refusal_01
+# persona: Caller changes their mind after the read-back
+# goal: Say no to the read-back; no write; end the call without a booking.
+# max_turns: 8
+
+I need a drain cleaning.
+12 Alder Street, 94107.
+No, don't book it yet.
+I'll call back later.

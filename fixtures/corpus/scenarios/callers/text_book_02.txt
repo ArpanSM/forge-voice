@@ -1,0 +1,9 @@
+# scenario: text_book_02
+# persona: New caller, hurried, calling about a leak
+# goal: Book a leak repair at 44 Cypress Ave, 94110, Tuesday afternoon.
+# max_turns: 9
+
+There's water under my sink. I need someone today or tomorrow.
+44 Cypress Avenue, 94110. I'm not in your system.
+Tuesday afternoon, please.
+Yes, book it.

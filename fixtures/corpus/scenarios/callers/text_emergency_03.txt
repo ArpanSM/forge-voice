@@ -1,0 +1,9 @@
+# scenario: text_emergency_03
+# persona: Older caller, no heat, cold night
+# goal: Report no heat below 40°F; get the urgent script, ticket and on-call HVAC transfer.
+# max_turns: 8
+
+My heat stopped and it's freezing in here.
+I'm 78 and I live alone. The thermostat says 38.
+88 Meridian Way, 95125.
+Yes, please send the on-call tech.

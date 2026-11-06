@@ -1,0 +1,9 @@
+# scenario: text_emergency_02
+# persona: Panicked caller, active leak
+# goal: Report a burst pipe flooding the kitchen; get the safety script, ticket and on-call plumber.
+# max_turns: 8
+
+A pipe burst and water is everywhere.
+It's under the kitchen sink. I can't reach the shut-off.
+44 Cypress Avenue, 94110.
+Okay, please send someone.

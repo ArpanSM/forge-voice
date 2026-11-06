@@ -1,0 +1,8 @@
+# scenario: text_afterhours_02
+# persona: Caller with no cooling after hours
+# goal: Report no cooling above 95°F after hours; get the urgent script, ticket and on-call transfer.
+# max_turns: 8
+
+My AC is out and it's still 98 degrees inside.
+I have a newborn. 88 Meridian Way, 95125.
+Yes, send the on-call tech.

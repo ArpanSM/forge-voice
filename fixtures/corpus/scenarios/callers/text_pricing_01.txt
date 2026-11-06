@@ -1,0 +1,8 @@
+# scenario: text_pricing_01
+# persona: Price-sensitive caller
+# goal: Ask for the drain cleaning price; get the range and on-site caveat; no booking.
+# max_turns: 4
+
+How much is a drain cleaning?
+Is that the final price?
+Okay, thanks.

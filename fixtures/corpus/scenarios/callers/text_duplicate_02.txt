@@ -1,0 +1,9 @@
+# scenario: text_duplicate_02
+# persona: Caller asks for a slot that was just taken
+# goal: Ask for a slot another caller just booked; get slot_unavailable and a valid alternative.
+# max_turns: 10
+
+I need a drain cleaning Monday at 9.
+12 Alder Street, 94107.
+What do you mean it's taken? Fine, what else do you have?
+Tuesday at 11 works.

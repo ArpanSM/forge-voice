@@ -1,0 +1,9 @@
+# scenario: text_cancel_03
+# persona: Priya Shah, homeowner, direct
+# goal: Cancel an AC repair because another provider was chosen.
+# max_turns: 7
+
+I need to cancel my AC appointment.
+Priya Shah, 88 Meridian Way, 95125.
+I found another company.
+Yes, cancel it.

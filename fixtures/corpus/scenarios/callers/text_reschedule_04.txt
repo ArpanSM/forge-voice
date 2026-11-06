@@ -1,0 +1,9 @@
+# scenario: text_reschedule_04
+# persona: Dana Whitfield, returning caller, precise
+# goal: Move a furnace repair to the next available weekday morning.
+# max_turns: 8
+
+I need a different time for my furnace repair.
+Dana Whitfield, 9 Juniper Court, 94117.
+The next weekday morning is fine.
+Yes, please.

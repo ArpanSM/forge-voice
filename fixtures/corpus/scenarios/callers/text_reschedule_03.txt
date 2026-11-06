@@ -1,0 +1,9 @@
+# scenario: text_reschedule_03
+# persona: Priya Shah, homeowner, direct
+# goal: Move an AC repair from Wednesday to Friday afternoon.
+# max_turns: 8
+
+I need to move my AC appointment to Friday.
+Priya Shah, 88 Meridian Way, 95125.
+Friday afternoon.
+Yes, that works.

@@ -1,0 +1,9 @@
+# scenario: text_reschedule_02
+# persona: Caller from a different phone, knows the booking ID
+# goal: Reschedule a booking that starts in 90 minutes; the cutoff should send to a human.
+# max_turns: 9
+
+I need to move my appointment. It's in an hour and a half.
+The booking is bk_0003. The address is 21 Harbor Blvd, 94118.
+Can you move it to tomorrow?
+Yes, transfer me.
