@@ -1,5 +1,5 @@
 fixture: fixtures/audio/entities_01.wav
 method: livekit_simulation
-note: 'Not an audio file. Ticket #5 generates the real fixture.'
+note: 'Not an audio file. Ticket #5 generates the real fixture at this path.'
 scenario_id: audio_entities_01
 status: placeholder

@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from typing import Any, Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
+
+from forge_voice.models import StrictModel
 
 
 class ProviderError(RuntimeError):
@@ -17,10 +19,6 @@ class ProviderError(RuntimeError):
 
 class ProviderNotConfiguredError(ProviderError):
     """A network profile was selected without an injected transport or base URL."""
-
-
-class StrictModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
 
 
 class ChatMessage(StrictModel):

@@ -17,7 +17,8 @@ policy, tools or tests.
 - `make corpus` derives seed customers/bookings/slots/calls, caller scripts, audio
   placeholders and a SHA-256 manifest under `fixtures/corpus/`. Generation uses a fixed
   anchor date and sorted output; no wall clock or randomness.
-- Tools and scenarios share the result envelope and stable error codes.
+- Typed tools use one common result envelope with stable error codes (implemented in #4);
+  scenario records keep their own expected/actual result shape.
 - `ChatProvider` is the provider seam. `FakeProvider` is deterministic and offline for unit
   tests. LFM3 and Groq adapters accept an injected HTTP transport and are not exercised over
   the network in unit tests.

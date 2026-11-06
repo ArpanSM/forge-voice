@@ -33,7 +33,7 @@ src/forge_voice/
 tenants/       # Harborlight and Summit YAML, synthetic only
 scenarios/     # 40 text + 10 audio manifest and caller fixtures
 fixtures/      # generated corpus (tenants, seeds, scenarios, hashes)
-docs/          # ADRs, agent workflow, runbook placeholders
+docs/          # ADRs and agent workflow (runbook arrives with ticket #8)
 tests/         # offline pytest suite
 ```
 

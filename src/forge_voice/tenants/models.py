@@ -11,21 +11,17 @@ from datetime import date
 from typing import Annotated, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
+from forge_voice.models import StrictModel
 from forge_voice.tenants.errors import UnknownServiceError
 
 ZIP_RE = re.compile(r"^\d{5}$")
 HOUR_RANGE_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d$")
-IDENTIFIER_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 
 Zip = Annotated[str, Field(pattern=r"^\d{5}$")]
 Identifier = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]*$")]
 Phone = Annotated[str, Field(pattern=r"^\+1\d{10}$")]
-
-
-class StrictModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
 
 
 def _unique(values: list[str], label: str) -> None:

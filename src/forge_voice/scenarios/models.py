@@ -7,15 +7,21 @@ fields from roadmap #26.
 
 from __future__ import annotations
 
-import re
 from datetime import date
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
-IDENTIFIER_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+from forge_voice.models import StrictModel
 
 Identifier = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]*$")]
+
+
+def _unique(values: list[str], label: str) -> None:
+    duplicates = sorted({value for value in values if values.count(value) > 1})
+    if duplicates:
+        raise ValueError(f"duplicate {label}: {duplicates}")
+
 
 HARD_GATES = frozenset(
     {
@@ -75,11 +81,18 @@ CRITICAL_REPEAT_IDS = frozenset(
     }
 )
 
-AUDIO_METHODS = frozenset({"livekit_simulation", "degraded_clip"})
-
-
-class StrictModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+LOCKED_COUNTS = {
+    "text": 40,
+    "text_dev": 32,
+    "text_held_out": 8,
+    "text_smoke": 8,
+    "text_critical_repeat": 10,
+    "audio": 10,
+    "audio_dev": 8,
+    "audio_held_out": 2,
+    "audio_smoke": 2,
+    "audio_local": 6,
+}
 
 
 class ManifestCounts(StrictModel):
@@ -117,8 +130,7 @@ class ScenarioBase(StrictModel):
         unknown = set(gates) - HARD_GATES
         if unknown:
             raise ValueError(f"unknown hard_gate labels: {sorted(unknown)}")
-        if len(gates) != len(set(gates)):
-            raise ValueError("hard_gates must be unique")
+        _unique(gates, "hard_gate labels")
         return gates
 
     @field_validator("expected_tool_calls")
@@ -127,8 +139,7 @@ class ScenarioBase(StrictModel):
         unknown = set(tools) - TOOLS
         if unknown:
             raise ValueError(f"unknown tool names: {sorted(unknown)}")
-        if len(tools) != len(set(tools)):
-            raise ValueError("expected_tool_calls must be unique")
+        _unique(tools, "expected tool call names")
         return tools
 
     @field_validator("expected_final_state")
@@ -192,18 +203,15 @@ class ScenarioManifest(StrictModel):
         audio = [scenario for scenario in self.scenarios if scenario.mode == "audio"]
 
         ids = [scenario.id for scenario in self.scenarios]
-        if len(ids) != len(set(ids)):
-            duplicates = sorted({scenario_id for scenario_id in ids if ids.count(scenario_id) > 1})
-            raise ValueError(f"duplicate scenario id(s): {duplicates}")
+        _unique(ids, "scenario id(s)")
 
         for scenario in self.scenarios:
             if not scenario.id.startswith(f"{scenario.mode}_"):
                 raise ValueError(f"scenario id {scenario.id!r} must start with {scenario.mode}_")
 
+        _unique(self.tenants, "manifest tenants")
         manifest_tenants = set(self.tenants)
         scenario_tenants = {scenario.tenant for scenario in self.scenarios}
-        if len(self.tenants) != len(manifest_tenants):
-            raise ValueError("manifest tenants must be unique")
         if scenario_tenants != manifest_tenants:
             raise ValueError(
                 "scenario tenants must match the manifest tenants; "
@@ -217,7 +225,10 @@ class ScenarioManifest(StrictModel):
                 )
 
         critical = [scenario.id for scenario in text if scenario.critical_repeat]
-        if set(critical) != CRITICAL_REPEAT_IDS:
+        if (
+            len(critical) != LOCKED_COUNTS["text_critical_repeat"]
+            or set(critical) != CRITICAL_REPEAT_IDS
+        ):
             raise ValueError(
                 "critical repeat set must match the locked ten text scenarios; "
                 f"expected={sorted(CRITICAL_REPEAT_IDS)}, found={sorted(critical)}"
@@ -242,17 +253,29 @@ class ScenarioManifest(StrictModel):
             "audio_local": sum(scenario.local_subset for scenario in audio),
         }
         expected = self.counts.model_dump()
-        mismatches = {
-            key: (expected[key], actual)
+        locked_mismatches = {
+            key: (locked, actual)
             for key, actual in derived.items()
-            if expected[key] != actual
+            if (locked := LOCKED_COUNTS[key]) != actual
         }
-        if mismatches:
+        if locked_mismatches:
             detail = ", ".join(
-                f"{key}: declared={declared}, found={actual}"
-                for key, (declared, actual) in sorted(mismatches.items())
+                f"{key}: locked={locked}, found={actual}"
+                for key, (locked, actual) in sorted(locked_mismatches.items())
             )
-            raise ValueError(f"manifest counts do not match scenarios: {detail}")
+            raise ValueError(f"scenarios violate the locked counts: {detail}")
+
+        declared_mismatches = {
+            key: (locked, expected[key])
+            for key, locked in LOCKED_COUNTS.items()
+            if expected[key] != locked
+        }
+        if declared_mismatches:
+            detail = ", ".join(
+                f"{key}: locked={locked}, declared={declared}"
+                for key, (locked, declared) in sorted(declared_mismatches.items())
+            )
+            raise ValueError(f"manifest counts block violates the locked counts: {detail}")
 
         return self
 

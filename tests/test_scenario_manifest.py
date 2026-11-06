@@ -124,6 +124,43 @@ def test_manifest_loader_rejects_overlapping_smoke_and_held_out(tmp_path: Path) 
         load_manifest(_variant(tmp_path, overlap), known_tenants=TENANTS)
 
 
+def test_manifest_loader_rejects_39_text_even_when_declared_counts_agree(
+    tmp_path: Path,
+) -> None:
+    def remove_text(data: dict) -> None:
+        data["scenarios"] = [
+            scenario for scenario in data["scenarios"] if scenario["id"] != "text_noise_01"
+        ]
+        data["counts"]["text"] = 39
+        data["counts"]["text_dev"] = 31
+
+    with pytest.raises(ScenarioConfigError, match="locked counts"):
+        load_manifest(_variant(tmp_path, remove_text), known_tenants=TENANTS)
+
+
+def test_manifest_loader_rejects_wrong_held_out_split_even_when_declared_counts_agree(
+    tmp_path: Path,
+) -> None:
+    def break_split(data: dict) -> None:
+        _text(data, "text_book_04")["held_out"] = False
+        data["counts"]["text_dev"] = 33
+        data["counts"]["text_held_out"] = 7
+
+    with pytest.raises(ScenarioConfigError, match="text_held_out"):
+        load_manifest(_variant(tmp_path, break_split), known_tenants=TENANTS)
+
+
+def test_manifest_loader_rejects_wrong_critical_set_even_when_count_matches(
+    tmp_path: Path,
+) -> None:
+    def swap_critical(data: dict) -> None:
+        _text(data, "text_book_01")["critical_repeat"] = False
+        _text(data, "text_noise_01")["critical_repeat"] = True
+
+    with pytest.raises(ScenarioConfigError, match="critical repeat set"):
+        load_manifest(_variant(tmp_path, swap_critical), known_tenants=TENANTS)
+
+
 def test_manifest_loader_rejects_count_drift(tmp_path: Path) -> None:
     def remove_text(data: dict) -> None:
         data["scenarios"] = [

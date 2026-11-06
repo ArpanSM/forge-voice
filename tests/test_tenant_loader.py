@@ -30,22 +30,49 @@ def _variant(tmp_path: Path, name: str, mutate) -> Path:
     return path
 
 
-def test_loader_loads_both_tenant_configs() -> None:
+def test_loader_loads_both_tenant_ids() -> None:
     registry = load_all_tenants(TENANTS_DIR)
 
     assert set(registry) == {"harborlight", "summit"}
-    assert registry["harborlight"].display_name == "Harborlight Home Services"
-    assert registry["summit"].display_name == "Summit Heating & Air"
-    assert len(registry["harborlight"].service_area.zip_allowlist) == 8
-    assert len(registry["summit"].service_area.zip_allowlist) == 7
-    assert registry["harborlight"].require_service("drain_cleaning").price_range.min == 149
-    assert registry["summit"].require_service("ac_repair").duration_minutes == 90
 
 
-def test_loader_loads_tenant_by_slug_and_rejects_unknown_tenant() -> None:
+def test_harborlight_config_has_expected_identity_and_coverage() -> None:
+    harborlight = load_tenant(TENANTS_DIR / "harborlight.yaml")
+
+    assert harborlight.display_name == "Harborlight Home Services"
+    assert len(harborlight.service_area.zip_allowlist) == 8
+    assert harborlight.has_zip("94107") is True
+
+
+def test_harborlight_config_has_expected_services() -> None:
+    harborlight = load_tenant(TENANTS_DIR / "harborlight.yaml")
+
+    assert len(harborlight.services) == 7
+    assert harborlight.require_service("drain_cleaning").price_range.min == 149
+
+
+def test_summit_config_has_expected_identity_and_coverage() -> None:
+    summit = load_tenant(TENANTS_DIR / "summit.yaml")
+
+    assert summit.display_name == "Summit Heating & Air"
+    assert len(summit.service_area.zip_allowlist) == 7
+    assert summit.has_zip("95125") is True
+
+
+def test_summit_config_has_expected_services() -> None:
+    summit = load_tenant(TENANTS_DIR / "summit.yaml")
+
+    assert len(summit.services) == 5
+    assert summit.require_service("ac_repair").duration_minutes == 90
+
+
+def test_loader_loads_tenant_by_slug() -> None:
     harborlight = load_tenant_by_slug(TENANTS_DIR, "harborlight")
 
     assert harborlight.tenant_id == "harborlight"
+
+
+def test_loader_rejects_unknown_tenant() -> None:
     with pytest.raises(UnknownTenantError):
         load_tenant_by_slug(TENANTS_DIR, "nope")
     with pytest.raises(UnknownTenantError):
