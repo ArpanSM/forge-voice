@@ -75,6 +75,9 @@ def test_loader_loads_tenant_by_slug() -> None:
 def test_loader_rejects_unknown_tenant() -> None:
     with pytest.raises(UnknownTenantError):
         load_tenant_by_slug(TENANTS_DIR, "nope")
+
+
+def test_loader_rejects_path_traversal_slug() -> None:
     with pytest.raises(UnknownTenantError):
         load_tenant_by_slug(TENANTS_DIR, "../harborlight")
 
@@ -137,6 +140,23 @@ def test_loader_rejects_unknown_pricing_service(tmp_path: Path) -> None:
 
     with pytest.raises(TenantConfigError, match="roofing"):
         load_tenant(_variant(tmp_path, "harborlight", add_unknown_pricing_service))
+
+
+def test_loader_rejects_excluded_technician_zip(tmp_path: Path) -> None:
+    def exclude_technician_zip(data: dict) -> None:
+        data["service_area"]["zip_exclusions"] = ["94107"]
+        data["service_area"]["dispatch_zones"].pop("94107")
+
+    with pytest.raises(TenantConfigError, match="excluded ZIPs"):
+        load_tenant(_variant(tmp_path, "harborlight", exclude_technician_zip))
+
+
+def test_loader_rejects_unknown_callback_sla_key(tmp_path: Path) -> None:
+    def add_unknown_key(data: dict) -> None:
+        data["handoff"]["callback_sla_minutes"]["weekend"] = 60
+
+    with pytest.raises(TenantConfigError, match="callback_sla_minutes"):
+        load_tenant(_variant(tmp_path, "harborlight", add_unknown_key))
 
 
 def test_loader_rejects_unknown_handoff_target_reference(tmp_path: Path) -> None:

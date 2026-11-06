@@ -4,7 +4,7 @@ import hashlib
 import json
 import os
 import shutil
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from pathlib import Path
 
 import pytest
@@ -280,6 +280,49 @@ def test_seed_includes_configured_saturday_slots(generated_root: Path) -> None:
     )
 
 
+def test_seed_validation_rejects_duplicate_customer_ids(generated_root: Path) -> None:
+    seed = TenantSeed.model_validate(_seed(generated_root))
+    tenant = load_tenant(generated_root / "tenants" / "harborlight.yaml")
+    seed.customers[1].customer_id = seed.customers[0].customer_id
+
+    with pytest.raises(SeedDataError, match="duplicate customer ids"):
+        validate_tenant_seed(seed, tenant)
+
+
+def test_seed_validation_rejects_slot_outside_business_hours(
+    generated_root: Path,
+) -> None:
+    seed = TenantSeed.model_validate(_seed(generated_root))
+    tenant = load_tenant(generated_root / "tenants" / "harborlight.yaml")
+    seed.slots[0].start = datetime.fromisoformat("2026-11-09T20:00:00-08:00")
+    seed.slots[0].end = datetime.fromisoformat("2026-11-09T21:00:00-08:00")
+
+    with pytest.raises(SeedDataError, match="outside business hours"):
+        validate_tenant_seed(seed, tenant)
+
+
+def test_seed_validation_rejects_slot_on_tenant_holiday(generated_root: Path) -> None:
+    seed = TenantSeed.model_validate(_seed(generated_root))
+    tenant = load_tenant(generated_root / "tenants" / "harborlight.yaml")
+    seed.slots[0].start = datetime.fromisoformat("2026-11-26T09:00:00-08:00")
+    seed.slots[0].end = datetime.fromisoformat("2026-11-26T10:00:00-08:00")
+
+    with pytest.raises(SeedDataError, match="holiday"):
+        validate_tenant_seed(seed, tenant)
+
+
+def test_build_tenant_seed_uses_tenant_timezone() -> None:
+    tenant = load_tenant(ROOT / "tenants" / "harborlight.yaml").model_copy(
+        update={"timezone": "America/New_York"}
+    )
+
+    seed = build_tenant_seed(tenant)
+
+    assert seed.anchor.utcoffset() == timedelta(hours=-5)
+    assert all(slot.start.utcoffset() == timedelta(hours=-5) for slot in seed.slots)
+    assert seed.calendar.timezone == "America/New_York"
+
+
 def test_seed_validation_rejects_customer_zip_outside_service_area(
     generated_root: Path,
 ) -> None:
@@ -408,6 +451,32 @@ def test_generate_corpus_restores_previous_output_when_commit_fails(
         generate_corpus(root)
 
     assert _tree(output) == before
+    assert not (root / "fixtures" / ".corpus.staging").exists()
+    assert not (root / "fixtures" / ".corpus.backup").exists()
+
+
+def test_generate_corpus_removes_partial_output_on_failed_first_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _source_root(tmp_path)
+    output = _output(root)
+    assert not output.exists()
+    real_replace = os.replace
+    failed = False
+
+    def fail_once(source: str | Path, target: str | Path) -> None:
+        nonlocal failed
+        if not failed and Path(target).name == "hashes.json":
+            failed = True
+            raise OSError("simulated first-run failure")
+        real_replace(source, target)
+
+    monkeypatch.setattr(os, "replace", fail_once)
+
+    with pytest.raises(OSError, match="simulated first-run failure"):
+        generate_corpus(root)
+
+    assert not output.exists()
     assert not (root / "fixtures" / ".corpus.staging").exists()
     assert not (root / "fixtures" / ".corpus.backup").exists()
 

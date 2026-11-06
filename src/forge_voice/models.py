@@ -13,8 +13,13 @@ class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-def ensure_unique(values: Sequence[str], label: str) -> None:
+def ensure_unique(
+    values: Sequence[str],
+    label: str,
+    *,
+    error_type: type[ValueError] = ValueError,
+) -> None:
     """Raise when a sequence contains duplicate string values."""
     duplicates = sorted({value for value in values if values.count(value) > 1})
     if duplicates:
-        raise ValueError(f"duplicate {label}: {duplicates}")
+        raise error_type(f"duplicate {label}: {duplicates}")

@@ -75,19 +75,6 @@ CRITICAL_REPEAT_IDS = frozenset(
     }
 )
 
-LOCKED_COUNTS = {
-    "text": 40,
-    "text_dev": 32,
-    "text_held_out": 8,
-    "text_smoke": 8,
-    "text_critical_repeat": 10,
-    "audio": 10,
-    "audio_dev": 8,
-    "audio_held_out": 2,
-    "audio_smoke": 2,
-    "audio_local": 6,
-}
-
 
 class ManifestCounts(StrictModel):
     text: int = Field(ge=0)
@@ -243,10 +230,6 @@ class ScenarioManifest(StrictModel):
             )
         if any(scenario.critical_repeat for scenario in audio):
             raise ValueError("critical_repeat is only defined for text scenarios")
-        if any(
-            scenario.held_out and not scenario.expected_final_state for scenario in self.scenarios
-        ):
-            raise ValueError("held-out scenarios must carry an expected final state")
 
         derived = {
             "text": len(text),

@@ -173,10 +173,15 @@ class HandoffTarget(StrictModel):
     hours: Literal["business_hours", "after_hours_and_emergency", "always"]
 
 
+class CallbackSla(StrictModel):
+    emergency: int = Field(gt=0)
+    non_emergency: Literal["next_business_day"]
+
+
 class Handoff(StrictModel):
     targets: list[HandoffTarget] = Field(min_length=1)
     default_target: Identifier
-    callback_sla_minutes: dict[str, int | Literal["next_business_day"]]
+    callback_sla_minutes: CallbackSla
 
 
 class AdapterConfig(StrictModel):
@@ -258,6 +263,11 @@ class TenantConfig(StrictModel):
                 raise ValueError(
                     f"technician {tech.id} references ZIPs outside the allowlist: "
                     f"{sorted(unknown_zips)}"
+                )
+            excluded_zips = set(tech.zips) & set(self.service_area.zip_exclusions)
+            if excluded_zips:
+                raise ValueError(
+                    f"technician {tech.id} references excluded ZIPs: {sorted(excluded_zips)}"
                 )
 
         target_ids = {target.id for target in self.handoff.targets}

@@ -18,9 +18,7 @@ from pydantic import Field
 from forge_voice.models import StrictModel, ensure_unique
 from forge_voice.tenants.models import Phone, TenantConfig, Zip
 
-TZ = ZoneInfo("America/Los_Angeles")
 ANCHOR_DATE = date(2026, 11, 9)
-ANCHOR_DATETIME = datetime(2026, 11, 9, 8, 0, tzinfo=TZ)
 CALENDAR_DAY_COUNT = 21
 SLOT_GAP_MINUTES = 30
 
@@ -336,12 +334,12 @@ def _calendar_days(start: date, count: int) -> list[date]:
     return [start + timedelta(days=offset) for offset in range(count)]
 
 
-def _at(day: date, clock: time) -> datetime:
-    return datetime.combine(day, clock, tzinfo=TZ)
+def _at(day: date, clock: time, tz: ZoneInfo) -> datetime:
+    return datetime.combine(day, clock, tzinfo=tz)
 
 
-def _start_from_iso(value: str) -> datetime:
-    return datetime.fromisoformat(value).replace(tzinfo=TZ)
+def _start_from_iso(value: str, tz: ZoneInfo) -> datetime:
+    return datetime.fromisoformat(value).replace(tzinfo=tz)
 
 
 def _overlaps(
@@ -393,7 +391,7 @@ def _day_windows(tenant: TenantConfig, day: date) -> list[tuple[time, time]]:
     return windows
 
 
-def _generate_open_slots(tenant: TenantConfig, prefix: str) -> list[SeedSlot]:
+def _generate_open_slots(tenant: TenantConfig, prefix: str, tz: ZoneInfo) -> list[SeedSlot]:
     """Create sequential, non-overlapping slots inside each day's configured hours."""
     slots: list[SeedSlot] = []
     sequence = 1
@@ -408,8 +406,8 @@ def _generate_open_slots(tenant: TenantConfig, prefix: str) -> list[SeedSlot]:
             offset = day_index % len(services)
             ordered = services[offset:] + services[:offset]
             for window_start, window_end in windows:
-                cursor = _at(day, window_start)
-                end_limit = _at(day, window_end)
+                cursor = _at(day, window_start, tz)
+                end_limit = _at(day, window_end, tz)
                 for service in ordered:
                     end = cursor + timedelta(minutes=service.duration_minutes)
                     if end > end_limit:
@@ -435,6 +433,7 @@ def _assign_bookings(
     prefix: str,
     customers_by_id: dict[str, SeedCustomer],
     slots: list[SeedSlot],
+    tz: ZoneInfo,
 ) -> list[SeedBooking]:
     bookings: list[SeedBooking] = []
     slots_by_key = {(slot.service_id, slot.technician_id, slot.start): slot for slot in slots}
@@ -442,7 +441,7 @@ def _assign_bookings(
     for spec in _booking_specs(tenant):
         service = tenant.require_service(spec.service_id)
         customer = customers_by_id[spec.customer_id]
-        start = _start_from_iso(spec.start)
+        start = _start_from_iso(spec.start, tz)
         end = start + timedelta(minutes=service.duration_minutes)
         key = (service.id, spec.technician_id, start)
         slot = slots_by_key.get(key)
@@ -506,8 +505,11 @@ def validate_tenant_seed(seed: TenantSeed, tenant: TenantConfig) -> None:
             f"seed tenant {seed.tenant_id!r} does not match config {tenant.tenant_id!r}"
         )
 
+    tz = ZoneInfo(tenant.timezone)
+    holidays = set(tenant.holidays)
+
     customer_ids = [customer.customer_id for customer in seed.customers]
-    ensure_unique(customer_ids, "customer ids")
+    ensure_unique(customer_ids, "customer ids", error_type=SeedDataError)
     customers = {customer.customer_id: customer for customer in seed.customers}
     for customer in seed.customers:
         if customer.tenant_id != tenant.tenant_id:
@@ -520,7 +522,7 @@ def validate_tenant_seed(seed: TenantSeed, tenant: TenantConfig) -> None:
     service_ids = {service.id for service in tenant.services}
     technicians = {technician.id: technician for technician in tenant.dispatch.technicians}
     slot_ids = [slot.slot_id for slot in seed.slots]
-    ensure_unique(slot_ids, "slot ids")
+    ensure_unique(slot_ids, "slot ids", error_type=SeedDataError)
     slots = {slot.slot_id: slot for slot in seed.slots}
     for slot in seed.slots:
         if slot.tenant_id != tenant.tenant_id:
@@ -536,9 +538,28 @@ def validate_tenant_seed(seed: TenantSeed, tenant: TenantConfig) -> None:
             )
         if slot.end <= slot.start:
             raise SeedDataError(f"slot {slot.slot_id} ends before it starts")
+        if slot.start.tzinfo is None or slot.end.tzinfo is None:
+            raise SeedDataError(f"slot {slot.slot_id} must use timezone-aware timestamps")
+        local_start = slot.start.astimezone(tz)
+        local_end = slot.end.astimezone(tz)
+        if local_start.date() in holidays:
+            raise SeedDataError(f"slot {slot.slot_id} is on a tenant holiday")
+        windows = _day_windows(tenant, local_start.date())
+        window_bounds = [
+            (
+                _at(local_start.date(), window_start, tz),
+                _at(local_start.date(), window_end, tz),
+            )
+            for window_start, window_end in windows
+        ]
+        if not any(
+            local_start >= window_start and local_end <= window_end
+            for window_start, window_end in window_bounds
+        ):
+            raise SeedDataError(f"slot {slot.slot_id} is outside business hours")
 
     booking_ids = [booking.booking_id for booking in seed.bookings]
-    ensure_unique(booking_ids, "booking ids")
+    ensure_unique(booking_ids, "booking ids", error_type=SeedDataError)
     booked_intervals: list[SeedBooking] = []
     for booking in seed.bookings:
         if booking.tenant_id != tenant.tenant_id:
@@ -590,10 +611,10 @@ def validate_tenant_seed(seed: TenantSeed, tenant: TenantConfig) -> None:
                 )
 
     ticket_ids = [ticket.ticket_id for ticket in seed.tickets]
-    ensure_unique(ticket_ids, "ticket ids")
+    ensure_unique(ticket_ids, "ticket ids", error_type=SeedDataError)
     tickets = {ticket.ticket_id: ticket for ticket in seed.tickets}
     calls = {call.call_id: call for call in seed.calls}
-    ensure_unique([call.call_id for call in seed.calls], "call ids")
+    ensure_unique([call.call_id for call in seed.calls], "call ids", error_type=SeedDataError)
     category_severity = {category.id: category.severity for category in tenant.emergency.categories}
     for ticket in seed.tickets:
         if ticket.tenant_id != tenant.tenant_id:
@@ -678,23 +699,25 @@ def build_tenant_seed(tenant: TenantConfig) -> TenantSeed:
     if prefix is None:
         raise SeedDataError(f"no seed prefix configured for tenant {tenant.tenant_id!r}")
 
+    tz = ZoneInfo(tenant.timezone)
+    anchor = datetime(ANCHOR_DATE.year, ANCHOR_DATE.month, ANCHOR_DATE.day, 8, 0, tzinfo=tz)
     customers = [
         SeedCustomer(
             tenant_id=tenant.tenant_id,
-            created_at=ANCHOR_DATETIME - timedelta(days=30),
+            created_at=anchor - timedelta(days=30),
             **customer,
         )
         for customer in _customer_map(tenant)
     ]
     customers_by_id = {customer.customer_id: customer for customer in customers}
 
-    slots = _generate_open_slots(tenant, prefix)
-    bookings = _assign_bookings(tenant, prefix, customers_by_id, slots)
+    slots = _generate_open_slots(tenant, prefix, tz)
+    bookings = _assign_bookings(tenant, prefix, customers_by_id, slots, tz)
 
     calls = [
         SeedCallRecord(
             tenant_id=tenant.tenant_id,
-            started_at=ANCHOR_DATETIME - timedelta(days=3, minutes=index * 17),
+            started_at=anchor - timedelta(days=3, minutes=index * 17),
             recording_ref="text_only",
             **call,
         )
@@ -703,7 +726,7 @@ def build_tenant_seed(tenant: TenantConfig) -> TenantSeed:
     tickets = [
         SeedEmergencyTicket(
             tenant_id=tenant.tenant_id,
-            created_at=ANCHOR_DATETIME - timedelta(days=3, minutes=30 + index),
+            created_at=anchor - timedelta(days=3, minutes=30 + index),
             **ticket,
         )
         for index, ticket in enumerate(_ticket_specs(tenant))
@@ -717,7 +740,7 @@ def build_tenant_seed(tenant: TenantConfig) -> TenantSeed:
             channel="sms",
             template="booking_confirmation",
             status="queued",
-            created_at=ANCHOR_DATETIME - timedelta(days=1, minutes=index * 11),
+            created_at=anchor - timedelta(days=1, minutes=index * 11),
         )
         for index, booking in enumerate(bookings)
     ]
@@ -727,7 +750,7 @@ def build_tenant_seed(tenant: TenantConfig) -> TenantSeed:
     seed = TenantSeed(
         schema_version=1,
         tenant_id=tenant.tenant_id,
-        anchor=ANCHOR_DATETIME,
+        anchor=anchor,
         customers=customers,
         bookings=bookings,
         slots=slots,
