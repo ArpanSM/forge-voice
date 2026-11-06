@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import json
 import os
+import threading
+import time
 from pathlib import Path
 
 from livekit.agents import (
@@ -44,6 +46,25 @@ def load_env() -> None:
 
 
 load_env()
+
+_TRACE_LOCK = threading.Lock()
+_TRACE_ROOM = ""
+
+
+def _trace(event: str, **fields: object) -> None:
+    """Append a JSONL trace event when SPIKE_TRACE is set.
+
+    The spike uses this to correlate caller-side audio timing with the agent's
+    turn-taking events. It is intentionally tiny and has no product role.
+    """
+    path = os.environ.get("SPIKE_TRACE", "").strip()
+    if not path:
+        return
+    record = {"ts": time.time(), "event": event, "room": _TRACE_ROOM, **fields}
+    line = json.dumps(record, ensure_ascii=False, default=str)
+    with _TRACE_LOCK, open(path, "a", encoding="utf-8") as fh:
+        fh.write(line + "\n")
+
 
 STORE = BookingStore()
 STORE.add_service(Service("drain", "Drain cleaning", 60))
@@ -103,7 +124,7 @@ class BookingAgent(Agent):
 
 def _service_id(value: str) -> str:
     text = value.lower()
-    if "drain" in text:
+    if any(word in text for word in ("drain", "cleaning", "plumbing")):
         return "drain"
     if any(word in text for word in ("hvac", "ac ", "air", "furnace", "heat")):
         return "hvac"
@@ -129,23 +150,37 @@ def _normalize_phone(value: str) -> str | None:
 @function_tool
 async def get_availability(ctx: RunContext, service: str, zip_code: str) -> str:
     """Return available appointment slots for a service and ZIP code."""
+    started = time.perf_counter()
+    _trace("tool_call", tool="get_availability", service=service, zip_code=zip_code)
     zip_code = _normalize_zip(zip_code) or ""
     if not zip_code:
-        return _json({"ok": False, "error": "invalid_zip"})
+        result = {"ok": False, "error": "invalid_zip"}
+        _trace(
+            "tool_result",
+            tool="get_availability",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            **result,
+        )
+        return _json(result)
     slots = STORE.get_availability(_service_id(service), zip_code)
-    return _json(
-        {
-            "ok": True,
-            "slots": [
-                {
-                    "slot_id": slot.slot_id,
-                    "technician": slot.technician,
-                    "start": slot.start,
-                }
-                for slot in slots
-            ],
-        }
+    result = {
+        "ok": True,
+        "slots": [
+            {
+                "slot_id": slot.slot_id,
+                "technician": slot.technician,
+                "start": slot.start,
+            }
+            for slot in slots
+        ],
+    }
+    _trace(
+        "tool_result",
+        tool="get_availability",
+        elapsed_ms=round((time.perf_counter() - started) * 1000),
+        slot_count=len(slots),
     )
+    return _json(result)
 
 
 def _last_user_text(ctx: RunContext) -> str:
@@ -182,14 +217,46 @@ async def book_appointment(
     confirmed: bool,
 ) -> str:
     """Book one slot after the caller has confirmed the read-back."""
+    started = time.perf_counter()
+    _trace(
+        "tool_call",
+        tool="book_appointment",
+        slot_id=slot_id,
+        customer_name=customer_name,
+        phone=phone,
+        address=address,
+        zip_code=zip_code,
+        confirmed=confirmed,
+    )
     if not any(word in _last_user_text(ctx) for word in AFFIRMATIVES):
-        return _json({"ok": False, "error": "explicit_confirmation_required"})
+        result = {"ok": False, "error": "explicit_confirmation_required"}
+        _trace(
+            "tool_result",
+            tool="book_appointment",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            **result,
+        )
+        return _json(result)
     normalized_zip = _normalize_zip(zip_code)
     if not normalized_zip:
-        return _json({"ok": False, "error": "invalid_zip"})
+        result = {"ok": False, "error": "invalid_zip"}
+        _trace(
+            "tool_result",
+            tool="book_appointment",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            **result,
+        )
+        return _json(result)
     normalized_phone = _normalize_phone(phone)
     if not normalized_phone:
-        return _json({"ok": False, "error": "invalid_phone"})
+        result = {"ok": False, "error": "invalid_phone"}
+        _trace(
+            "tool_result",
+            tool="book_appointment",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            **result,
+        )
+        return _json(result)
     customer = Customer(
         name=customer_name,
         phone=normalized_phone,
@@ -204,21 +271,36 @@ async def book_appointment(
         confirmed=confirmed,
     )
     if result.ok and result.booking:
-        return _json(
-            {
-                "ok": True,
-                "booking_id": result.booking.booking_id,
-                "slot": result.booking.slot.start,
-                "replayed": result.replayed,
-            }
+        payload = {
+            "ok": True,
+            "booking_id": result.booking.booking_id,
+            "slot": result.booking.slot.start,
+            "replayed": result.replayed,
+        }
+        _trace(
+            "tool_result",
+            tool="book_appointment",
+            elapsed_ms=round((time.perf_counter() - started) * 1000),
+            **payload,
         )
-    return _json({"ok": False, "error": result.error})
+        return _json(payload)
+    payload = {"ok": False, "error": result.error}
+    _trace(
+        "tool_result",
+        tool="book_appointment",
+        elapsed_ms=round((time.perf_counter() - started) * 1000),
+        **payload,
+    )
+    return _json(payload)
 
 
 @function_tool
 async def transfer_to_human(ctx: RunContext, reason: str) -> str:
     """Transfer the caller to a human when requested or when the booking cannot proceed."""
-    return _json({"ok": True, "transfer": True, "reason": reason})
+    _trace("tool_call", tool="transfer_to_human", reason=reason)
+    payload = {"ok": True, "transfer": True, "reason": reason}
+    _trace("tool_result", tool="transfer_to_human", **payload)
+    return _json(payload)
 
 
 server = AgentServer()
@@ -277,13 +359,90 @@ def _session() -> AgentSession:
         llm=llm,
         tts=tts,
         vad=silero.VAD.load(),
+        # The spike has no real receptionist; keep the agent listening while the
+        # scripted caller prepares its next turn.
+        user_away_timeout=None,
     )
+
+
+def _event_summary(event: object) -> dict[str, object]:
+    """Keep the trace small and stable; no audio arrays or model objects."""
+    data: dict[str, object] = {
+        "event_type": getattr(event, "type", type(event).__name__)
+    }
+    for field in (
+        "old_state",
+        "new_state",
+        "transcript",
+        "is_final",
+        "source",
+        "user_initiated",
+        "is_interruption",
+        "detection_delay",
+        "overlap_started_at",
+        "resumed",
+        "agent_ended",
+        "total_duration",
+    ):
+        value = getattr(event, field, None)
+        if value is not None:
+            data[field] = value
+    created_at = getattr(event, "created_at", None)
+    if created_at is not None:
+        data["event_ts"] = created_at
+    item = getattr(event, "item", None)
+    if item is not None:
+        role = getattr(item, "role", None)
+        if role is not None:
+            data["role"] = role
+        content = getattr(item, "content", None)
+        if content is not None:
+            data["content"] = (
+                " ".join(str(part) for part in content)
+                if isinstance(content, (list, tuple))
+                else str(content)
+            )
+    calls = getattr(event, "function_calls", None)
+    if calls is not None:
+        data["function_calls"] = [getattr(call, "name", str(call)) for call in calls]
+    error = getattr(event, "error", None)
+    if error is not None:
+        data["error"] = str(error)
+    return data
+
+
+def _trace_session(session: AgentSession) -> None:
+    for event_name in (
+        "agent_state_changed",
+        "user_state_changed",
+        "user_input_transcribed",
+        "conversation_item_added",
+        "speech_created",
+        "overlapping_speech",
+        "agent_false_interruption",
+        "function_tools_executed",
+        "error",
+    ):
+        session.on(
+            event_name, lambda event: _trace("session_event", **_event_summary(event))
+        )
 
 
 @server.rtc_session()
 async def entrypoint(ctx: JobContext) -> None:
+    global _TRACE_ROOM
+    _TRACE_ROOM = ctx.room.name
+    _trace("entrypoint", room=ctx.room.name, job=getattr(ctx.job, "id", ""))
     await ctx.connect()
+    _trace("room_connected", room=ctx.room.name)
+
+    async def _on_shutdown(reason: str = "") -> None:
+        _trace("shutdown", room=ctx.room.name, reason=reason)
+
+    ctx.add_shutdown_callback(_on_shutdown)
+
     session = _session()
+    _trace_session(session)
     await session.start(agent=BookingAgent(), room=ctx.room)
     await session.generate_reply(
         instructions=(

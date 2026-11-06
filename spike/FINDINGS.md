@@ -1,94 +1,164 @@
 # Voice spike findings — 6 Nov 2026
 
+**Status:** spike complete; go on LiveKit-first, do not claim the demo latency target.
 **Machine:** i5-8300H, 7 GB RAM, GTX 1050 Ti Mobile 4 GB; one model in VRAM at a time.
 **Model:** LFM3-Audio-2B Q4_K_M + F16 projector, served by llama.cpp on
 `127.0.0.1:8082`.
-**Runtime:** LiveKit Agents 1.8.11, Python 3.12, console mode.
+**Runtime:** LiveKit Agents 1.8.11, Python 3.12, LiveKit Cloud WebRTC.
 **Profiles:** hybrid (LFM3 audio + Groq `qwen/qwen3.8-27b` LLM) and fully local LFM3.
+
+## Artifacts
+
+- [Browser demo screenshot](results/voice-spike-browser.png)
+- [Hybrid WebRTC report](results/webrtc-hybrid.md) · [JSON](results/webrtc-hybrid.json)
+- [Fully local WebRTC report](results/webrtc-lfm3.md) · [JSON](results/webrtc-lfm3.json)
+
+## What changed since the last note
+
+- **Browser token endpoint and page.** `make spike-token` serves a localhost page and a
+  short-lived LiveKit token. `/health` and `/token` were exercised; the page loaded in
+  Chrome. The page is the manual demo path.
+- **Automated WebRTC caller.** `scripts/webrtc_bench.py` starts the token server and the
+  agent worker, joins a LiveKit Cloud room, publishes caller TTS audio, subscribes to the
+  agent audio, and records the trace. This is the measured path; it uses the same token
+  endpoint the browser uses.
+- **Trace instrumentation.** `spike/agent.py` writes JSONL events for agent/user state,
+  transcripts, tool calls/results, speech events, overlapping speech and errors when
+  `SPIKE_TRACE` is set. This is how barge-in and first-audio are measured.
+- **10-turn run on both profiles**, plus barge-in, silence and three degraded-audio
+  variants.
+
+## 10-turn WebRTC results
+
+Measured over the real LiveKit Cloud WebRTC path. One 10-turn run per profile; this is a
+10-turn sample, not a p50/p95 over many calls.
+
+| Profile | p50 | p95 | Per-turn first audio (ms) |
+|---|---:|---:|---|
+| Hybrid (LFM3 audio + Groq Qwen) | **2,868 ms** | **5,345 ms** | 2820, 4061, 2912, 2038, 4965, 2704, 2823, 5058, 5580, 2620 |
+| Fully local LFM3 | **2,861 ms** | **5,347 ms** | 2792, 4285, 2925, 2094, 5147, 2796, 2437, 5019, 5511, 2614 |
+
+**Method:** first audio is the trace timestamp when the agent state changes to `speaking`
+after the caller's speech ends. It includes the 500 ms trailing silence/endpointing and the
+LLM/tool loop. Actual audio frames may start tens of milliseconds later. False
+interruptions: **0** in both runs.
+
+**Booking path:** both runs committed `bk_0001` at **Monday 11:00 am** after an explicit
+"yes"; earlier `book_appointment` calls were rejected with
+`explicit_confirmation_required`. Tool execution was under 1 ms; the caller-perceived
+latency is STT/endpointing/LLM/TTS, not the tool itself.
+
+**Comparison with the direct 3-turn bench:** hybrid 1.15 / 2.31 / 2.15 s; local 3.18 /
+5.53 / 5.01 s. The 10-turn WebRTC path adds transport, endpointing and the agent's
+multi-step tool loop. The 10-turn p95 is above the original 3.0 s stop/go line, so the demo
+tier is **not** met. Do not claim sub-3 s or sub-2 s. Latency remains report-only, per
+[#23](https://github.com/ArpanSM/forge-roadmap/issues/23) and
+[#26](https://github.com/ArpanSM/forge-roadmap/issues/26); production APIs should be
+re-measured before quoting.
+
+The hybrid and local 10-turn numbers landing in the same band is not a claim that the
+local model is as fast as Groq. The direct 3-turn bench shows the local multi-call tool
+turn cost; in the 10-turn WebRTC run, short turns and transport/endpointing dominate. Report
+both tiers.
+
+## Barge-in
+
+- **Hybrid:** 880 ms from caller interruption to the agent leaving `speaking`; recovered
+  with a new response.
+- **Fully local:** 884 ms; recovered.
+- **False interruptions:** 0; **overlapping-speech events:** 0 on these runs.
+- The 500 ms barge-in target is **not** met, but the behavior is usable: the agent stops,
+  yields and answers again. This was measured with synthetic caller TTS over WebRTC, not a
+  real handset or acoustic echo path.
+
+## Silence
+
+- 3 s of silence produced **no proactive prompt**.
+- When the caller said "I need a drain cleaning" after the silence, the agent recovered;
+  first audio was 2,133 ms.
+- Add an explicit silence prompt ("Are you still there?") in the product; do not rely on
+  recovery only.
+
+## Degraded audio
+
+One long caller turn with service, name, address, ZIP and phone, degraded three ways. The
+VAD split the long turn into segments; the transcript below is the combined final STT.
+
+| Degradation | First audio | ZIP | Address | Phone | Transcript |
+|---|---:|---|---|---|---|
+| Noisy | 1,055 ms | No | Yes | Yes | "I need a drain cleaning. My name is Sam Rivera. My address is 12 Alder Street, Nader 40-07. My phone…" |
+| Low-quality mic | 1,093 ms | No | Yes | Yes | "…Nadri 40 O said…" |
+| Packet loss | 1,111 ms | No | Yes | Yes | "…Nadri 40 Ode…" |
+
+**Finding:** ZIP is the weak entity on degraded audio. "94107" was heard as "Nader 40-07",
+"Nadri 40 O said" and "Nadri 40 Ode". Address and phone mostly held. The product needs
+digit-by-digit ZIP prompts, a read-back, and a reprompt on anything that is not five digits.
+The long utterance was also split by VAD and the agent responded to early segments; this is
+a turn-taking issue, not only an ASR issue.
+
+## Cost and free tier
+
+- **Demo:** $0 on LiveKit Build + local LFM3 + Groq free tier.
+- **Production estimate:** **$0.03–0.06/min** from
+  [#23](https://github.com/ArpanSM/forge-roadmap/issues/23); not measured in this spike.
+- LiveKit Build includes 60 audio-simulation turns. This harness used its own WebRTC caller,
+  so those 60 turns were not consumed.
+- Groq free limits: 30 RPM, 1K RPD, 8K TPM, 200K TPD. One 10-turn run per profile is well
+  inside the limit.
+- Local LFM3: one model in 4 GB VRAM; TTS streams first frame in ~0.24–0.32 s but full
+  synthesis runs at roughly 1x real time.
 
 ## What works
 
-- **One local model can do STT, chat and TTS.** LFM3-Audio-2B handled all three on the 4 GB
-  card. The audio model's `/v1/chat/completions` returned native `tool_calls` once the tools
-  were attached to the `Agent`.
-- **TTS streams.** `/tts` returns a chunked WAV; the first PCM frame arrived in **233–265 ms**
-  across the benchmark turns. The full WAV takes 4.4–8.7 s for 4–8 s of speech, but playback
-  can start on the first chunk.
-- **LiveKit console works.** The agent greeted with `llm_ttft: 542 ms` and
-  `tts_ttfb: 241 ms` on the console status line.
-- **The booking policy is the safety boundary.** A premature `book_appointment` call was
-  rejected with `explicit_confirmation_required`; after the caller said "yes", the same call
-  created exactly one booking. The six offline tests cover confirmation, double booking,
-  idempotent replay and conflict.
-- **LFM3 STT is usable when numbers are spoken as digits.** "nine four one zero seven"
-  transcribed as `94107`; "five five five, one two three, four five six seven" transcribed as
-  `555-123-4567`.
-- **The hybrid profile is much faster.** Groq `qwen/qwen3.8-27b` did a two-call tool turn in
-  **411 ms + 403 ms**. With LFM3 STT/TTS, first audio was **1.15 / 2.31 / 2.15 s** over three
-  turns.
+- Token endpoint, browser page, LiveKit Cloud WebRTC room, agent dispatch and audio
+  subscription.
+- One booking path: explicit confirmation, one booking, no double booking; the six offline
+  policy tests still pass.
+- Barge-in recovery and no false interruptions in these runs.
+- Trace-based measurement of agent state, transcripts, tool calls and overlapping speech.
 
-## Measured turn — fully local LFM3 (scripted booking, TTS caller)
+## What failed or is weak
 
-| Turn | STT | LLM + tools | TTS first frame | First audio | TTS total |
-|---|---:|---:|---:|---:|---:|
-| 1 — service + ZIP, availability | 499 ms | 2,436 ms | 243 ms | **3,178 ms** | 7,121 ms |
-| 2 — details, premature booking rejected | 1,403 ms | 3,874 ms | 250 ms | **5,527 ms** | 4,820 ms |
-| 3 — "yes", booking commits | 425 ms | 4,324 ms | 265 ms | **5,014 ms** | 8,747 ms |
-
-The first-audio number is `STT + LLM/tools + TTS first frame`. The fully local profile is
-**above the 1.8 s p95 target** on this hardware. The bottleneck is the LLM tool turn (two model
-calls: choose a tool, then speak the result), not TTS.
-
-## Measured turn — hybrid (LFM3 audio + Groq Qwen)
-
-| Turn | STT | LLM + tools | TTS first frame | First audio | TTS total |
-|---|---:|---:|---:|---:|---:|
-| 1 — service + ZIP, availability | 498 ms | 408 ms | 247 ms | **1,153 ms** | 4,874 ms |
-| 2 — details, availability | 1,331 ms | 667 ms | 315 ms | **2,313 ms** | 11,244 ms |
-| 3 — "yes", booking commits | 395 ms | 1,520 ms | 237 ms | **2,152 ms** | 8,457 ms |
-
-Three turns are a smoke test, not p50/p95. The hybrid is the demo headline; the fully local
-profile is the offline fallback. The budget and cost calculator are in
-`forge-roadmap/research/voice-latency-cost-2026-11.md` (#23).
-
-## What failed
-
-- **Continuous numbers are fragile.** "94107" was heard as "9410 said" or "91-07"; a
-  continuous phone number was heard as "555-010-01010". The fix is product-level: ask callers
-  to say digits one at a time, normalize, read back and reject anything that is not 5/10
-  digits. This is now enforced in the tool.
-- **OrcaRouter free models are capacity-limited.** `deepseek/deepseek-v4.1-flash-free`,
-  `deepseek/deepseek-v4-flash-free` and `z-ai/glm-5.3-flash-free` returned HTTP 429
-  `free_rate_limited` on 6 Nov. `tencent/hy4-preview-free` works (2.65 s for a tool call) but
-  is last resort. OrcaRouter Qwen3.8 is a paid model (HTTP 402).
-- **Groq was blocked earlier, not now.** The first run returned HTTP 403 (`error code: 1010`)
-  with a Python default user-agent; the current key works and `qwen/qwen3.8-27b` returns tool
-  calls. Free limits: 30 RPM, 1K RPD, 8K TPM, 200K TPD. `openai/gpt-oss-*` models reject
-  `reasoning_effort=none`; use `low`, `medium` or `high`.
-- **NVIDIA is not a voice model.** `nvidia/nemotron-3.5-lightning-30b-a3b` returned a correct
-  tool call but took 4.91 s; `deepseek-ai/deepseek-v4.1-flash` timed out at 60 s. Keep NVIDIA
-  for long-context extraction, not the voice loop.
-- **Deepgram and Cartesia were not used.** The user has no Deepgram credit and Cartesia is
-  not working; the local LFM3 path is the required audio profile.
-- **Street suffixes are fragile too.** "12 Alder St" was transcribed as "12 Alder Saint" in
-  the hybrid run. The ZIP and phone normalizers held, but the address needs a suffix
-  normalizer and a read-back of the full address.
-- **Browser/Cloud transport is not measured yet.** Console mode is verified; the browser
-  token endpoint and WebRTC path are the next step.
-- **Barge-in is not measured yet.** The agent runs; the next step is a scripted interruption
-  and a noisy/package-loss run.
+- 10-turn WebRTC p95 **5.3 s** on both profiles; above the 3.0 s demo stop/go line.
+- Barge-in yield **~0.88 s**; above the 0.5 s target.
+- No proactive silence prompt.
+- Degraded ZIP recognition is unreliable.
+- The 10-turn sample is one run per profile; provider/network variance is not characterised.
+- Tool `elapsed_ms` measures tool execution only; the LLM/tool-loop time is in the
+  caller-perceived first audio, not in the tool trace.
+- No real phone/SIP path, no human listener, no acoustic echo cancellation test.
+- Caller audio is synthetic LFM3 TTS; a real human will have different timing and accents.
 
 ## Decision
 
-- **LiveKit-first still holds.** The runtime worked, the model streaming worked, and the
-  console gives a clean mic/speaker path.
-- **Hybrid is the demo headline.** LFM3-Audio-2B for STT/TTS + Groq `qwen/qwen3.8-27b` for
-  LLM/tools: 1.15–2.31 s first audio over three turns. Fully local LFM3 (3.18–5.53 s) is the
-  offline fallback.
-- **Do not promise sub-2 s on this hardware.** Report the measured tiers. The hybrid can
-  approach the target on a good network; the local 2B model cannot.
-- **Groq is the first fallback, not the default.** The local LFM3 path stays the default
-  (`LLM_PROVIDER=lfm3`) because it works offline and has no free-tier ceiling. Use
-  `LLM_PROVIDER=groq` for the hybrid demo.
-- **Next:** browser/Cloud transport, barge-in, degraded audio, and a 10-turn benchmark with
-  p50/p95 on both profiles. The address suffix normalizer is a small fix before the run.
+- **LiveKit-first holds.** The WebRTC path, token endpoint, agent dispatch, turn detector,
+  barge-in recovery and trace instrumentation all worked. Pipecat remains the portability
+  adapter; nothing here justifies switching the primary runtime.
+- **Go on the architecture; do not claim the demo latency target.** The 10-turn p95 is above
+  the original 3.0 s line. Publish the measured tiers, mention the production-API caveat, and
+  re-measure before quoting. If the demo needs sub-3 s, change the model/profile or use
+  hosted APIs for the demo; the policy and tool layer are already correct.
+- **Before the demo:** add a silence prompt, a ZIP reprompt/read-back, and a turn-taking
+  guard for long caller utterances. Keep the confirmation/idempotency path unchanged.
+- **Do not claim:** sub-2 s, sub-3 s, a production SLA, local parity with Groq, or a $0
+  production phone line.
+
+## Reproduce
+
+```bash
+lfm3 audio
+make spike-check
+make spike-test
+
+# browser page + token endpoint
+make spike-token
+# open http://127.0.0.1:8000
+
+# automated WebRTC runs
+PYTHONPATH=. python3 scripts/webrtc_bench.py --profile hybrid --mode all
+PYTHONPATH=. python3 scripts/webrtc_bench.py --profile lfm3 --mode latency
+PYTHONPATH=. python3 scripts/webrtc_bench.py --profile lfm3 --mode barge-in
+```
+
+The bench writes `report-<profile>.json`, `report-<profile>.md`, `trace-<profile>.jsonl`,
+caller WAVs and the agent log under `/tmp/opencode/webrtc-bench/`.

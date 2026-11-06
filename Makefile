@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: spike-test spike-check spike-bench spike-console
+.PHONY: spike-test spike-check spike-bench spike-console spike-token spike-webrtc
 
 spike-test:
 	$(PYTHON) -m pytest spike -q
@@ -13,3 +13,9 @@ spike-bench:
 
 spike-console:
 	$(PYTHON) -m spike.agent console
+
+spike-token:
+	$(PYTHON) -m spike.token_server
+
+spike-webrtc:
+	PYTHONPATH=. $(PYTHON) scripts/webrtc_bench.py

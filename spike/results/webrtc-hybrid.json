@@ -1,0 +1,197 @@
+{
+  "profile": "hybrid",
+  "turns_script": [
+    "Hi, I need a drain cleaning.",
+    "The ZIP is nine four one zero seven.",
+    "My address is 12 Alder Street.",
+    "My name is Sam Rivera.",
+    "My phone is five five five, one two three, four five six seven.",
+    "What times do you have on Monday?",
+    "Is eleven available?",
+    "Let's do eleven.",
+    "Yes, book it.",
+    "Thanks, that's all."
+  ],
+  "latency": {
+    "mode": "latency",
+    "profile": "hybrid",
+    "room": "spike-hybrid-lat-7a357dbc",
+    "turns": [
+      {
+        "turn": 1,
+        "caller_text": "Hi, I need a drain cleaning.",
+        "first_audio_ms": 2820,
+        "tool_results": []
+      },
+      {
+        "turn": 2,
+        "caller_text": "The ZIP is nine four one zero seven.",
+        "first_audio_ms": 4061,
+        "tool_results": [
+          {
+            "ts": 1793981887.2747128,
+            "event": "tool_result",
+            "room": "spike-hybrid-lat-7a357dbc",
+            "tool": "get_availability",
+            "elapsed_ms": 0,
+            "slot_count": 2
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "caller_text": "My address is 12 Alder Street.",
+        "first_audio_ms": 2912,
+        "tool_results": []
+      },
+      {
+        "turn": 4,
+        "caller_text": "My name is Sam Rivera.",
+        "first_audio_ms": 2038,
+        "tool_results": []
+      },
+      {
+        "turn": 5,
+        "caller_text": "My phone is five five five, one two three, four five six seven.",
+        "first_audio_ms": 4965,
+        "tool_results": [
+          {
+            "ts": 1793981928.7864268,
+            "event": "tool_result",
+            "room": "spike-hybrid-lat-7a357dbc",
+            "tool": "book_appointment",
+            "elapsed_ms": 0,
+            "ok": false,
+            "error": "explicit_confirmation_required"
+          }
+        ]
+      },
+      {
+        "turn": 6,
+        "caller_text": "What times do you have on Monday?",
+        "first_audio_ms": 2704,
+        "tool_results": []
+      },
+      {
+        "turn": 7,
+        "caller_text": "Is eleven available?",
+        "first_audio_ms": 2823,
+        "tool_results": []
+      },
+      {
+        "turn": 8,
+        "caller_text": "Let's do eleven.",
+        "first_audio_ms": 5058,
+        "tool_results": [
+          {
+            "ts": 1793981965.7447312,
+            "event": "tool_result",
+            "room": "spike-hybrid-lat-7a357dbc",
+            "tool": "book_appointment",
+            "elapsed_ms": 0,
+            "ok": false,
+            "error": "explicit_confirmation_required"
+          }
+        ]
+      },
+      {
+        "turn": 9,
+        "caller_text": "Yes, book it.",
+        "first_audio_ms": 5580,
+        "tool_results": [
+          {
+            "ts": 1793981980.2876675,
+            "event": "tool_result",
+            "room": "spike-hybrid-lat-7a357dbc",
+            "tool": "book_appointment",
+            "elapsed_ms": 0,
+            "ok": true,
+            "booking_id": "bk_0001",
+            "slot": "Monday 9 November, 11:00 am",
+            "replayed": false
+          }
+        ]
+      },
+      {
+        "turn": 10,
+        "caller_text": "Thanks, that's all.",
+        "first_audio_ms": 2620,
+        "tool_results": []
+      }
+    ],
+    "first_audio_ms": [
+      2820,
+      4061,
+      2912,
+      2038,
+      4965,
+      2704,
+      2823,
+      5058,
+      5580,
+      2620
+    ],
+    "p50_ms": 2867.5,
+    "p95_ms": 5345.099999999999,
+    "false_interruptions": 0
+  },
+  "barge_in": {
+    "mode": "barge-in",
+    "profile": "hybrid",
+    "room": "spike-hybrid-bi-469f3ca0",
+    "barge_in_yield_ms": 880,
+    "overlapping_speech": [],
+    "false_interruptions": 0,
+    "recovered": true,
+    "recovered_text": []
+  },
+  "silence": {
+    "mode": "silence",
+    "profile": "hybrid",
+    "room": "spike-hybrid-sil-035dcee7",
+    "prompted_during_silence": false,
+    "recovered": true,
+    "first_audio_ms": 2133
+  },
+  "degraded": [
+    {
+      "mode": "degraded",
+      "profile": "hybrid",
+      "room": "spike-hybrid-noisy-044c396f",
+      "degradation": "noisy",
+      "first_audio_ms": 1055,
+      "transcript": "I need a drain cleaning. My name is Sam Rivera. My address is 12 Alder Street, Nader 40-07. My phone is 555-123-4567.",
+      "entity_hits": {
+        "zip": false,
+        "address": true,
+        "phone": true
+      }
+    },
+    {
+      "mode": "degraded",
+      "profile": "hybrid",
+      "room": "spike-hybrid-lowmic-044c396f",
+      "degradation": "lowmic",
+      "first_audio_ms": 1093,
+      "transcript": "I need a drain cleaning. My name is Sam Rivera. My address is 12 Alder Street, Nadri 40 O said. My phone is 555-123-4567.",
+      "entity_hits": {
+        "zip": false,
+        "address": true,
+        "phone": true
+      }
+    },
+    {
+      "mode": "degraded",
+      "profile": "hybrid",
+      "room": "spike-hybrid-packetloss-044c396f",
+      "degradation": "packetloss",
+      "first_audio_ms": 1111,
+      "transcript": "I need a drain cleaning. My name is Sam Rivera. My address is 12 Alder Street, Nadri 40 Ode. My phone is 555-123-4567.",
+      "entity_hits": {
+        "zip": false,
+        "address": true,
+        "phone": true
+      }
+    }
+  ]
+}
