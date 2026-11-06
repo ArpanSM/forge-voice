@@ -9,12 +9,17 @@ come after the spike.
 ## Model profile
 
 - **STT + TTS:** LFM3-Audio-2B, local, `http://127.0.0.1:8082`; no API cost.
-- **LLM:** the same LFM3-Audio-2B by default. It can chat, call tools, do STT and TTS on one
-  model, which matters on a 4 GB GPU. OrcaRouter `tencent/hy4-preview-free` is the optional
-  hosted fallback; Groq returned 403 in this environment.
+- **LLM — hybrid (demo headline):** Groq `qwen/qwen3.8-27b`, set
+  `LLM_PROVIDER=groq`. It did a two-call tool turn in 0.81 s; first audio was 1.15–2.31 s over
+  three turns.
+- **LLM — fully local (offline fallback):** LFM3-Audio-2B, the default
+  `LLM_PROVIDER=lfm3`. One model handles STT, chat/tools and TTS on a 4 GB GPU; first audio was
+  3.18–5.53 s.
+- **Last resort:** OrcaRouter `tencent/hy4-preview-free` (2.65 s tool call). OrcaRouter DeepSeek
+  free returned 429; Qwen3.8 is paid.
 - **Transport:** LiveKit Agents; console mode is verified. Browser/Cloud is the next step.
-- **Not used:** Deepgram and Cartesia. They stayed in `.env.example` only as an optional
-  hosted profile.
+- **Not used:** Deepgram and Cartesia (no credit / not working). NVIDIA NIM is for long-context
+  extraction, not voice: the tested models were 4.9 s or timed out.
 
 ## Day 1 — offline booking core
 
@@ -29,8 +34,9 @@ come after the spike.
 2. `cp .env.example .env` and fill the LiveKit keys; the local LFM3 path needs no LLM key.
 3. `make spike-check` validates presence and never prints values.
 4. `make spike-bench` runs a scripted booking turn: caller TTS → STT → agent (LLM + tools) →
-   assistant TTS, with per-stage timings.
-5. `make spike-console` runs the LiveKit console for a live mic/speaker check.
+   assistant TTS, with per-stage timings. It uses the fully local profile by default.
+5. `LLM_PROVIDER=groq make spike-bench` runs the hybrid profile (LFM3 audio + Groq LLM).
+6. `make spike-console` runs the LiveKit console for a live mic/speaker check.
 
 ## Day 3 — stress + findings
 
@@ -40,9 +46,11 @@ come after the spike.
 
 ## Decision rule
 
-- **Go:** p95 ≤ 3.0 s on the hosted-free profile, barge-in usable, one booking path correct.
-- **Change profile/runtime:** p95 > 3.0 s consistently, barge-in unusable, or the free tier
-  cannot complete a demo.
+- **Go:** hybrid p95 ≤ 3.0 s over 10 turns, barge-in usable, one booking path correct.
+- **Change profile/runtime:** hybrid p95 > 3.0 s consistently, barge-in unusable, or the free
+  tier cannot complete a demo.
+- **Fully local is a documented fallback, not the p95 target:** 3.2–5.5 s first audio on this
+  laptop. Do not claim sub-2 s for it.
 - **Record-only fallback:** keep the browser demo local and record it; do not claim a hosted
   production service.
 

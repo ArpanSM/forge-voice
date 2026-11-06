@@ -17,6 +17,7 @@ OPTIONAL = [
     "GROQ_API_KEY",
     "DEEPGRAM_API_KEY",
     "CARTESIA_API_KEY",
+    "NVIDIA_API",
     "TWILIO_ACCOUNT_SID",
     "LFM3_AUDIO_BASE_URL",
     "LFM3_AUDIO_MODEL",
@@ -62,7 +63,7 @@ def main() -> int:
     if missing:
         print("\nFill .env from .env.example, or run the local text fallback.")
         return 1
-    print("\nEnvironment looks ready (LFM3 audio + local/LLM profile).")
+    print("\nEnvironment looks ready (LFM3 audio; local or hybrid LLM profile).")
     return 0
 
 
