@@ -1,39 +1,42 @@
 # Voice spike — 3 days, no product commitment
 
-**Question:** can LiveKit Agents on the free tier carry the Harborlight booking flow with
-acceptable latency and turn-taking?
+**Question:** can LiveKit Agents plus the local LFM3 audio model carry the Harborlight
+booking flow with acceptable latency and turn-taking?
 
 This folder is a throwaway spike. It is not the product layout. The product spec and tickets
 come after the spike.
 
-## Day 1 — offline booking core
+## Model profile
 
-The pure booking policy is here first so the audio work has something real to call:
+- **STT + TTS:** LFM3-Audio-2B, local, `http://127.0.0.1:8082`; no API cost.
+- **LLM:** the same LFM3-Audio-2B by default. It can chat, call tools, do STT and TTS on one
+  model, which matters on a 4 GB GPU. OrcaRouter `tencent/hy4-preview-free` is the optional
+  hosted fallback; Groq returned 403 in this environment.
+- **Transport:** LiveKit Agents; console mode is verified. Browser/Cloud is the next step.
+- **Not used:** Deepgram and Cartesia. They stayed in `.env.example` only as an optional
+  hosted profile.
+
+## Day 1 — offline booking core
 
 - `spike/booking.py` — services, slots, availability, one idempotent booking write,
   confirmation gate, no double booking.
 - `spike/test_booking.py` — six tests for the failure paths that matter.
 - `make spike-test` — no network, no keys.
 
-## Day 2 — hosted browser call
+## Day 2 — local audio loop
 
-1. Copy `.env.example` to `.env` and fill the free-tier keys.
-2. `make spike-check` validates presence (never prints values).
-3. Install LiveKit Agents and the plugins, then run a browser agent with:
-   - Deepgram Nova-3 (STT)
-   - OrcaRouter or Groq free LLM
-   - Cartesia Sonic (TTS)
-   - LiveKit Cloud browser transport
-4. Record 10 scripted calls: clean booking, no availability, interruption, silence, wrong
-   service, transfer.
-5. Measure caller-perceived p50/p95, barge-in yield, false interruptions, tool latency and
-   cost.
+1. `lfm3 audio` loads the model on `127.0.0.1:8082`.
+2. `cp .env.example .env` and fill the LiveKit keys; the local LFM3 path needs no LLM key.
+3. `make spike-check` validates presence and never prints values.
+4. `make spike-bench` runs a scripted booking turn: caller TTS → STT → agent (LLM + tools) →
+   assistant TTS, with per-stage timings.
+5. `make spike-console` runs the LiveKit console for a live mic/speaker check.
 
-## Day 3 — stress + local fallback
+## Day 3 — stress + findings
 
 - Noisy audio, low-quality microphone, packet loss.
-- faster-whisper + Ollama + Kokoro/Piper fallback.
-- Write `spike/FINDINGS.md`: what worked, what failed, free-tier limits, go/no-go.
+- Browser/LiveKit Cloud transport and token endpoint.
+- `spike/FINDINGS.md`: what worked, what failed, free-tier limits, go/no-go.
 
 ## Decision rule
 

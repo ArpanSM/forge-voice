@@ -10,11 +10,17 @@ REQUIRED = [
     "LIVEKIT_URL",
     "LIVEKIT_API_KEY",
     "LIVEKIT_API_SECRET",
-    "DEEPGRAM_API_KEY",
-    "CARTESIA_API_KEY",
 ]
 
-OPTIONAL = ["ORCAROUTER_API_KEY", "GROQ_API_KEY", "TWILIO_ACCOUNT_SID"]
+OPTIONAL = [
+    "ORCAROUTER_API_KEY",
+    "GROQ_API_KEY",
+    "DEEPGRAM_API_KEY",
+    "CARTESIA_API_KEY",
+    "TWILIO_ACCOUNT_SID",
+    "LFM3_AUDIO_BASE_URL",
+    "LFM3_AUDIO_MODEL",
+]
 
 
 def load_env(path: Path) -> None:
@@ -40,13 +46,23 @@ def main() -> int:
     missing = [name for name in REQUIRED if not present(name)]
     for name in REQUIRED:
         print(f"{'ok' if present(name) else 'missing':7} {name}")
+
+    provider = os.environ.get("LLM_PROVIDER", "lfm3").strip().lower()
+    print(f"{'ok':7} LLM_PROVIDER={provider}")
+    if provider == "orcarouter" and not present("ORCAROUTER_API_KEY"):
+        print("missing ORCAROUTER_API_KEY for LLM_PROVIDER=orcarouter")
+        missing.append("ORCAROUTER_API_KEY")
+    if provider == "groq" and not present("GROQ_API_KEY"):
+        print("missing GROQ_API_KEY for LLM_PROVIDER=groq")
+        missing.append("GROQ_API_KEY")
+
     for name in OPTIONAL:
-        print(f"{'ok' if present(name) else 'optional':7} {name}")
+        print(f"{'ok' if present(name) else 'unused':7} {name}")
 
     if missing:
         print("\nFill .env from .env.example, or run the local text fallback.")
         return 1
-    print("\nEnvironment looks ready for the hosted spike.")
+    print("\nEnvironment looks ready (LFM3 audio + local/LLM profile).")
     return 0
 
 
