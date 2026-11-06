@@ -1,7 +1,7 @@
 PYTHON ?= python3.12
 export PYTHONPATH := src
 
-.PHONY: help install corpus corpus-check test lint format
+.PHONY: help install corpus corpus-check test lint format text-demo
 
 help:
 	@printf '%s\n' \
@@ -10,6 +10,7 @@ help:
 	  'make corpus-check  Regenerate and fail if committed fixtures drift' \
 	  'make test          Run the offline unit test suite' \
 	  'make lint          Run ruff check and format check' \
+	  'make text-demo     Run representative text-mode book/reschedule/emergency/handoff calls' \
 	  'make format        Apply ruff formatting'
 
 install:
@@ -32,3 +33,6 @@ lint:
 format:
 	$(PYTHON) -m ruff check --fix src tests
 	$(PYTHON) -m ruff format src tests
+
+text-demo:
+	$(PYTHON) -m forge_voice.runtime.demo
