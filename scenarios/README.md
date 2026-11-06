@@ -16,3 +16,7 @@ hard-gate labels and required fields.
 
 Audio is intentionally not synthesized here. Ticket #5 generates the real WAV fixtures; this
 ticket ships placeholders only.
+
+`manifest.yaml` is authoritative for the audio tenant split. It carries 7 Harborlight and 3
+Summit audio scenarios. The #26 prose's 8/2 sentence is stale; do not edit the manifest to
+match the prose.

@@ -1,8 +1,9 @@
 """Deterministic synthetic seed data for both tenants.
 
 Anchor time is fixed at Monday 2026-11-09 08:00 America/Los_Angeles. No wall clock or random
-source is used, so repeated generation is byte-identical. Slot generation is non-overlapping
-per technician per day; a booking interval is never left open.
+source is used, so repeated generation is byte-identical. Slots follow each tenant's configured
+business hours, skip holidays and never overlap per technician; a booking interval is never
+left open.
 """
 
 from __future__ import annotations
@@ -14,15 +15,13 @@ from zoneinfo import ZoneInfo
 
 from pydantic import Field
 
-from forge_voice.models import StrictModel
-from forge_voice.tenants.models import TenantConfig
+from forge_voice.models import StrictModel, ensure_unique
+from forge_voice.tenants.models import Phone, TenantConfig, Zip
 
 TZ = ZoneInfo("America/Los_Angeles")
 ANCHOR_DATE = date(2026, 11, 9)
 ANCHOR_DATETIME = datetime(2026, 11, 9, 8, 0, tzinfo=TZ)
-BUSINESS_DAY_COUNT = 14
-SLOT_START = time(9, 0)
-SLOT_END = time(17, 0)
+CALENDAR_DAY_COUNT = 21
 SLOT_GAP_MINUTES = 30
 
 TENANT_PREFIX = {"harborlight": "hl", "summit": "sm"}
@@ -36,14 +35,14 @@ class SeedAddress(StrictModel):
     line1: str = Field(min_length=1)
     city: str = Field(min_length=1)
     state: str = Field(pattern=r"^[A-Z]{2}$")
-    zip: str = Field(pattern=r"^\d{5}$")
+    zip: Zip
 
 
 class SeedCustomer(StrictModel):
     customer_id: str = Field(pattern=r"^cus_[a-z0-9_]+$")
     tenant_id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
     name: str = Field(min_length=1)
-    phone: str = Field(pattern=r"^\+1\d{10}$")
+    phone: Phone
     address: SeedAddress
     created_at: datetime
 
@@ -63,7 +62,7 @@ class SeedBooking(StrictModel):
     start: datetime
     end: datetime
     status: Literal["booked", "cancelled"]
-    contact_phone: str = Field(pattern=r"^\+1\d{10}$")
+    contact_phone: Phone
     address: SeedAddress
     confirmation: SeedConfirmation
 
@@ -81,7 +80,7 @@ class SeedSlot(StrictModel):
 class SeedCallRecord(StrictModel):
     call_id: str = Field(pattern=r"^call_[a-z0-9_]+$")
     tenant_id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
-    caller_phone: str | None = Field(default=None, pattern=r"^\+1\d{10}$")
+    caller_phone: Phone | None = None
     intent: Literal["book", "reschedule", "cancel", "status", "emergency", "pricing_faq", "human"]
     outcome: Literal[
         "booked",
@@ -96,16 +95,30 @@ class SeedCallRecord(StrictModel):
     ]
     started_at: datetime
     recording_ref: Literal["text_only"]
-    booking_id: str | None = None
-    ticket_id: str | None = None
+    booking_id: str | None = Field(default=None, pattern=r"^bk_[a-z0-9_]+$")
+    ticket_id: str | None = Field(default=None, pattern=r"^em_[a-z0-9_]+$")
     qa_flags: list[str] = Field(default_factory=list)
+
+
+class SeedEmergencyTicket(StrictModel):
+    ticket_id: str = Field(pattern=r"^em_[a-z0-9_]+$")
+    tenant_id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
+    call_id: str = Field(pattern=r"^call_[a-z0-9_]+$")
+    customer_id: str = Field(pattern=r"^cus_[a-z0-9_]+$")
+    category: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
+    severity: Literal["life_safety", "urgent", "priority"]
+    description: str = Field(min_length=1)
+    safety_instructions_given: list[str] = Field(min_length=1)
+    transfer_mode: Literal["live", "callback"]
+    status: Literal["open", "assigned", "closed"]
+    created_at: datetime
 
 
 class SeedSmsMessage(StrictModel):
     message_id: str = Field(pattern=r"^sms_[a-z0-9_]+$")
     tenant_id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
     booking_id: str = Field(pattern=r"^bk_[a-z0-9_]+$")
-    to: str = Field(pattern=r"^\+1\d{10}$")
+    to: Phone
     channel: Literal["sms"]
     template: Literal["booking_confirmation"]
     status: Literal["queued"]
@@ -135,6 +148,7 @@ class TenantSeed(StrictModel):
     bookings: list[SeedBooking]
     slots: list[SeedSlot]
     calls: list[SeedCallRecord]
+    tickets: list[SeedEmergencyTicket] = Field(default_factory=list)
     calendar: SeedCalendar
     crm: SeedCrm
     sms: SeedSms
@@ -272,7 +286,7 @@ CALLS: dict[str, list[dict[str, Any]]] = {
         },
         {
             "call_id": "call_hl_0004",
-            "caller_phone": "+14155550113",
+            "caller_phone": None,
             "intent": "pricing_faq",
             "outcome": "info_only",
         },
@@ -300,15 +314,26 @@ CALLS: dict[str, list[dict[str, Any]]] = {
     ],
 }
 
+TICKETS: dict[str, list[dict[str, Any]]] = {
+    "harborlight": [
+        {
+            "ticket_id": "em_0001",
+            "call_id": "call_hl_0003",
+            "customer_id": "cus_0002",
+            "category": "gas_or_co",
+            "severity": "life_safety",
+            "description": "Caller reported a gas smell near the furnace.",
+            "safety_instructions_given": ["gas_co"],
+            "transfer_mode": "live",
+            "status": "open",
+        },
+    ],
+    "summit": [],
+}
 
-def _business_days(start: date, count: int) -> list[date]:
-    days: list[date] = []
-    current = start
-    while len(days) < count:
-        if current.weekday() < 5:
-            days.append(current)
-        current += timedelta(days=1)
-    return days
+
+def _calendar_days(start: date, count: int) -> list[date]:
+    return [start + timedelta(days=offset) for offset in range(count)]
 
 
 def _at(day: date, clock: time) -> datetime:
@@ -349,36 +374,59 @@ def _call_specs(tenant: TenantConfig) -> list[dict[str, Any]]:
     return calls
 
 
+def _ticket_specs(tenant: TenantConfig) -> list[dict[str, Any]]:
+    tickets = TICKETS.get(tenant.tenant_id)
+    if tickets is None:
+        raise SeedDataError(f"no seed tickets configured for tenant {tenant.tenant_id!r}")
+    return tickets
+
+
+def _day_windows(tenant: TenantConfig, day: date) -> list[tuple[time, time]]:
+    if day in set(tenant.holidays):
+        return []
+    day_name = day.strftime("%A").lower()
+    ranges = getattr(tenant.business_hours, day_name)
+    windows: list[tuple[time, time]] = []
+    for value in ranges:
+        start_text, end_text = value.split("-")
+        windows.append((time.fromisoformat(start_text), time.fromisoformat(end_text)))
+    return windows
+
+
 def _generate_open_slots(tenant: TenantConfig, prefix: str) -> list[SeedSlot]:
-    """Create sequential, non-overlapping slots for each technician's workday."""
+    """Create sequential, non-overlapping slots inside each day's configured hours."""
     slots: list[SeedSlot] = []
     sequence = 1
-    for day_index, day in enumerate(_business_days(ANCHOR_DATE, BUSINESS_DAY_COUNT)):
+    for day_index, day in enumerate(_calendar_days(ANCHOR_DATE, CALENDAR_DAY_COUNT)):
+        windows = _day_windows(tenant, day)
+        if not windows:
+            continue
         for technician in tenant.dispatch.technicians:
             services = [service for service in tenant.services if service.id in technician.skills]
             if not services:
                 continue
             offset = day_index % len(services)
             ordered = services[offset:] + services[:offset]
-            cursor = _at(day, SLOT_START)
-            day_end = _at(day, SLOT_END)
-            for service in ordered:
-                end = cursor + timedelta(minutes=service.duration_minutes)
-                if end > day_end:
-                    continue
-                slots.append(
-                    SeedSlot(
-                        slot_id=f"slot_{prefix}_{sequence:05d}",
-                        tenant_id=tenant.tenant_id,
-                        service_id=service.id,
-                        technician_id=technician.id,
-                        start=cursor,
-                        end=end,
-                        status="open",
+            for window_start, window_end in windows:
+                cursor = _at(day, window_start)
+                end_limit = _at(day, window_end)
+                for service in ordered:
+                    end = cursor + timedelta(minutes=service.duration_minutes)
+                    if end > end_limit:
+                        continue
+                    slots.append(
+                        SeedSlot(
+                            slot_id=f"slot_{prefix}_{sequence:05d}",
+                            tenant_id=tenant.tenant_id,
+                            service_id=service.id,
+                            technician_id=technician.id,
+                            start=cursor,
+                            end=end,
+                            status="open",
+                        )
                     )
-                )
-                sequence += 1
-                cursor = end + timedelta(minutes=SLOT_GAP_MINUTES)
+                    sequence += 1
+                    cursor = end + timedelta(minutes=SLOT_GAP_MINUTES)
     return slots
 
 
@@ -459,8 +507,7 @@ def validate_tenant_seed(seed: TenantSeed, tenant: TenantConfig) -> None:
         )
 
     customer_ids = [customer.customer_id for customer in seed.customers]
-    if len(customer_ids) != len(set(customer_ids)):
-        raise SeedDataError(f"duplicate customer ids in seed for {tenant.tenant_id}")
+    ensure_unique(customer_ids, "customer ids")
     customers = {customer.customer_id: customer for customer in seed.customers}
     for customer in seed.customers:
         if customer.tenant_id != tenant.tenant_id:
@@ -473,8 +520,7 @@ def validate_tenant_seed(seed: TenantSeed, tenant: TenantConfig) -> None:
     service_ids = {service.id for service in tenant.services}
     technicians = {technician.id: technician for technician in tenant.dispatch.technicians}
     slot_ids = [slot.slot_id for slot in seed.slots]
-    if len(slot_ids) != len(set(slot_ids)):
-        raise SeedDataError(f"duplicate slot ids in seed for {tenant.tenant_id}")
+    ensure_unique(slot_ids, "slot ids")
     slots = {slot.slot_id: slot for slot in seed.slots}
     for slot in seed.slots:
         if slot.tenant_id != tenant.tenant_id:
@@ -492,9 +538,8 @@ def validate_tenant_seed(seed: TenantSeed, tenant: TenantConfig) -> None:
             raise SeedDataError(f"slot {slot.slot_id} ends before it starts")
 
     booking_ids = [booking.booking_id for booking in seed.bookings]
-    if len(booking_ids) != len(set(booking_ids)):
-        raise SeedDataError(f"duplicate booking ids in seed for {tenant.tenant_id}")
-    bookings = {booking.booking_id: booking for booking in seed.bookings}
+    ensure_unique(booking_ids, "booking ids")
+    booked_intervals: list[SeedBooking] = []
     for booking in seed.bookings:
         if booking.tenant_id != tenant.tenant_id:
             raise SeedDataError(f"booking {booking.booking_id} has the wrong tenant")
@@ -514,18 +559,58 @@ def validate_tenant_seed(seed: TenantSeed, tenant: TenantConfig) -> None:
         slot = slots.get(booking.slot_id)
         if slot is None:
             raise SeedDataError(f"booking {booking.booking_id} references unknown slot")
+        expected_slot_status = "booked" if booking.status == "booked" else "open"
+        if slot.status != expected_slot_status:
+            raise SeedDataError(
+                f"booking {booking.booking_id} status {booking.status!r} disagrees "
+                f"with slot status {slot.status!r}"
+            )
         if (
             slot.service_id != booking.service_id
             or slot.technician_id != booking.technician_id
             or slot.start != booking.start
             or slot.end != booking.end
-            or slot.status != "booked"
         ):
             raise SeedDataError(f"booking {booking.booking_id} disagrees with its slot")
         if booking.contact_phone != customer.phone:
             raise SeedDataError(f"booking {booking.booking_id} contact phone mismatch")
         if booking.address != customer.address:
             raise SeedDataError(f"booking {booking.booking_id} address mismatch")
+        if booking.status == "booked":
+            booked_intervals.append(booking)
+
+    open_slots = [slot for slot in seed.slots if slot.status == "open"]
+    for slot in open_slots:
+        for booking in booked_intervals:
+            if slot.technician_id != booking.technician_id:
+                continue
+            if _overlaps(slot.start, slot.end, booking.start, booking.end):
+                raise SeedDataError(
+                    f"open slot {slot.slot_id} overlaps booking {booking.booking_id}"
+                )
+
+    ticket_ids = [ticket.ticket_id for ticket in seed.tickets]
+    ensure_unique(ticket_ids, "ticket ids")
+    tickets = {ticket.ticket_id: ticket for ticket in seed.tickets}
+    calls = {call.call_id: call for call in seed.calls}
+    ensure_unique([call.call_id for call in seed.calls], "call ids")
+    category_severity = {category.id: category.severity for category in tenant.emergency.categories}
+    for ticket in seed.tickets:
+        if ticket.tenant_id != tenant.tenant_id:
+            raise SeedDataError(f"ticket {ticket.ticket_id} has the wrong tenant")
+        if ticket.customer_id not in customers:
+            raise SeedDataError(f"ticket {ticket.ticket_id} references unknown customer")
+        call = calls.get(ticket.call_id)
+        if call is None:
+            raise SeedDataError(f"ticket {ticket.ticket_id} references unknown call")
+        if call.ticket_id != ticket.ticket_id:
+            raise SeedDataError(
+                f"ticket {ticket.ticket_id} is not referenced by call {call.call_id}"
+            )
+        if ticket.category not in category_severity:
+            raise SeedDataError(f"ticket {ticket.ticket_id} references unknown emergency category")
+        if ticket.severity != category_severity[ticket.category]:
+            raise SeedDataError(f"ticket {ticket.ticket_id} severity disagrees with category")
 
     known_phones = {customer.phone for customer in seed.customers}
     for call in seed.calls:
@@ -533,20 +618,32 @@ def validate_tenant_seed(seed: TenantSeed, tenant: TenantConfig) -> None:
             raise SeedDataError(f"call {call.call_id} has the wrong tenant")
         if call.caller_phone is not None and call.caller_phone not in known_phones:
             raise SeedDataError(f"call {call.call_id} references an unknown caller")
-        if call.booking_id is not None and call.booking_id not in bookings:
+        if call.booking_id is not None and call.booking_id not in booking_ids:
             raise SeedDataError(f"call {call.call_id} references unknown booking")
+        if call.ticket_id is not None:
+            ticket = tickets.get(call.ticket_id)
+            if ticket is None:
+                raise SeedDataError(f"call {call.call_id} references unknown ticket")
+            if ticket.call_id != call.call_id:
+                raise SeedDataError(f"call {call.call_id} ticket call mismatch")
 
     for message in seed.sms.messages:
         if message.tenant_id != tenant.tenant_id:
             raise SeedDataError(f"SMS {message.message_id} has the wrong tenant")
-        booking = bookings.get(message.booking_id)
+        booking = next(
+            (item for item in seed.bookings if item.booking_id == message.booking_id),
+            None,
+        )
         if booking is None:
             raise SeedDataError(f"SMS {message.message_id} references unknown booking")
         if message.to != booking.contact_phone:
             raise SeedDataError(f"SMS {message.message_id} phone mismatch")
 
-    booked_ids = sorted(booking.slot_id for booking in seed.bookings)
-    open_ids = sorted(slot.slot_id for slot in seed.slots if slot.status == "open")
+    if seed.crm.customer_ids != customer_ids:
+        raise SeedDataError("crm.customer_ids does not match the seeded customers")
+
+    booked_ids = sorted(booking.slot_id for booking in seed.bookings if booking.status == "booked")
+    open_ids = sorted(slot.slot_id for slot in open_slots)
     if seed.calendar.booked_slot_ids != booked_ids:
         raise SeedDataError("calendar booked slots do not match bookings")
     if seed.calendar.open_slot_ids != open_ids:
@@ -554,7 +651,6 @@ def validate_tenant_seed(seed: TenantSeed, tenant: TenantConfig) -> None:
     if set(booked_ids) & set(open_ids):
         raise SeedDataError("a booked slot is still listed as open")
 
-    open_slots = [slot for slot in seed.slots if slot.status == "open"]
     for index, first in enumerate(open_slots):
         for second in open_slots[index + 1 :]:
             if first.technician_id != second.technician_id:
@@ -565,8 +661,8 @@ def validate_tenant_seed(seed: TenantSeed, tenant: TenantConfig) -> None:
                     f"{first.technician_id}"
                 )
 
-    for index, first in enumerate(seed.bookings):
-        for second in seed.bookings[index + 1 :]:
+    for index, first in enumerate(booked_intervals):
+        for second in booked_intervals[index + 1 :]:
             if first.technician_id != second.technician_id:
                 continue
             if _overlaps(first.start, first.end, second.start, second.end):
@@ -604,6 +700,14 @@ def build_tenant_seed(tenant: TenantConfig) -> TenantSeed:
         )
         for index, call in enumerate(_call_specs(tenant))
     ]
+    tickets = [
+        SeedEmergencyTicket(
+            tenant_id=tenant.tenant_id,
+            created_at=ANCHOR_DATETIME - timedelta(days=3, minutes=30 + index),
+            **ticket,
+        )
+        for index, ticket in enumerate(_ticket_specs(tenant))
+    ]
     sms_messages = [
         SeedSmsMessage(
             message_id=f"sms_{prefix}_{index + 1:04d}",
@@ -628,6 +732,7 @@ def build_tenant_seed(tenant: TenantConfig) -> TenantSeed:
         bookings=bookings,
         slots=slots,
         calls=calls,
+        tickets=tickets,
         calendar=SeedCalendar(
             timezone=tenant.timezone,
             booked_slot_ids=booked,

@@ -2,18 +2,20 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
-from datetime import datetime
+from datetime import datetime, time
 from pathlib import Path
 
 import pytest
 import yaml
 
-from forge_voice.corpus import generate_corpus
-from forge_voice.corpus.seed import (
+from forge_voice.corpus import (
     SeedDataError,
+    SeedSlot,
     TenantSeed,
     build_tenant_seed,
+    generate_corpus,
     validate_tenant_seed,
 )
 from forge_voice.tenants import TenantConfigError, load_tenant
@@ -200,6 +202,16 @@ def test_seed_calls_reference_known_customers_and_bookings(generated_root: Path)
             assert call["booking_id"] in bookings
 
 
+def test_seed_calls_reference_existing_emergency_tickets(generated_root: Path) -> None:
+    seed = _seed(generated_root)
+    tickets = {ticket["ticket_id"]: ticket for ticket in seed["tickets"]}
+    for call in seed["calls"]:
+        if call["ticket_id"] is None:
+            continue
+        assert call["ticket_id"] in tickets
+        assert tickets[call["ticket_id"]]["call_id"] == call["call_id"]
+
+
 def test_seed_calendar_indexes_open_and_booked_slots(generated_root: Path) -> None:
     seed = _seed(generated_root)
     booked = {booking["slot_id"] for booking in seed["bookings"]}
@@ -215,11 +227,12 @@ def test_seed_booked_slots_are_not_open(generated_root: Path) -> None:
     assert booked.isdisjoint(open_slots)
 
 
-def test_seed_open_slots_do_not_overlap_per_technician(generated_root: Path) -> None:
+@pytest.mark.parametrize("status", ["open", "booked"])
+def test_seed_slots_do_not_overlap_per_technician(generated_root: Path, status: str) -> None:
     seed = _seed(generated_root)
-    open_slots = [slot for slot in seed["slots"] if slot["status"] == "open"]
-    for index, first in enumerate(open_slots):
-        for second in open_slots[index + 1 :]:
+    slots = [slot for slot in seed["slots"] if slot["status"] == status]
+    for index, first in enumerate(slots):
+        for second in slots[index + 1 :]:
             if first["technician_id"] != second["technician_id"]:
                 continue
             first_start = datetime.fromisoformat(first["start"])
@@ -232,21 +245,39 @@ def test_seed_open_slots_do_not_overlap_per_technician(generated_root: Path) -> 
             )
 
 
-def test_seed_booked_slots_do_not_overlap_per_technician(generated_root: Path) -> None:
+def test_seed_slots_stay_within_configured_business_hours(generated_root: Path) -> None:
     seed = _seed(generated_root)
-    booked = [slot for slot in seed["slots"] if slot["status"] == "booked"]
-    for index, first in enumerate(booked):
-        for second in booked[index + 1 :]:
-            if first["technician_id"] != second["technician_id"]:
-                continue
-            first_start = datetime.fromisoformat(first["start"])
-            first_end = datetime.fromisoformat(first["end"])
-            second_start = datetime.fromisoformat(second["start"])
-            second_end = datetime.fromisoformat(second["end"])
-            assert not (first_start < second_end and second_start < first_end), (
-                first["slot_id"],
-                second["slot_id"],
+    tenant = _tenant(generated_root)
+    for slot in seed["slots"]:
+        start = datetime.fromisoformat(slot["start"])
+        end = datetime.fromisoformat(slot["end"])
+        ranges = tenant["business_hours"][start.strftime("%A").lower()]
+        windows = [
+            (
+                datetime.combine(start.date(), time.fromisoformat(start_text), tzinfo=start.tzinfo),
+                datetime.combine(start.date(), time.fromisoformat(end_text), tzinfo=start.tzinfo),
             )
+            for start_text, end_text in (value.split("-") for value in ranges)
+        ]
+        assert any(
+            start >= window_start and end <= window_end for window_start, window_end in windows
+        )
+
+
+def test_seed_slots_exclude_tenant_holidays(generated_root: Path) -> None:
+    seed = _seed(generated_root)
+    tenant = _tenant(generated_root)
+    holidays = set(tenant["holidays"])
+    assert holidays
+    for slot in seed["slots"]:
+        assert datetime.fromisoformat(slot["start"]).date().isoformat() not in holidays
+
+
+def test_seed_includes_configured_saturday_slots(generated_root: Path) -> None:
+    seed = _seed(generated_root)
+    assert any(
+        datetime.fromisoformat(slot["start"]).strftime("%A") == "Saturday" for slot in seed["slots"]
+    )
 
 
 def test_seed_validation_rejects_customer_zip_outside_service_area(
@@ -257,6 +288,54 @@ def test_seed_validation_rejects_customer_zip_outside_service_area(
     seed.customers[0].address.zip = "10001"
 
     with pytest.raises(SeedDataError, match="not served"):
+        validate_tenant_seed(seed, tenant)
+
+
+def test_seed_validation_rejects_open_slot_overlapping_booking(
+    generated_root: Path,
+) -> None:
+    seed = TenantSeed.model_validate(_seed(generated_root))
+    tenant = load_tenant(generated_root / "tenants" / "harborlight.yaml")
+    seed.slots.append(
+        SeedSlot(
+            slot_id="slot_hl_conflict",
+            tenant_id="harborlight",
+            service_id="drain_cleaning",
+            technician_id="tech_alex",
+            start=datetime.fromisoformat("2026-11-09T09:15:00-08:00"),
+            end=datetime.fromisoformat("2026-11-09T09:45:00-08:00"),
+            status="open",
+        )
+    )
+
+    with pytest.raises(SeedDataError, match="overlaps booking"):
+        validate_tenant_seed(seed, tenant)
+
+
+def test_seed_validation_rejects_booking_status_mismatch(generated_root: Path) -> None:
+    seed = TenantSeed.model_validate(_seed(generated_root))
+    tenant = load_tenant(generated_root / "tenants" / "harborlight.yaml")
+    seed.bookings[0].status = "cancelled"
+
+    with pytest.raises(SeedDataError, match="status"):
+        validate_tenant_seed(seed, tenant)
+
+
+def test_seed_validation_rejects_crm_customer_mismatch(generated_root: Path) -> None:
+    seed = TenantSeed.model_validate(_seed(generated_root))
+    tenant = load_tenant(generated_root / "tenants" / "harborlight.yaml")
+    seed.crm.customer_ids = seed.crm.customer_ids[:-1]
+
+    with pytest.raises(SeedDataError, match=r"crm\.customer_ids"):
+        validate_tenant_seed(seed, tenant)
+
+
+def test_seed_validation_rejects_dangling_emergency_ticket(generated_root: Path) -> None:
+    seed = TenantSeed.model_validate(_seed(generated_root))
+    tenant = load_tenant(generated_root / "tenants" / "harborlight.yaml")
+    seed.tickets.clear()
+
+    with pytest.raises(SeedDataError, match="unknown ticket"):
         validate_tenant_seed(seed, tenant)
 
 
@@ -304,24 +383,28 @@ def test_generate_corpus_fails_closed_on_invalid_tenant(tmp_path: Path) -> None:
     assert not _output(root).exists()
 
 
-def test_generate_corpus_restores_previous_output_when_swap_fails(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize("fail_name", ["harborlight.json", "hashes.json"])
+def test_generate_corpus_restores_previous_output_when_commit_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fail_name: str
 ) -> None:
     root = _source_root(tmp_path)
     generate_corpus(root)
     output = _output(root)
     before = _tree(output)
+    real_replace = os.replace
+    failed = False
 
-    real_replace = Path.replace
+    def fail_once(source: str | Path, target: str | Path) -> None:
+        nonlocal failed
+        assert output.exists(), "the corpus directory disappeared during the swap"
+        if not failed and Path(target).name == fail_name:
+            failed = True
+            raise OSError("simulated commit failure")
+        real_replace(source, target)
 
-    def fail_staging_swap(self: Path, target: Path) -> Path:
-        if self.name == ".corpus.staging":
-            raise OSError("simulated swap failure")
-        return real_replace(self, target)
+    monkeypatch.setattr(os, "replace", fail_once)
 
-    monkeypatch.setattr(Path, "replace", fail_staging_swap)
-
-    with pytest.raises(OSError, match="simulated swap failure"):
+    with pytest.raises(OSError, match="simulated commit failure"):
         generate_corpus(root)
 
     assert _tree(output) == before

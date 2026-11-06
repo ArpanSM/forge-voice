@@ -13,7 +13,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import Field, field_validator, model_validator
 
-from forge_voice.models import StrictModel
+from forge_voice.models import StrictModel, ensure_unique
 from forge_voice.tenants.errors import UnknownServiceError
 
 ZIP_RE = re.compile(r"^\d{5}$")
@@ -22,11 +22,6 @@ HOUR_RANGE_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d$")
 Zip = Annotated[str, Field(pattern=r"^\d{5}$")]
 Identifier = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]*$")]
 Phone = Annotated[str, Field(pattern=r"^\+1\d{10}$")]
-
-
-def _unique(values: list[str], label: str) -> None:
-    if len(values) != len(set(values)):
-        raise ValueError(f"{label} must be unique")
 
 
 class PriceRange(StrictModel):
@@ -87,8 +82,8 @@ class ServiceArea(StrictModel):
 
     @model_validator(mode="after")
     def validate_zip_rules(self) -> ServiceArea:
-        _unique(self.zip_allowlist, "zip_allowlist")
-        _unique(self.zip_exclusions, "zip_exclusions")
+        ensure_unique(self.zip_allowlist, "zip_allowlist")
+        ensure_unique(self.zip_exclusions, "zip_exclusions")
         allowed = set(self.zip_allowlist)
         excluded = set(self.zip_exclusions)
         outside = excluded - allowed
@@ -115,8 +110,8 @@ class Technician(StrictModel):
 
     @model_validator(mode="after")
     def unique_lists(self) -> Technician:
-        _unique(self.skills, "technician skills")
-        _unique(self.zips, "technician zips")
+        ensure_unique(self.skills, "technician skills")
+        ensure_unique(self.zips, "technician zips")
         return self
 
 
@@ -247,10 +242,10 @@ class TenantConfig(StrictModel):
             raise ValueError(f"unknown timezone {self.timezone!r}") from exc
 
         service_ids = [service.id for service in self.services]
-        _unique(service_ids, "service ids")
+        ensure_unique(service_ids, "service ids")
         known_services = set(service_ids)
-        _unique([tech.id for tech in self.dispatch.technicians], "technician ids")
-        _unique([target.id for target in self.handoff.targets], "handoff target ids")
+        ensure_unique([tech.id for tech in self.dispatch.technicians], "technician ids")
+        ensure_unique([target.id for target in self.handoff.targets], "handoff target ids")
 
         for tech in self.dispatch.technicians:
             unknown_skills = set(tech.skills) - known_services
@@ -280,7 +275,10 @@ class TenantConfig(StrictModel):
             raise ValueError(
                 f"emergency.on_call target {self.emergency.on_call.target!r} is not a target"
             )
-        _unique([category.id for category in self.emergency.categories], "emergency category ids")
+        ensure_unique(
+            [category.id for category in self.emergency.categories],
+            "emergency category ids",
+        )
 
         unknown_pricing = {
             entry.service_id for entry in self.knowledge_base.pricing
@@ -289,9 +287,12 @@ class TenantConfig(StrictModel):
             raise ValueError(
                 f"knowledge_base.pricing references unknown services: {sorted(unknown_pricing)}"
             )
-        _unique([entry.service_id for entry in self.knowledge_base.pricing], "pricing service ids")
-        _unique([entry.id for entry in self.knowledge_base.faq], "FAQ ids")
-        _unique([entry.id for entry in self.knowledge_base.policies], "policy ids")
+        ensure_unique(
+            [entry.service_id for entry in self.knowledge_base.pricing],
+            "pricing service ids",
+        )
+        ensure_unique([entry.id for entry in self.knowledge_base.faq], "FAQ ids")
+        ensure_unique([entry.id for entry in self.knowledge_base.policies], "policy ids")
         return self
 
     def require_service(self, service_id: str) -> Service:

@@ -11,7 +11,7 @@ def main() -> int:
     summary = generate_corpus(Path.cwd())
     print(
         f"corpus: {summary.text_scenarios} text + {summary.audio_scenarios} audio, "
-        f"{len(summary.artifacts)} artifacts"
+        f"{len(summary.artifact_hashes)} artifacts"
     )
     print(f"manifest sha256: {summary.manifest_sha256}")
     print(f"output: {summary.output_dir}")

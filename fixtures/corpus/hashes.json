@@ -247,11 +247,11 @@
     },
     {
       "path": "seed/harborlight.json",
-      "sha256": "5773d8814fce7d4672ba219353eb4386d9684cb00ef0cc2d02e23e8cbccd18b1"
+      "sha256": "72ffeb01ea9891d855c8d4f0ef79b5f901cb07b1117733546bbc1353d1902ec4"
     },
     {
       "path": "seed/summit.json",
-      "sha256": "edb31e11c9153c81b7479c1680bbcd61a6370990f97d6611ddb113f0578bff33"
+      "sha256": "505ef3737cc9f72687dadbdb7eed8c86124d42f8d44be20c06c04f20be0e2de0"
     },
     {
       "path": "tenants/harborlight.yaml",

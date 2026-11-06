@@ -121,13 +121,15 @@ def test_loader_rejects_bad_zip_rule(tmp_path: Path, mutate) -> None:
         load_tenant(path)
 
 
-def test_loader_rejects_unknown_service_references(tmp_path: Path) -> None:
+def test_loader_rejects_unknown_technician_skill(tmp_path: Path) -> None:
     def add_unknown_skill(data: dict) -> None:
         data["dispatch"]["technicians"][0]["skills"].append("roofing")
 
     with pytest.raises(TenantConfigError, match="roofing"):
         load_tenant(_variant(tmp_path, "harborlight", add_unknown_skill))
 
+
+def test_loader_rejects_unknown_pricing_service(tmp_path: Path) -> None:
     def add_unknown_pricing_service(data: dict) -> None:
         data["knowledge_base"]["pricing"].append(
             {"service_id": "roofing", "range": {"min": 1, "max": 2, "currency": "USD"}}
