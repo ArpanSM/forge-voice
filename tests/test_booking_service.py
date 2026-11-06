@@ -416,13 +416,10 @@ def test_slot_taken_after_offer_rolls_back_the_whole_write(
     assert store.get_token("harborlight", token.token).used_at is None
 
 
-def test_expired_offer_is_rejected_then_refreshed_and_booked(
-    tokens, service, store, harborlight, clock
-) -> None:
+def test_expired_offer_is_rejected(tokens, service, harborlight, clock) -> None:
     first = _offer(service).slots[0]
     clock.advance(timedelta(seconds=harborlight.policies.offer_ttl_seconds + 1))
     readback = _book_readback(service, first)
-    readback.token_payload()
     policy = ConversationPolicy(harborlight, clock, tokens)
     token = _token(policy, "call_1", readback)
 
@@ -435,11 +432,16 @@ def test_expired_offer_is_rejected_then_refreshed_and_booked(
             confirmed=True,
             token=token.token,
         )
+
     assert exc.value.code == "slot_expired"
 
+
+def test_expired_offer_can_be_refreshed_and_rebooked(
+    tokens, service, store, harborlight, clock
+) -> None:
+    clock.advance(timedelta(seconds=harborlight.policies.offer_ttl_seconds + 1))
     refreshed = _offer(service).slots[0]
     readback = _book_readback(service, refreshed)
-    readback.token_payload()
     policy = ConversationPolicy(harborlight, clock, tokens)
     fresh_token = _token(policy, "call_1", readback)
 
@@ -451,6 +453,7 @@ def test_expired_offer_is_rejected_then_refreshed_and_booked(
         confirmed=True,
         token=fresh_token.token,
     )
+
     assert booked.booking.slot_id == refreshed.slot_id
     assert store.count_bookings("harborlight", slot_id=refreshed.slot_id) == 1
 
@@ -583,12 +586,9 @@ def test_reschedule_rejects_cutoff(tokens, service, store, harborlight, clock) -
     assert exc.value.code == "cutoff_passed"
 
 
-def test_cancel_releases_slot_and_second_cancel_is_idempotent(
-    tokens, service, store, outbox, harborlight, clock
-) -> None:
+def test_cancel_releases_the_slot(tokens, service, store, outbox, harborlight, clock) -> None:
     booking = store.get_booking("harborlight", "bk_0002")
     readback = _cancel_readback(service, "bk_0002")
-    readback.token_payload()
     token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_cancel",
@@ -613,6 +613,28 @@ def test_cancel_releases_slot_and_second_cancel_is_idempotent(
     assert store.get_slot("harborlight", booking.slot_id).status == "open"
     assert len(outbox.messages) == 1
 
+
+def test_second_cancel_is_idempotent(tokens, service, store, outbox, harborlight, clock) -> None:
+    booking = store.get_booking("harborlight", "bk_0002")
+    readback = _cancel_readback(service, "bk_0002")
+    token = _token(
+        ConversationPolicy(harborlight, clock, tokens),
+        "call_cancel",
+        readback,
+        caller_phone=booking.contact_phone,
+        utterance="yes, cancel it",
+        intent="cancel",
+    )
+    service.cancel(
+        call_id="call_cancel",
+        booking_id="bk_0002",
+        caller_phone=booking.contact_phone,
+        ownership_verified=False,
+        confirmed=True,
+        token=token.token,
+        reason="no_longer_needed",
+    )
+
     second = service.cancel(
         call_id="call_cancel_2",
         booking_id="bk_0002",
@@ -622,6 +644,7 @@ def test_cancel_releases_slot_and_second_cancel_is_idempotent(
         token=None,
         reason="other",
     )
+
     assert second.already_cancelled is True
     assert len(outbox.messages) == 1
 

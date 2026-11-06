@@ -550,6 +550,26 @@ def test_incomplete_handoff_routes_to_a_callback(runner) -> None:
     assert result.booking_count == 0
 
 
+def test_incomplete_handoff_never_marks_the_caller_verified(runner) -> None:
+    result = runner.run_call(
+        _scenario(
+            [
+                "I need a drain cleaning.",
+                "12 Alder Street, 94107.",
+            ],
+            caller_phone="+14155550101",
+            faults={"get_availability": "timeout"},
+        )
+    )
+
+    assert result.outcome == "callback"
+    assert result.handoff_packet is not None
+    assert result.handoff_packet.complete is False
+    assert result.handoff_packet.caller.name is None
+    assert result.handoff_packet.caller.verified is False
+    assert "handoff_packet_incomplete" in result.qa_flags
+
+
 def test_handoff_without_a_phone_never_claims_connected(runner) -> None:
     result = runner.run_call(_scenario(["I want to talk to a person.", "Yes, transfer me."]))
 

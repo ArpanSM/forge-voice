@@ -22,7 +22,9 @@ from forge_voice.errors import ErrorCode, StableError
 from forge_voice.models import StrictModel
 from forge_voice.policy.booking import BookingService, CustomerInput
 from forge_voice.policy.confirmation import payload_digest
+from forge_voice.policy.conversation import ConversationPolicy
 from forge_voice.policy.handoff import HandoffPacket
+from forge_voice.policy.state import CallState
 from forge_voice.scheduling import next_business_day_window
 from forge_voice.tenants.models import Technician, TenantConfig
 from forge_voice.tools.envelope import ToolResult, sanitize_args
@@ -83,6 +85,8 @@ class ToolRegistry:
         clock: Clock,
         transfer: TransferSimulator,
         faults: Mapping[str, str] | None = None,
+        policy: ConversationPolicy | None = None,
+        state: CallState | None = None,
     ) -> None:
         self.tenant = tenant
         self.store = store
@@ -90,6 +94,8 @@ class ToolRegistry:
         self.session = session
         self.clock = clock
         self.transfer = transfer
+        self.policy = policy
+        self.state = state
         self._faults = dict(faults or {})
         self._counter = 0
         self._handlers: dict[str, Callable[[dict[str, Any], str], dict[str, Any]]] = {
@@ -283,6 +289,10 @@ class ToolRegistry:
             window_days=args.window_days,
             exclude_slot_ids=tuple(args.exclude_slot_ids),
         )
+        self.session.confirmed = False
+        self.session.confirmation_token = None
+        if self.policy is not None and self.state is not None:
+            self.policy.clear_confirmation(self.state)
         return {
             "slots": [
                 {
@@ -504,17 +514,20 @@ class ToolRegistry:
             raise StableError(ErrorCode.no_target, "No handoff target is configured.")
         callback_id: str | None = None
         connected_at: datetime | None = None
+        needs_callback = False
         if args.mode == "callback":
             status = "queued_callback"
-            callback_id = self._create_callback(packet, args, emergency=emergency)
+            needs_callback = True
         elif self.transfer.answers(target.id):
             status = "connected"
             connected_at = self.clock.now
         else:
             status = "no_answer"
-            callback_id = self._create_callback(packet, args, emergency=emergency)
+            needs_callback = True
 
         with self.store.transaction():
+            if needs_callback:
+                callback_id = self._create_callback(packet, args, emergency=emergency)
             transfer_id = (
                 f"tr_{self.tenant.tenant_id}_"
                 f"{self.store.next_sequence(self.tenant.tenant_id, 'transfer'):04d}"
@@ -587,46 +600,36 @@ class ToolRegistry:
                     "That retry does not match the original callback.",
                 )
             return json.loads(existing.result_json)["callback_id"]
-
-        with self.store.transaction():
-            existing = self.store.get_idempotency(self.tenant.tenant_id, key)
-            if existing is not None:
-                if existing.payload_hash != request_hash:
-                    raise StableError(
-                        ErrorCode.idempotency_conflict,
-                        "That retry does not match the original callback.",
-                    )
-                return json.loads(existing.result_json)["callback_id"]
-            callback_id = (
-                f"cb_{self.tenant.tenant_id}_"
-                f"{self.store.next_sequence(self.tenant.tenant_id, 'callback'):04d}"
+        callback_id = (
+            f"cb_{self.tenant.tenant_id}_"
+            f"{self.store.next_sequence(self.tenant.tenant_id, 'callback'):04d}"
+        )
+        self.store.insert_callback(
+            CallbackRecord(
+                callback_id=callback_id,
+                tenant_id=self.tenant.tenant_id,
+                call_id=self.session.call_id,
+                name=packet.caller.name or "Caller",
+                phone=packet.caller.phone,
+                reason=args.reason,
+                window_start=window_start,
+                window_end=window_end,
+                sla="15_minutes" if emergency else "next_business_day",
+                created_at=self.clock.now,
             )
-            self.store.insert_callback(
-                CallbackRecord(
-                    callback_id=callback_id,
-                    tenant_id=self.tenant.tenant_id,
-                    call_id=self.session.call_id,
-                    name=packet.caller.name or "Caller",
-                    phone=packet.caller.phone,
-                    reason=args.reason,
-                    window_start=window_start,
-                    window_end=window_end,
-                    sla="15_minutes" if emergency else "next_business_day",
-                    created_at=self.clock.now,
-                )
+        )
+        self.store.put_idempotency(
+            IdempotencyRecord(
+                key=key,
+                tenant_id=self.tenant.tenant_id,
+                call_id=self.session.call_id,
+                intent="callback",
+                target=f"{args.reason}:{packet.caller.phone}",
+                payload_hash=request_hash,
+                result_json=json.dumps({"callback_id": callback_id}),
+                created_at=self.clock.now,
             )
-            self.store.put_idempotency(
-                IdempotencyRecord(
-                    key=key,
-                    tenant_id=self.tenant.tenant_id,
-                    call_id=self.session.call_id,
-                    intent="callback",
-                    target=f"{args.reason}:{packet.caller.phone}",
-                    payload_hash=request_hash,
-                    result_json=json.dumps({"callback_id": callback_id}),
-                    created_at=self.clock.now,
-                )
-            )
+        )
         return callback_id
 
     @staticmethod

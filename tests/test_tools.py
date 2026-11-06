@@ -323,11 +323,15 @@ def test_availability_marks_offers_and_expiry(registry, harborlight) -> None:
     assert result.data["timezone"] == "America/Los_Angeles"
 
 
-def test_availability_returns_reasons_not_errors(registry) -> None:
-    out_of_area = registry.call(
-        "get_availability", {"service_id": "drain_cleaning", "zip": "10001"}
-    )
-    no_slots = registry.call(
+def test_availability_out_of_area_is_a_business_outcome(registry) -> None:
+    result = registry.call("get_availability", {"service_id": "drain_cleaning", "zip": "10001"})
+
+    assert result.ok is True
+    assert result.data["reason"] == "out_of_area"
+
+
+def test_availability_no_slots_is_a_business_outcome(registry) -> None:
+    result = registry.call(
         "get_availability",
         {
             "service_id": "drain_cleaning",
@@ -336,15 +340,75 @@ def test_availability_returns_reasons_not_errors(registry) -> None:
             "window_days": 1,
         },
     )
-    unknown_service = registry.call("get_availability", {"service_id": "roofing", "zip": "94107"})
-    bad_zip = registry.call("get_availability", {"service_id": "drain_cleaning", "zip": "abc"})
 
-    assert out_of_area.data["reason"] == "out_of_area"
-    assert no_slots.data["reason"] == "no_slots"
-    assert unknown_service.ok is True
-    assert unknown_service.data["reason"] == "service_not_offered"
-    assert bad_zip.ok is False
-    assert bad_zip.error.code == "invalid_zip"
+    assert result.ok is True
+    assert result.data["reason"] == "no_slots"
+
+
+def test_availability_unknown_service_is_a_business_outcome(registry) -> None:
+    result = registry.call("get_availability", {"service_id": "roofing", "zip": "94107"})
+
+    assert result.ok is True
+    assert result.data["reason"] == "service_not_offered"
+
+
+def test_availability_invalid_zip_is_an_error(registry) -> None:
+    result = registry.call("get_availability", {"service_id": "drain_cleaning", "zip": "abc"})
+
+    assert result.ok is False
+    assert result.error.code == "invalid_zip"
+
+
+def test_get_availability_clears_a_stale_confirmation(harborlight, store, clock, tokens) -> None:
+    service = BookingService(harborlight, store, Outbox(), clock, tokens=tokens)
+    policy = ConversationPolicy(harborlight, clock, tokens)
+    state = policy.start_call("call_tools", "+14155550101")
+    registry = ToolRegistry(
+        tenant=harborlight,
+        store=store,
+        service=service,
+        session=ToolSession(
+            tenant_id="harborlight",
+            call_id="call_tools",
+            caller_phone="+14155550101",
+        ),
+        clock=clock,
+        transfer=TransferSimulator(),
+        policy=policy,
+        state=state,
+    )
+    slot = _slot(registry)
+    readback = service.booking_readback(slot["slot_id"], CustomerInput.model_validate(CUSTOMER))
+    policy.identify_intent(state, "I need a drain cleaning")
+    policy.begin_offer(state)
+    policy.read_back(state, readback)
+    assert policy.confirm(state, "yes").accepted is True
+    token = policy.issue_confirmation(state)
+    registry.session.confirmed = True
+    registry.session.confirmation_token = token.token
+
+    registry.call(
+        "get_availability",
+        {"service_id": "drain_cleaning", "zip": "94107", "preferred_date": "2026-11-09"},
+    )
+
+    assert registry.session.confirmed is False
+    assert registry.session.confirmation_token is None
+    assert state.awaiting_confirmation is False
+    assert state.confirmation_token is None
+
+    result = registry.call(
+        "book_appointment",
+        {
+            "service_id": "drain_cleaning",
+            "slot_id": slot["slot_id"],
+            "customer": CUSTOMER,
+        },
+    )
+
+    assert result.ok is False
+    assert result.error.code == "explicit_confirmation_required"
+    assert store.count_bookings("harborlight") == 4
 
 
 def test_book_tool_rejects_premature_write(registry, store) -> None:

@@ -339,6 +339,42 @@ def test_a_different_callback_window_creates_a_different_callback(
     assert first.data["callback_id"] != second.data["callback_id"]
 
 
+def test_transfer_crash_rolls_back_the_callback(harborlight, store, clock, monkeypatch) -> None:
+    registry = _registry(harborlight, store, clock, answered=set())
+    ticket = _ticket(registry, clock)
+    packet = _packet("harborlight", "call_em", clock, ticket_id=ticket["ticket_id"])
+    original = store.put_idempotency
+    calls = {"count": 0}
+
+    def flaky(record):
+        calls["count"] += 1
+        if calls["count"] == 2:
+            raise RuntimeError("simulated crash after callback insert")
+        return original(record)
+
+    monkeypatch.setattr(store, "put_idempotency", flaky)
+
+    result = registry.call(
+        "transfer_to_human",
+        {
+            "reason": "emergency",
+            "urgency": "emergency",
+            "mode": "live",
+            "packet": packet.model_dump(mode="json"),
+        },
+    )
+
+    assert result.ok is False
+    assert result.error.code == "internal_error"
+    assert store.list_callbacks("harborlight", call_id="call_em") == []
+    assert (
+        store.get_idempotency(
+            "harborlight", "harborlight:call_em:transfer:emergency:live:+14155550101:default"
+        )
+        is None
+    )
+
+
 def test_answered_transfer_reports_connected(harborlight, store, clock) -> None:
     registry = _registry(harborlight, store, clock, answered={"harborlight_on_call"})
     ticket = _ticket(registry, clock)

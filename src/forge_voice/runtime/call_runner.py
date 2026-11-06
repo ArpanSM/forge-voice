@@ -131,6 +131,8 @@ class CallRunner:
             clock=clock,
             transfer=self._transfer,
             faults=scenario.faults,
+            policy=policy,
+            state=state,
         )
         facts = extract_facts(
             tenant, scenario.turns, store, now, caller_phone=scenario.caller_phone
@@ -608,9 +610,13 @@ class _Run:
             self.booking_id = booking_id
             if booking_id not in self.booking_ids:
                 self.booking_ids.append(booking_id)
+        if not packet.complete:
+            packet = packet.model_copy(
+                update={"caller": packet.caller.model_copy(update={"verified": False})}
+            )
+            self._flag("handoff_packet_incomplete")
         self.handoff_packet = packet
         if mode == "live" and not packet.complete:
-            self._flag("handoff_packet_incomplete")
             mode = "callback"
         if mode == "callback" and packet.caller.phone is None:
             self._flag("handoff_missing_phone")
