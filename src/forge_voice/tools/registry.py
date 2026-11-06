@@ -122,6 +122,20 @@ class ToolRegistry:
                 raise StableError(ErrorCode.invalid_argument, f"Unknown tool {name!r}.")
             fault = self._faults.pop(name, None)
             if fault is not None:
+                if fault == "slot_expired":
+                    raise StableError(
+                        ErrorCode.slot_expired,
+                        "That offer expired. I can refresh the available times.",
+                        retryable=True,
+                    )
+                if fault == "slot_unavailable":
+                    raise StableError(ErrorCode.slot_unavailable, "That slot was just taken.")
+                if fault == "dependency_unavailable":
+                    raise StableError(
+                        ErrorCode.dependency_unavailable,
+                        "The local adapter is unavailable.",
+                        retryable=True,
+                    )
                 raise StableError(
                     ErrorCode.timeout,
                     "The tool did not respond in time.",
@@ -138,11 +152,15 @@ class ToolRegistry:
                 details=exc.details,
             )
         except ValidationError as exc:
+            fields = []
+            for error in exc.errors():
+                location = error.get("loc", ())
+                fields.append(str(location[-1]) if location else "body")
             result = ToolResult.failure(
                 ErrorCode.invalid_argument,
                 "Some required details are missing or malformed.",
                 request_id,
-                details={"fields": [error["loc"][-1] for error in exc.errors()]},
+                details={"fields": fields},
             )
         except (ValueError, TypeError):
             result = ToolResult.failure(
@@ -164,17 +182,30 @@ class ToolRegistry:
         args = LookupCustomerArgs.model_validate(payload)
         phone = normalize_phone(args.phone) if args.phone else None
         zip_code = normalize_zip(args.address.zip) if args.address else None
-        matches = self.store.find_customers(
-            self.tenant.tenant_id,
-            phone=phone,
-            name=args.name,
-            zip_code=zip_code,
-            line1=args.address.line1 if args.address else None,
+        booking = None
+        if args.booking_id:
+            booking = self.store.get_booking(self.tenant.tenant_id, args.booking_id)
+            if booking is None:
+                raise StableError(ErrorCode.not_found, "No matching booking.")
+            customer = self.store.get_customer(self.tenant.tenant_id, booking.customer_id)
+            if customer is None:
+                raise StableError(ErrorCode.not_found, "No matching customer.")
+        else:
+            matches = self.store.find_customers(
+                self.tenant.tenant_id,
+                phone=phone,
+                name=args.name,
+                zip_code=zip_code,
+                line1=args.address.line1 if args.address else None,
+            )
+            if not matches:
+                raise StableError(ErrorCode.not_found, "No matching customer.")
+            customer = matches[0]
+        verified = (
+            self._booking_factor_verified(customer, booking, args)
+            if booking is not None
+            else self._caller_verified(customer, args)
         )
-        if not matches:
-            raise StableError(ErrorCode.not_found, "No matching customer.")
-        customer = matches[0]
-        verified = self._customer_verified(customer, args)
         if not verified:
             return {
                 "customer": {
@@ -187,15 +218,17 @@ class ToolRegistry:
             }
         bookings = []
         if args.include_bookings:
-            for booking in self.store.list_bookings(
+            for item in self.store.list_bookings(
                 self.tenant.tenant_id, customer_id=customer.customer_id
             ):
+                if args.booking_id and item.booking_id != args.booking_id:
+                    continue
                 bookings.append(
                     {
-                        "booking_id": booking.booking_id,
-                        "service_id": booking.service_id,
-                        "start": booking.start.isoformat(),
-                        "status": booking.status,
+                        "booking_id": item.booking_id,
+                        "service_id": item.service_id,
+                        "start": item.start.isoformat(),
+                        "status": item.status,
                     }
                 )
         return {
@@ -347,8 +380,12 @@ class ToolRegistry:
                 ErrorCode.invalid_category,
                 "That emergency category is not configured for this business.",
             )
-        customer = self._customer_input(args.customer)
-        existing_customer = self.store.find_customers(self.tenant.tenant_id, phone=customer.phone)
+        customer = self._customer_input(args.customer) if args.customer else None
+        existing_customer = (
+            self.store.find_customers(self.tenant.tenant_id, phone=customer.phone)
+            if customer is not None
+            else []
+        )
         request = args.model_dump(mode="json")
         request_hash = payload_digest(request)
         key = f"{self.tenant.tenant_id}:{self.session.call_id}:ticket:{category.id}"
@@ -379,9 +416,9 @@ class ToolRegistry:
                 tenant_id=self.tenant.tenant_id,
                 call_id=self.session.call_id,
                 customer_id=existing_customer[0].customer_id if existing_customer else None,
-                customer_name=customer.name,
-                customer_phone=customer.phone,
-                address=customer.address,
+                customer_name=customer.name if customer else None,
+                customer_phone=customer.phone if customer else None,
+                address=customer.address if customer else None,
                 category=category.id,
                 severity=category.severity,
                 description=args.description,
@@ -428,6 +465,11 @@ class ToolRegistry:
                 ErrorCode.invalid_argument,
                 "The handoff packet does not match this call.",
             )
+        if args.mode == "callback" and not packet.caller.phone:
+            raise StableError(
+                ErrorCode.invalid_argument,
+                "A callback number is required for a callback handoff.",
+            )
         if args.mode == "live" and not packet.complete:
             raise StableError(
                 ErrorCode.invalid_argument,
@@ -437,7 +479,7 @@ class ToolRegistry:
         request_hash = payload_digest(request)
         key = (
             f"{self.tenant.tenant_id}:{self.session.call_id}:transfer:"
-            f"{args.reason}:{args.mode}:{packet.caller.phone}"
+            f"{args.reason}:{args.mode}:{packet.caller.phone}:{self._window_key(args)}"
         )
         existing = self.store.get_idempotency(self.tenant.tenant_id, key)
         if existing is not None:
@@ -514,14 +556,27 @@ class ToolRegistry:
     def _create_callback(
         self, packet: HandoffPacket, args: TransferToHumanArgs, *, emergency: bool
     ) -> str:
+        if args.callback_window is not None:
+            window_start = args.callback_window.start
+            window_end = args.callback_window.end
+        elif emergency:
+            window_start = self.clock.now
+            window_end = self.clock.now + timedelta(
+                minutes=self.tenant.emergency.on_call.callback_sla_minutes
+            )
+        else:
+            window_start, window_end = next_business_day_window(self.tenant, self.clock.now)
         key = (
             f"{self.tenant.tenant_id}:{self.session.call_id}:callback:"
-            f"{args.reason}:{packet.caller.phone}"
+            f"{args.reason}:{args.mode}:{packet.caller.phone}:"
+            f"{window_start.isoformat()}:{window_end.isoformat()}"
         )
         request = {
             "reason": args.reason,
             "phone": packet.caller.phone,
             "mode": args.mode,
+            "window_start": window_start.isoformat(),
+            "window_end": window_end.isoformat(),
         }
         request_hash = payload_digest(request)
         existing = self.store.get_idempotency(self.tenant.tenant_id, key)
@@ -533,16 +588,6 @@ class ToolRegistry:
                 )
             return json.loads(existing.result_json)["callback_id"]
 
-        if args.callback_window is not None:
-            window_start = args.callback_window.start
-            window_end = args.callback_window.end
-        elif emergency:
-            window_start = self.clock.now
-            window_end = self.clock.now + timedelta(
-                minutes=self.tenant.emergency.on_call.callback_sla_minutes
-            )
-        else:
-            window_start, window_end = next_business_day_window(self.tenant, self.clock.now)
         with self.store.transaction():
             existing = self.store.get_idempotency(self.tenant.tenant_id, key)
             if existing is not None:
@@ -584,6 +629,12 @@ class ToolRegistry:
             )
         return callback_id
 
+    @staticmethod
+    def _window_key(args: TransferToHumanArgs) -> str:
+        if args.callback_window is None:
+            return "default"
+        return f"{args.callback_window.start.isoformat()}:{args.callback_window.end.isoformat()}"
+
     def _customer_input(self, args: Any) -> CustomerInput:
         return CustomerInput(
             name=args.name,
@@ -596,14 +647,34 @@ class ToolRegistry:
             ),
         )
 
-    def _customer_verified(self, customer: Any, args: LookupCustomerArgs) -> bool:
-        if self.session.ownership_verified:
-            return True
+    def _caller_verified(self, customer: Any, args: LookupCustomerArgs) -> bool:
         if not self.session.caller_phone or self.session.caller_phone != customer.phone:
             return False
         if args.phone:
             return normalize_phone(args.phone) == customer.phone
-        return True
+        return bool(args.name and args.address and self._address_matches(customer, args))
+
+    @staticmethod
+    def _address_matches(customer: Any, args: LookupCustomerArgs) -> bool:
+        if args.address is None:
+            return False
+        return (
+            args.name is not None
+            and args.name.lower() == customer.name.lower()
+            and normalize_zip(args.address.zip) == customer.address.zip
+            and args.address.line1.lower() == customer.address.line1.lower()
+        )
+
+    def _booking_factor_verified(
+        self, customer: Any, booking: Any, args: LookupCustomerArgs
+    ) -> bool:
+        if self.session.caller_phone and self.session.caller_phone == customer.phone:
+            return True
+        if not args.name or args.address is None:
+            return False
+        if not self._address_matches(customer, args):
+            return False
+        return booking.customer_id == customer.customer_id
 
     def _require_service(self, service_id: str) -> None:
         try:

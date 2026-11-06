@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
 from datetime import datetime, timedelta
-from typing import Any
 
 from forge_voice.clock import Clock
-from forge_voice.policy.confirmation import (
-    ConfirmationToken,
-    ConfirmationTokenStore,
-    payload_digest,
+from forge_voice.policy.confirmation import ConfirmationToken, ConfirmationTokenStore
+from forge_voice.policy.state import (
+    CallIntent,
+    CallPhase,
+    CallState,
+    ConfirmationDecision,
+    ReadbackPayload,
 )
-from forge_voice.policy.state import CallIntent, CallPhase, CallState
 from forge_voice.tenants.models import TenantConfig
 
 WRITABLE_INTENTS = frozenset({CallIntent.book, CallIntent.reschedule, CallIntent.cancel})
@@ -86,7 +86,7 @@ class ConversationPolicy:
     def identify_intent(self, state: CallState, utterance: str) -> CallIntent:
         intent = self.classify_intent(utterance)
         state.intent = intent
-        state.phase = CallPhase.identify_intent
+        state.phase = CallPhase.collect
         return intent
 
     def classify_intent(self, utterance: str) -> CallIntent:
@@ -121,56 +121,76 @@ class ConversationPolicy:
             )
         )
 
-    def record_readback(self, state: CallState, payload: Mapping[str, Any]) -> None:
+    def begin_offer(self, state: CallState) -> None:
+        self.clear_confirmation(state)
+        state.phase = CallPhase.offer
+
+    def clear_confirmation(self, state: CallState) -> None:
+        state.readback_done = False
+        state.readback_payload = None
+        state.awaiting_confirmation = False
+        state.explicit_yes = False
+        state.confirmation_token = None
+        state.phase = CallPhase.offer
+
+    def read_back(self, state: CallState, payload: ReadbackPayload) -> None:
+        if state.phase not in {
+            CallPhase.offer,
+            CallPhase.collect,
+            CallPhase.offer_slots,
+            CallPhase.read_back,
+        }:
+            raise ConfirmationRequiredError("read-back must follow collection and an offer")
         state.readback_done = True
-        state.readback_payload = dict(payload)
+        state.readback_payload = payload
         state.awaiting_confirmation = True
         state.explicit_yes = False
         state.confirmation_token = None
-        state.phase = CallPhase.readback
+        state.phase = CallPhase.awaiting_confirmation
 
-    def confirm(self, state: CallState, utterance: str) -> bool:
-        if not state.readback_done or not state.awaiting_confirmation:
+    def confirm(self, state: CallState, utterance: str) -> ConfirmationDecision:
+        if state.phase is not CallPhase.awaiting_confirmation:
             state.explicit_yes = False
-            return False
-        text = utterance.lower()
-        decided = bool(YES_PATTERN.search(text)) and not REFUSAL_PATTERN.search(
-            text.replace("yes", "")
-        )
-        if not decided and REFUSAL_PATTERN.search(text):
-            decided = False
+            return ConfirmationDecision(accepted=False, error="explicit_confirmation_required")
+        text = utterance.lower().strip()
+        clear_yes = bool(YES_PATTERN.search(text)) and not REFUSAL_PATTERN.search(text)
+        if clear_yes:
+            state.explicit_yes = True
+            state.awaiting_confirmation = False
+            state.phase = CallPhase.write
+            return ConfirmationDecision(accepted=True)
+        state.explicit_yes = False
         state.awaiting_confirmation = False
-        state.explicit_yes = decided
-        return decided
+        state.phase = CallPhase.read_back
+        return ConfirmationDecision(accepted=False, error="explicit_confirmation_required")
 
-    def issue_confirmation(
-        self,
-        state: CallState,
-        *,
-        target: str,
-        payload: Mapping[str, Any],
-    ) -> ConfirmationToken:
+    def issue_confirmation(self, state: CallState) -> ConfirmationToken:
         if state.intent not in WRITABLE_INTENTS:
             raise ConfirmationRequiredError("only booking writes use a confirmation token")
-        if not state.readback_done or state.readback_payload is None:
-            raise ConfirmationRequiredError("read-back must happen before a token is issued")
-        if not state.explicit_yes:
+        if state.phase is not CallPhase.write or not state.explicit_yes:
             raise ConfirmationRequiredError("an explicit yes must happen before a token is issued")
-        if payload_digest(payload) != payload_digest(state.readback_payload):
-            raise ConfirmationRequiredError(
-                "the confirmation payload must match the read-back payload"
-            )
+        payload = state.readback_payload
+        if payload is None:
+            raise ConfirmationRequiredError("read-back must happen before a token is issued")
         token = self.tokens.issue(
             tenant_id=state.tenant_id,
             call_id=state.call_id,
             intent=state.intent.value,
-            target=target,
-            payload=payload,
+            target=payload.target,
+            payload=payload.token_payload(),
             ttl_seconds=self.tenant.policies.confirmation_ttl_seconds,
         )
         state.confirmation_token = token.token
-        state.phase = CallPhase.write_booking
+        state.phase = CallPhase.write
         return token
+
+    def mark_written(self, state: CallState, *, target: str, booking_id: str) -> None:
+        state.confirmed_slot_id = (
+            target if state.intent in {CallIntent.book, CallIntent.reschedule} else None
+        )
+        state.booking_id = booking_id
+        state.write_count += 1
+        state.phase = CallPhase.done
 
     def within_change_cutoff(
         self, appointment_start: datetime, now: datetime | None = None

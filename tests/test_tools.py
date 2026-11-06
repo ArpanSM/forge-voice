@@ -12,7 +12,6 @@ from forge_voice.policy import (
     ConfirmationTokenStore,
     ConversationPolicy,
     CustomerInput,
-    canonical_booking_payload,
 )
 from forge_voice.tools import ToolRegistry, ToolResult, ToolSession
 from forge_voice.transfer import TransferSimulator
@@ -45,7 +44,7 @@ def store(seed_data):
 
 @pytest.fixture
 def tokens(store, clock):
-    return ConfirmationTokenStore(clock, store=store)
+    return ConfirmationTokenStore(clock, backend=store, token_factory=lambda: "deterministic")
 
 
 @pytest.fixture
@@ -77,13 +76,15 @@ def _slot(registry: ToolRegistry, *, day=date(2026, 11, 9)):
 
 def _book_token(registry: ToolRegistry, slot: dict, tokens: ConfirmationTokenStore) -> str:
     customer = CustomerInput.model_validate(CUSTOMER)
-    payload = canonical_booking_payload("drain_cleaning", slot["slot_id"], customer)
+    readback = registry.service.booking_readback(slot["slot_id"], customer)
     policy = ConversationPolicy(registry.tenant, registry.clock, tokens)
     state = policy.start_call(registry.session.call_id, registry.session.caller_phone)
     policy.identify_intent(state, "I need a drain cleaning")
-    policy.record_readback(state, payload)
-    policy.confirm(state, "yes, book it")
-    return policy.issue_confirmation(state, target=slot["slot_id"], payload=payload).token
+    policy.begin_offer(state)
+    policy.read_back(state, readback)
+    decision = policy.confirm(state, "yes, book it")
+    assert decision.accepted
+    return policy.issue_confirmation(state).token
 
 
 def _confirm_session(registry: ToolRegistry, token: str) -> None:
@@ -243,6 +244,53 @@ def test_unknown_technician_is_a_stable_error(registry, store) -> None:
 
     assert result.ok is False
     assert result.error.code == "not_found"
+
+
+@pytest.mark.parametrize("tool", sorted(TOOLS))
+def test_every_empty_tool_call_returns_the_standard_envelope(registry, tool) -> None:
+    result = registry.call(tool, {})
+
+    assert result.ok is False
+    assert result.error is not None
+    assert result.error.code == "invalid_argument"
+    assert isinstance(result.error.details.get("fields"), list)
+    assert result.error.details["fields"]
+
+
+def test_invalid_cancel_reason_is_an_envelope_not_an_index_error(registry) -> None:
+    result = registry.call(
+        "cancel_appointment",
+        {"booking_id": "bk_0001", "reason": "not-a-reason"},
+    )
+
+    assert result.ok is False
+    assert result.error.code == "invalid_argument"
+    assert "reason" in result.error.details["fields"]
+
+
+def test_verifying_one_customer_does_not_unmask_another(harborlight, store, clock) -> None:
+    service = BookingService(harborlight, store, Outbox(), clock)
+    registry = ToolRegistry(
+        tenant=harborlight,
+        store=store,
+        service=service,
+        session=ToolSession(
+            tenant_id="harborlight",
+            call_id="call_one",
+            caller_phone="+14155550101",
+        ),
+        clock=clock,
+        transfer=TransferSimulator(),
+    )
+
+    first = registry.call("lookup_customer", {"phone": "+14155550101"})
+    second = registry.call("lookup_customer", {"phone": "+14155550104"})
+
+    assert first.ok is True
+    assert first.data["verification_required"] is False
+    assert second.ok is True
+    assert second.data["verification_required"] is True
+    assert "customer_id" not in second.data["customer"]
 
 
 def test_service_area_returns_zone_and_technicians(registry) -> None:

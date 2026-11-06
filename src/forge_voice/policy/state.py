@@ -37,11 +37,16 @@ class CallPhase(StrEnum):
     identify_intent = "identify_intent"
     identify_customer = "identify_customer"
     collect_service = "collect_service"
+    collect = "collect"
     check_area = "check_area"
     get_availability = "get_availability"
     offer_slots = "offer_slots"
+    offer = "offer"
+    read_back = "read_back"
+    awaiting_confirmation = "awaiting_confirmation"
     readback = "readback"
     write_booking = "write_booking"
+    write = "write"
     send_confirmation = "send_confirmation"
     lookup = "lookup"
     change = "change"
@@ -79,6 +84,31 @@ class SlotOffer(StrictModel):
     expires_at: str
 
 
+class ReadbackPayload(StrictModel):
+    """The exact payload the caller hears and confirms."""
+
+    tenant_id: str
+    intent: CallIntent
+    target: str
+    service_id: str
+    service_name: str
+    start: str
+    end: str
+    technician_id: str
+    technician_name: str
+    address: Address
+    contact_phone: str
+    customer_name: str
+
+    def token_payload(self) -> dict[str, object]:
+        return self.model_dump(mode="json")
+
+
+class ConfirmationDecision(StrictModel):
+    accepted: bool
+    error: str | None = None
+
+
 class CallState(StrictModel):
     """Everything deterministic policy may reason about during one call."""
 
@@ -95,7 +125,7 @@ class CallState(StrictModel):
     selected_slot_id: str | None = None
     confirmed_slot_id: str | None = None
     readback_done: bool = False
-    readback_payload: dict[str, object] | None = None
+    readback_payload: ReadbackPayload | None = None
     awaiting_confirmation: bool = False
     explicit_yes: bool = False
     confirmation_token: str | None = None

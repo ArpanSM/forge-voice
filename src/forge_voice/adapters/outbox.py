@@ -22,16 +22,23 @@ class Outbox:
         self.path = Path(path) if path is not None else None
         self._messages: list[ConfirmationRecord] = []
         if self.path is not None and self.path.is_file():
-            lines = self.path.read_text(encoding="utf-8").splitlines()
+            lines = self.path.read_text(encoding="utf-8").splitlines(keepends=True)
+            kept: list[str] = []
+            truncated = False
             for index, line in enumerate(lines):
                 if not line.strip():
+                    kept.append(line)
                     continue
                 try:
                     self._messages.append(ConfirmationRecord.model_validate_json(line))
                 except ValueError:
                     if index != len(lines) - 1:
                         raise
-                    # A crash can leave a partial trailing line; keep earlier messages.
+                    truncated = True
+                    continue
+                kept.append(line)
+            if truncated:
+                self.path.write_text("".join(kept), encoding="utf-8")
 
     @property
     def messages(self) -> list[ConfirmationRecord]:
@@ -48,11 +55,11 @@ class Outbox:
         self._messages.append(record)
         return record
 
-    def drain(self, store: SQLiteAdapter, at: datetime, tenant_id: str | None = None) -> int:
+    def drain(self, store: SQLiteAdapter, at: datetime, tenant_id: str) -> int:
         drained = 0
         for record in store.list_undrained_confirmations(tenant_id):
             self.send(record)
-            store.mark_confirmation_drained(record.message_id, at)
+            store.mark_confirmation_drained(tenant_id, record.message_id, at)
             drained += 1
         return drained
 

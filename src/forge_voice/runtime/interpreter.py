@@ -83,8 +83,7 @@ class CallerFacts:
     preferred_window: str | None
     preferred_hour: int | None
     day_flexible: bool
-    confirmation_utterance: str | None
-    confirmation_refused: bool
+    last_data_index: int
     asks_again: bool
     injection: bool
     mentions_other_tenant: bool
@@ -111,18 +110,7 @@ def extract_facts(
     if phone is None:
         phone = caller_phone
     name = known.name if known else _find_name(text)
-    decision: bool | None = None
-    decision_turn: str | None = None
-    for turn in turns[_readiness_index(turns) :]:
-        lowered = turn.lower()
-        if EXPLICIT_NO_RE.search(lowered):
-            decision = False
-            decision_turn = turn
-        elif EXPLICIT_YES_RE.search(lowered):
-            decision = True
-            decision_turn = turn
-    confirmation_utterance = decision_turn if decision is True else None
-    confirmation_refused = decision is False
+    last_data_index = _last_data_index(turns)
     preferred_day = _preferred_day(text, now)
     preferred_window = _preferred_window(text)
     preferred_hour = _preferred_hour(text)
@@ -138,8 +126,7 @@ def extract_facts(
         day_flexible=bool(
             re.search(r"next weekday|next available|this week|next week", text, re.I)
         ),
-        confirmation_utterance=confirmation_utterance,
-        confirmation_refused=confirmation_refused,
+        last_data_index=last_data_index,
         asks_again=bool(re.search(r"\bagain\b|\bonce more\b|\bto be sure\b", text, re.I)),
         injection=bool(INJECTION_RE.search(text)),
         mentions_other_tenant=bool(
@@ -151,11 +138,51 @@ def extract_facts(
     )
 
 
-def _readiness_index(turns: list[str]) -> int:
+_SERVICE_HINTS = tuple(
+    sorted(
+        {
+            keyword
+            for tenant_keywords in SERVICE_KEYWORDS.values()
+            for _, keywords in tenant_keywords
+            for keyword in keywords
+        }
+    )
+)
+DATA_HINT_RE = re.compile(
+    r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|"
+    r"morning|afternoon|evening|tomorrow|today|next weekday|"
+    r"fixed it|found another|no longer|moved|duplicate|price|expensive|"
+    r"at \d{1,2})\b",
+    re.IGNORECASE,
+)
+
+
+def _last_data_index(turns: list[str]) -> int:
+    last = 0
     for index, turn in enumerate(turns):
-        if _find_zip(turn) is not None or ADDRESS_RE.search(turn):
-            return index
-    return 0
+        lowered = turn.lower()
+        if (
+            _find_zip(turn) is not None
+            or ADDRESS_RE.search(turn)
+            or _find_phone(turn) is not None
+            or re.search(r"\bbk_[a-z0-9_]+", turn)
+            or any(keyword in lowered for keyword in _SERVICE_HINTS)
+            or DATA_HINT_RE.search(turn)
+        ):
+            last = index
+    return last
+
+
+def confirmation_after(turns: list[str], readback_index: int) -> tuple[str | None, int | None]:
+    """Return the last clear yes/no after the read-back point, and its turn index."""
+    decision: str | None = None
+    index: int | None = None
+    for offset, turn in enumerate(turns[readback_index + 1 :], start=readback_index + 1):
+        lowered = turn.lower()
+        if EXPLICIT_NO_RE.search(lowered) or EXPLICIT_YES_RE.search(lowered):
+            decision = turn
+            index = offset
+    return decision, index
 
 
 def _known_customer(text: str, customers: list[CustomerRecord]) -> CustomerRecord | None:

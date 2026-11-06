@@ -133,7 +133,7 @@ def test_no_heat_outside_threshold_is_not_an_emergency(harborlight) -> None:
     assert triage_emergency(harborlight, "My heat stopped") is None
 
 
-def test_emergency_ticket_is_structured_and_does_not_book(harborlight, store, clock) -> None:
+def test_emergency_ticket_is_structured(harborlight, store, clock) -> None:
     registry = _registry(harborlight, store, clock)
 
     ticket = _ticket(registry, clock)
@@ -149,6 +149,13 @@ def test_emergency_ticket_is_structured_and_does_not_book(harborlight, store, cl
     assert stored.customer_phone == "+14155550101"
     assert stored.address is not None
     assert stored.address.zip == "94107"
+
+
+def test_emergency_ticket_does_not_book(harborlight, store, clock) -> None:
+    registry = _registry(harborlight, store, clock)
+
+    _ticket(registry, clock)
+
     assert store.count_bookings("harborlight") == 4
 
 
@@ -266,7 +273,73 @@ def test_live_transfer_rejects_an_incomplete_packet(harborlight, store, clock) -
     assert packet.complete is False
 
 
-def test_answered_transfer_reports_connected_and_complete_packet(harborlight, store, clock) -> None:
+def test_live_no_answer_and_callback_mode_do_not_share_a_callback_id(
+    harborlight, store, clock
+) -> None:
+    registry = _registry(harborlight, store, clock, answered=set())
+    ticket = _ticket(registry, clock)
+    packet = _packet("harborlight", "call_em", clock, ticket_id=ticket["ticket_id"])
+    live = registry.call(
+        "transfer_to_human",
+        {
+            "reason": "emergency",
+            "urgency": "emergency",
+            "mode": "live",
+            "packet": packet.model_dump(mode="json"),
+        },
+    )
+    callback = registry.call(
+        "transfer_to_human",
+        {
+            "reason": "emergency",
+            "urgency": "emergency",
+            "mode": "callback",
+            "packet": packet.model_dump(mode="json"),
+            "callback_window": {
+                "start": clock.now.isoformat(),
+                "end": (clock.now + timedelta(minutes=15)).isoformat(),
+            },
+        },
+    )
+
+    assert live.ok is True
+    assert callback.ok is True
+    assert live.data["callback_id"] != callback.data["callback_id"]
+
+
+def test_a_different_callback_window_creates_a_different_callback(
+    harborlight, store, clock
+) -> None:
+    registry = _registry(harborlight, store, clock)
+    packet = _packet("harborlight", "call_em", clock)
+    args = {
+        "reason": "after_hours",
+        "urgency": "normal",
+        "mode": "callback",
+        "packet": packet.model_dump(mode="json"),
+        "callback_window": {
+            "start": (clock.now + timedelta(days=3)).isoformat(),
+            "end": (clock.now + timedelta(days=3, hours=4)).isoformat(),
+        },
+    }
+    first = registry.call("transfer_to_human", args)
+    second = registry.call(
+        "transfer_to_human",
+        {
+            **args,
+            "callback_window": {
+                "start": (clock.now + timedelta(days=4)).isoformat(),
+                "end": (clock.now + timedelta(days=4, hours=4)).isoformat(),
+            },
+        },
+    )
+
+    assert first.ok is True
+    assert second.ok is True
+    assert first.data["callback_id"] != second.data["callback_id"]
+
+
+def test_answered_transfer_reports_connected(harborlight, store, clock) -> None:
     registry = _registry(harborlight, store, clock, answered={"harborlight_on_call"})
     ticket = _ticket(registry, clock)
     packet = _packet("harborlight", "call_em", clock, ticket_id=ticket["ticket_id"])
@@ -283,9 +356,26 @@ def test_answered_transfer_reports_connected_and_complete_packet(harborlight, st
 
     assert result.ok is True
     assert result.data["status"] == "connected"
-    assert result.data["packet_complete"] is True
     assert result.data["target"]["id"] == "harborlight_on_call"
     assert result.data["callback_id"] is None
+
+
+def test_complete_packet_has_no_missing_fields(harborlight, store, clock) -> None:
+    registry = _registry(harborlight, store, clock, answered={"harborlight_on_call"})
+    ticket = _ticket(registry, clock)
+    packet = _packet("harborlight", "call_em", clock, ticket_id=ticket["ticket_id"])
+
+    result = registry.call(
+        "transfer_to_human",
+        {
+            "reason": "emergency",
+            "urgency": "emergency",
+            "mode": "live",
+            "packet": packet.model_dump(mode="json"),
+        },
+    )
+
+    assert result.data["packet_complete"] is True
     assert packet.complete is True
     assert packet.missing_fields() == []
 

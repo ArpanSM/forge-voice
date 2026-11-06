@@ -25,14 +25,12 @@ from forge_voice.policy import (
     CallOutcome,
     ConversationPolicy,
     CustomerInput,
+    ReadbackPayload,
     TransferStatus,
-    canonical_booking_payload,
-    canonical_cancel_payload,
-    canonical_reschedule_payload,
 )
 from forge_voice.policy.emergency import EmergencyTriage, triage_emergency
 from forge_voice.policy.handoff import HandoffCaller, HandoffPacket, HandoffService
-from forge_voice.runtime.interpreter import CallerFacts, extract_facts
+from forge_voice.runtime.interpreter import CallerFacts, confirmation_after, extract_facts
 from forge_voice.runtime.models import (
     CallResult,
     CallScenario,
@@ -185,6 +183,8 @@ class _Run:
         self.tool_events: list[ToolCallRecord] = []
         self.qa_flags: list[str] = []
         self.booking_ids: list[str] = []
+        self.turns: list[str] = []
+        self.decision_index: int | None = None
         self.write_count = 0
         self.cancel_count = 0
         self.replayed = False
@@ -206,6 +206,7 @@ class _Run:
     # ------------------------------------------------------------------ top level
     def execute(self, scenario: CallScenario) -> None:
         self._say(self.tenant.persona.greeting)
+        self.turns = list(scenario.turns)
         for turn in scenario.turns:
             self.transcript.append(TranscriptTurn(role="caller", text=turn))
 
@@ -221,16 +222,16 @@ class _Run:
             self._emergency_unconfirmed()
         elif self.facts.injection:
             self._injection()
+        elif intent is CallIntent.reschedule:
+            self._reschedule()
+        elif intent is CallIntent.cancel:
+            self._cancel()
         elif intent is CallIntent.human or self.facts.wants_human:
             self._handoff(booking_id=self._booking_id_from_text())
         elif intent is CallIntent.pricing_faq:
             self._pricing()
         elif intent is CallIntent.status:
             self._status()
-        elif intent is CallIntent.reschedule:
-            self._reschedule()
-        elif intent is CallIntent.cancel:
-            self._cancel()
         else:
             self._book()
 
@@ -265,18 +266,13 @@ class _Run:
             self._callback(reason="caller_request")
             return
         slot = self._choose_slot(slots)
-        service = self.tenant.require_service(self.facts.service_id or slot["service_id"])
-        self.state.service_id = service.id
-        payload = canonical_booking_payload(service.id, slot["slot_id"], customer)
-        if (
-            self._authorize_write(
-                payload, slot["slot_id"], self._readback(service.name, slot, customer, service.id)
-            )
-            is None
-        ):
+        self.policy.begin_offer(self.state)
+        readback = self.service.booking_readback(slot["slot_id"], customer)
+        self.state.service_id = readback.service_id
+        if not self._authorize_write(readback, self._readback_text(readback, action="book")):
             return
         args = {
-            "service_id": service.id,
+            "service_id": readback.service_id,
             "slot_id": slot["slot_id"],
             "customer": customer.model_dump(mode="json"),
         }
@@ -285,22 +281,23 @@ class _Run:
             ErrorCode.slot_expired,
             ErrorCode.slot_unavailable,
         }:
-            slots = self._availability(exclude={slot["slot_id"]})
+            self._clear_confirmation()
+            exclude = (
+                {slot["slot_id"]} if result.error.code is ErrorCode.slot_unavailable else set()
+            )
+            slots = self._availability(exclude=exclude)
             if slots:
                 slot = self._choose_slot(slots)
-                payload = canonical_booking_payload(service.id, slot["slot_id"], customer)
-                if (
-                    self._authorize_write(
-                        payload,
-                        slot["slot_id"],
-                        self._readback(service.name, slot, customer, service.id),
-                    )
-                    is None
+                self.policy.begin_offer(self.state)
+                readback = self.service.booking_readback(slot["slot_id"], customer)
+                if not self._authorize_write(
+                    readback, self._readback_text(readback, action="book")
                 ):
                     return
                 args["slot_id"] = slot["slot_id"]
                 result = self._tool("book_appointment", args)
         if not result.ok:
+            payload = readback.token_payload()
             if result.error.code is ErrorCode.timeout:
                 self._flag("tool_timeout")
                 replay = self.service.replay(
@@ -318,6 +315,11 @@ class _Run:
             self._callback(reason="tool_failure")
             return
         self._record_booking(result.data["booking"]["booking_id"], replayed=result.data["replayed"])
+        self.policy.mark_written(
+            self.state,
+            target=readback.target,
+            booking_id=result.data["booking"]["booking_id"],
+        )
         if self.facts.asks_again:
             again = self._tool("book_appointment", args)
             if again.ok and again.data["replayed"]:
@@ -367,10 +369,11 @@ class _Run:
             self._callback(reason="caller_request", booking_id=booking.booking_id)
             return
         slot = self._choose_slot(slots)
-        payload = canonical_reschedule_payload(booking.booking_id, slot["slot_id"])
-        if (
-            self._authorize_write(payload, slot["slot_id"], self._booking_readback(booking, slot))
-            is None
+        self.policy.begin_offer(self.state)
+        readback = self.service.reschedule_readback(booking.booking_id, slot["slot_id"])
+        if not self._authorize_write(
+            readback,
+            self._readback_text(readback, action="move", old_start=booking.start),
         ):
             return
         old_slot = self.store.get_slot(self.tenant.tenant_id, booking.slot_id)
@@ -384,19 +387,22 @@ class _Run:
             ErrorCode.slot_expired,
             ErrorCode.slot_unavailable,
         }:
+            self._clear_confirmation()
+            exclude = (
+                {slot["slot_id"]} if result.error.code is ErrorCode.slot_unavailable else set()
+            )
             slots = self._availability(
                 zip_code=booking.address.zip,
                 service_id=booking.service_id,
-                exclude={slot["slot_id"]},
+                exclude=exclude,
             )
             if slots:
                 slot = self._choose_slot(slots)
-                payload = canonical_reschedule_payload(booking.booking_id, slot["slot_id"])
-                if (
-                    self._authorize_write(
-                        payload, slot["slot_id"], self._booking_readback(booking, slot)
-                    )
-                    is None
+                self.policy.begin_offer(self.state)
+                readback = self.service.reschedule_readback(booking.booking_id, slot["slot_id"])
+                if not self._authorize_write(
+                    readback,
+                    self._readback_text(readback, action="move", old_start=booking.start),
                 ):
                     return
                 args["new_slot_id"] = slot["slot_id"]
@@ -415,6 +421,11 @@ class _Run:
         self._say(
             "Moved. Your appointment is now "
             f"{self._format(datetime.fromisoformat(result.data['booking']['current']['start']))}."
+        )
+        self.policy.mark_written(
+            self.state,
+            target=args["new_slot_id"],
+            booking_id=booking.booking_id,
         )
         self.policy.record_change(self.state)
         self.outcome = CallOutcome.rescheduled
@@ -456,12 +467,9 @@ class _Run:
             )
             return
         self.state.intent = CallIntent.cancel
-        payload = canonical_cancel_payload(booking.booking_id)
-        readback = (
-            f"Just to confirm: cancel the {booking.service_id.replace('_', ' ')} on "
-            f"{self._format(booking.start)} at {booking.address.line1}. Should I cancel it?"
-        )
-        if self._authorize_write(payload, booking.booking_id, readback) is None:
+        self.policy.begin_offer(self.state)
+        readback = self.service.cancel_readback(booking.booking_id)
+        if not self._authorize_write(readback, self._readback_text(readback, action="cancel")):
             return
         result = self._tool(
             "cancel_appointment",
@@ -480,12 +488,15 @@ class _Run:
         current_slot = self.store.get_slot(self.tenant.tenant_id, booking.slot_id)
         self.slot_released = current_slot is not None and current_slot.status == "open"
         self._say("Cancelled. No fee applies and the appointment slot has been released.")
+        self.policy.mark_written(
+            self.state, target=booking.booking_id, booking_id=booking.booking_id
+        )
         self.policy.record_change(self.state)
         self.outcome = CallOutcome.cancelled
 
     # ---------------------------------------------------------------- other paths
     def _status(self) -> None:
-        result = self._lookup(include_bookings=True)
+        result = self._lookup(include_bookings=True, booking_id=self._booking_id_from_text())
         if not result.ok or not result.data["bookings"]:
             self._callback(reason="caller_request")
             return
@@ -523,23 +534,19 @@ class _Run:
         self.state.urgency = triage.severity
         self._say(triage.safety_text)
         customer = self._customer()
-        ticket_id: str | None = None
+        ticket_args: dict[str, Any] = {
+            "category": triage.category.id,
+            "severity": triage.severity,
+            "description": triage.description,
+            "safety_instructions_given": [triage.safety_script],
+            "transfer_mode": "live",
+        }
         if customer is not None:
-            ticket = self._tool(
-                "create_emergency_ticket",
-                {
-                    "category": triage.category.id,
-                    "severity": triage.severity,
-                    "customer": customer.model_dump(mode="json"),
-                    "description": triage.description,
-                    "safety_instructions_given": [triage.safety_script],
-                    "transfer_mode": "live",
-                },
-            )
-            if ticket.ok:
-                ticket_id = ticket.data["ticket_id"]
-            else:
-                self._flag("ticket_write_failed")
+            ticket_args["customer"] = customer.model_dump(mode="json")
+        ticket = self._tool("create_emergency_ticket", ticket_args)
+        ticket_id = ticket.data["ticket_id"] if ticket.ok else None
+        if not ticket.ok:
+            self._flag("ticket_write_failed")
         self.ticket_id = ticket_id
         self._handoff(
             reason="emergency",
@@ -605,6 +612,15 @@ class _Run:
         if mode == "live" and not packet.complete:
             self._flag("handoff_packet_incomplete")
             mode = "callback"
+        if mode == "callback" and packet.caller.phone is None:
+            self._flag("handoff_missing_phone")
+            self.error_code = "invalid_phone"
+            self.outcome = CallOutcome.failed
+            self._say(
+                "I don't have a callback number. I can take your details, but I need a "
+                "number to have someone call you back."
+            )
+            return
         args: dict[str, Any] = {
             "reason": reason,
             "urgency": urgency,
@@ -629,11 +645,18 @@ class _Run:
             self.outcome = CallOutcome.callback
             minutes = self.tenant.emergency.on_call.callback_sla_minutes
             if urgency == "emergency":
-                self._say(
-                    "I couldn't reach the on-call technician. I've created an emergency "
-                    f"ticket and someone will call you back within {minutes} minutes. "
-                    "If anything gets worse, call 911."
-                )
+                if self.ticket_id:
+                    self._say(
+                        "I couldn't reach the on-call technician. I've created an emergency "
+                        f"ticket and someone will call you back within {minutes} minutes. "
+                        "If anything gets worse, call 911."
+                    )
+                else:
+                    self._say(
+                        "I couldn't reach the on-call technician and couldn't create the "
+                        "ticket. I've saved your details so someone can call you back. "
+                        "If anything gets worse, call 911."
+                    )
             else:
                 self._say(
                     "I couldn't complete a live transfer. I've saved your details and "
@@ -661,17 +684,29 @@ class _Run:
         self.outcome = CallOutcome.abandoned
 
     # ------------------------------------------------------------------ helpers
-    def _authorize_write(self, payload: dict[str, Any], target: str, readback: str) -> str | None:
-        self.policy.record_readback(self.state, payload)
+    def _clear_confirmation(self) -> None:
+        self.policy.clear_confirmation(self.state)
+        self.registry.session.confirmed = False
+        self.registry.session.confirmation_token = None
+
+    def _authorize_write(self, payload: ReadbackPayload, readback: str) -> bool:
+        self.policy.read_back(self.state, payload)
         self._say(readback)
-        if self.facts.confirmation_utterance is None or self.facts.confirmation_refused:
+        start_index = max(
+            self.facts.last_data_index,
+            self.decision_index if self.decision_index is not None else -1,
+        )
+        utterance, index = confirmation_after(self.turns, start_index)
+        decision = self.policy.confirm(self.state, utterance or "")
+        if not decision.accepted:
+            self.error_code = decision.error
             self._refuse()
-            return None
-        self.policy.confirm(self.state, self.facts.confirmation_utterance or "")
-        token = self.policy.issue_confirmation(self.state, target=target, payload=payload)
+            return False
+        token = self.policy.issue_confirmation(self.state)
         self.registry.session.confirmed = True
         self.registry.session.confirmation_token = token.token
-        return token.token
+        self.decision_index = index
+        return True
 
     def _say(self, text: str) -> None:
         self.responses.append(text)
@@ -692,14 +727,16 @@ class _Run:
         )
         return result
 
-    def _lookup(self, *, include_bookings: bool = False) -> Any:
+    def _lookup(self, *, include_bookings: bool = False, booking_id: str | None = None) -> Any:
         args: dict[str, Any] = {"include_bookings": include_bookings}
+        if booking_id:
+            args["booking_id"] = booking_id
         if self.facts.phone:
             args["phone"] = self.facts.phone
-        elif self.facts.name != "Caller" and self.facts.address is not None:
+        if self.facts.name != "Caller" and self.facts.address is not None:
             args["name"] = self.facts.name
             args["address"] = self.facts.address.model_dump(mode="json")
-        else:
+        if "booking_id" not in args and "phone" not in args and "name" not in args:
             return _MissingLookup()
         result = self._tool("lookup_customer", args)
         if result.ok and not result.data["verification_required"]:
@@ -770,24 +807,17 @@ class _Run:
         return match.group(1) if match else None
 
     def _find_booking(self) -> Any:
-        match = re.search(r"\b(bk_[a-z0-9_]+)\b", self.facts.text)
-        if match:
-            return self.store.get_booking(self.tenant.tenant_id, match.group(1))
-        customers = []
-        if self.facts.phone:
-            customers = self.store.find_customers(self.tenant.tenant_id, phone=self.facts.phone)
-        if not customers and self.facts.name != "Caller" and self.facts.address is not None:
-            customers = self.store.find_customers(
-                self.tenant.tenant_id,
-                name=self.facts.name,
-                zip_code=self.facts.address.zip,
-                line1=self.facts.address.line1,
-            )
-        bookings = []
-        for customer in customers:
-            bookings.extend(
-                self.store.list_bookings(self.tenant.tenant_id, customer_id=customer.customer_id)
-            )
+        booking_id = self._booking_id_from_text()
+        result = self._lookup(include_bookings=True, booking_id=booking_id)
+        if not result.ok or result.data["verification_required"]:
+            return None
+        if booking_id:
+            return self.store.get_booking(self.tenant.tenant_id, booking_id)
+        bookings = [
+            self.store.get_booking(self.tenant.tenant_id, summary["booking_id"])
+            for summary in result.data["bookings"]
+        ]
+        bookings = [booking for booking in bookings if booking is not None]
         if self.facts.service_id:
             matching = [
                 booking for booking in bookings if booking.service_id == self.facts.service_id
@@ -797,22 +827,7 @@ class _Run:
         return bookings[0] if bookings else None
 
     def _verify_ownership(self, booking: Any) -> bool:
-        if self.registry.session.caller_phone == booking.contact_phone:
-            self.registry.session.ownership_verified = True
-            return True
-        if self.facts.address is None:
-            return False
-        address_matches = (
-            self.facts.address.zip == booking.address.zip
-            and self.facts.address.line1.lower() == booking.address.line1.lower()
-        )
-        provides_booking_id = booking.booking_id in self.facts.text
-        customer = self.store.get_customer(self.tenant.tenant_id, booking.customer_id)
-        named = customer is not None and customer.name.lower() == self.facts.name.lower()
-        if address_matches and (named or provides_booking_id):
-            self.registry.session.ownership_verified = True
-            return True
-        return False
+        return self.registry.session.ownership_verified
 
     def _customer(self) -> CustomerInput | None:
         address = self.facts.address
@@ -840,15 +855,14 @@ class _Run:
             else None
         )
         phone = (
-            (booking.contact_phone if booking else None)
+            self.registry.session.caller_phone
             or self.facts.phone
-            or self.registry.session.caller_phone
-            or DEFAULT_CALLER_PHONE[self.tenant.tenant_id]
+            or (booking.contact_phone if booking else None)
         )
         service_id = booking.service_id if booking else self.facts.service_id
         address = booking.address if booking else self.facts.address
-        name = self.facts.name
-        if booking is not None and name == "Caller":
+        name = self.facts.name if self.facts.name != "Caller" else None
+        if booking is not None and name is None:
             customer = self.store.get_customer(self.tenant.tenant_id, booking.customer_id)
             if customer is not None:
                 name = customer.name
@@ -909,39 +923,28 @@ class _Run:
             return self.tenant.knowledge_base.faq[0].answer
         return None
 
-    def _readback(
-        self,
-        service_name: str,
-        slot: dict[str, Any],
-        customer: CustomerInput | None,
-        service_id: str,
+    def _readback_text(
+        self, payload: ReadbackPayload, *, action: str, old_start: datetime | None = None
     ) -> str:
-        configured = self.tenant.require_service(service_id)
-        if customer is None:
-            address = self.facts.address
-            phone = self.facts.phone or DEFAULT_CALLER_PHONE[self.tenant.tenant_id]
-            name = self.facts.name
-        else:
-            address = customer.address
-            phone = customer.phone
-            name = customer.name
-        technician = slot["technician"]["name"]
-        location = f"{address.line1}, {address.city} {address.zip}" if address else "your address"
-        when = self._format(datetime.fromisoformat(slot["start"]))
+        location = f"{payload.address.line1}, {payload.address.city} {payload.address.zip}"
+        when = self._format(datetime.fromisoformat(payload.start))
+        if action == "move" and old_start is not None:
+            return (
+                f"Just to confirm: move your {payload.service_name} from "
+                f"{self._format(old_start)} to {when} with {payload.technician_name} "
+                f"at {location}, for {payload.customer_name} at {payload.contact_phone}. "
+                "Should I move it?"
+            )
+        if action == "cancel":
+            return (
+                f"Just to confirm: cancel the {payload.service_name} on {when} with "
+                f"{payload.technician_name} at {location}, for {payload.customer_name} "
+                f"at {payload.contact_phone}. Should I cancel it?"
+            )
         return (
-            f"Just to confirm: {configured.name} on {when} "
-            f"with {technician} at {location}, for {name} at {phone}. Should I book that?"
-        )
-
-    def _booking_readback(self, booking: Any, slot: dict[str, Any]) -> str:
-        service = self.tenant.require_service(booking.service_id)
-        technician = slot["technician"]["name"]
-        new_when = self._format(datetime.fromisoformat(slot["start"]))
-        old_when = self._format(booking.start)
-        return (
-            f"Just to confirm: move your {service.name} from {old_when} to {new_when} "
-            f"with {technician} at {booking.address.line1}, {booking.address.city} "
-            f"{booking.address.zip}, for {booking.contact_phone}. Should I move it?"
+            f"Just to confirm: {payload.service_name} on {when} with "
+            f"{payload.technician_name} at {location}, for {payload.customer_name} "
+            f"at {payload.contact_phone}. Should I book that?"
         )
 
     def _record_booking(self, booking_id: str, *, replayed: bool = False) -> None:

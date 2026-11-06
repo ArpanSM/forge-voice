@@ -13,9 +13,7 @@ from forge_voice.policy import (
     ConfirmationTokenStore,
     ConversationPolicy,
     CustomerInput,
-    canonical_booking_payload,
-    canonical_cancel_payload,
-    canonical_reschedule_payload,
+    ReadbackPayload,
 )
 from forge_voice.policy.booking import BookingWrite
 
@@ -41,7 +39,7 @@ def outbox():
 
 @pytest.fixture
 def tokens(store, clock):
-    return ConfirmationTokenStore(clock, store=store)
+    return ConfirmationTokenStore(clock, backend=store, token_factory=lambda: "deterministic")
 
 
 @pytest.fixture
@@ -56,8 +54,7 @@ def _offer(service: BookingService, *, service_id="drain_cleaning", day=date(202
 def _token(
     policy: ConversationPolicy,
     call_id: str,
-    target: str,
-    payload: dict,
+    readback: ReadbackPayload,
     *,
     caller_phone: str = "+14155550101",
     utterance: str = "yes, book it",
@@ -72,18 +69,32 @@ def _token(
             "cancel": "I need to cancel my appointment",
         }[intent],
     )
-    policy.record_readback(state, payload)
-    policy.confirm(state, utterance)
-    return policy.issue_confirmation(state, target=target, payload=payload)
+    policy.begin_offer(state)
+    policy.read_back(state, readback)
+    decision = policy.confirm(state, utterance)
+    assert decision.accepted
+    return policy.issue_confirmation(state)
+
+
+def _book_readback(service: BookingService, slot, customer=CUSTOMER) -> ReadbackPayload:
+    return service.booking_readback(slot.slot_id, customer)
+
+
+def _reschedule_readback(service: BookingService, booking_id: str, offer) -> ReadbackPayload:
+    return service.reschedule_readback(booking_id, offer.slot_id)
+
+
+def _cancel_readback(service: BookingService, booking_id: str) -> ReadbackPayload:
+    return service.cancel_readback(booking_id)
 
 
 def test_clean_booking_commits_one_row_after_confirmation(
     tokens, service, store, outbox, harborlight, clock
 ) -> None:
     slot = _offer(service).slots[0]
-    payload = canonical_booking_payload("drain_cleaning", slot.slot_id, CUSTOMER)
+    readback = _book_readback(service, slot)
     policy = ConversationPolicy(harborlight, clock, tokens)
-    token = _token(policy, "call_1", slot.slot_id, payload)
+    token = _token(policy, "call_1", readback)
 
     result = service.book(
         call_id="call_1",
@@ -102,10 +113,10 @@ def test_clean_booking_commits_one_row_after_confirmation(
     assert store.get_slot("harborlight", slot.slot_id).status == "booked"
     assert len(outbox.messages) == 1
     assert outbox.messages[0].booking_id == result.booking.booking_id
-    stored_token = store.get_token(token.token)
+    stored_token = store.get_token("harborlight", token.token)
     assert stored_token is not None
     assert stored_token.used_at is not None
-    assert store.list_undrained_confirmations() == []
+    assert store.list_undrained_confirmations("harborlight") == []
 
 
 def test_premature_write_is_rejected_with_explicit_confirmation_required(
@@ -131,8 +142,8 @@ def test_same_idempotency_key_and_payload_replays_same_booking(
     tokens, service, store, outbox, harborlight, clock
 ) -> None:
     slot = _offer(service).slots[0]
-    payload = canonical_booking_payload("drain_cleaning", slot.slot_id, CUSTOMER)
-    token = _token(ConversationPolicy(harborlight, clock, tokens), "call_1", slot.slot_id, payload)
+    readback = _book_readback(service, slot)
+    token = _token(ConversationPolicy(harborlight, clock, tokens), "call_1", readback)
 
     first = service.book(
         call_id="call_1",
@@ -159,12 +170,12 @@ def test_same_idempotency_key_and_payload_replays_same_booking(
 
 def test_replay_requires_confirmation_authorization(tokens, service, harborlight, clock) -> None:
     slot = _offer(service).slots[0]
-    payload = canonical_booking_payload("drain_cleaning", slot.slot_id, CUSTOMER)
+    readback = _book_readback(service, slot)
+    payload = readback.token_payload()
     token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_1",
-        slot.slot_id,
-        payload,
+        readback,
     )
     service.book(
         call_id="call_1",
@@ -204,12 +215,12 @@ def test_outbox_failure_leaves_the_booking_committed_and_a_durable_queue_row(
     outbox = Outbox(blocker / "outbox.jsonl")
     service = BookingService(harborlight, store, outbox, clock, tokens=tokens)
     slot = _offer(service).slots[0]
-    payload = canonical_booking_payload("drain_cleaning", slot.slot_id, CUSTOMER)
+    readback = _book_readback(service, slot)
+    readback.token_payload()
     token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_1",
-        slot.slot_id,
-        payload,
+        readback,
     )
 
     result = service.book(
@@ -224,32 +235,34 @@ def test_outbox_failure_leaves_the_booking_committed_and_a_durable_queue_row(
     assert result.booking.status == "booked"
     assert store.count_bookings("harborlight", slot_id=slot.slot_id) == 1
     assert store.count_confirmations("harborlight") == 1
-    assert len(store.list_undrained_confirmations()) == 1
+    assert len(store.list_undrained_confirmations("harborlight")) == 1
 
 
 def test_concurrent_calls_cannot_double_book_the_same_slot(
     harborlight, store, outbox, clock, tokens
 ) -> None:
     first = BookingService(harborlight, store, outbox, clock, tokens=tokens)
-    second_tokens = ConfirmationTokenStore(clock, store=store)
+    second_tokens = ConfirmationTokenStore(
+        clock, backend=store, token_factory=lambda: "deterministic"
+    )
     second = BookingService(harborlight, store, Outbox(), clock, tokens=second_tokens)
     first_slot = _offer(first).slots[0]
     second_slot = _offer(second).slots[0]
     assert first_slot.slot_id == second_slot.slot_id
-    first_payload = canonical_booking_payload("drain_cleaning", first_slot.slot_id, CUSTOMER)
+    first_readback = _book_readback(first, first_slot)
+    first_payload = first_readback.token_payload()
     other = CUSTOMER.model_copy(update={"name": "Second Caller", "phone": "+14155550113"})
-    second_payload = canonical_booking_payload("drain_cleaning", second_slot.slot_id, other)
+    second_readback = _book_readback(second, second_slot, other)
+    second_payload = second_readback.token_payload()
     first_token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_race_1",
-        first_slot.slot_id,
-        first_payload,
+        first_readback,
     )
     second_token = _token(
         ConversationPolicy(harborlight, clock, second_tokens),
         "call_race_2",
-        second_slot.slot_id,
-        second_payload,
+        second_readback,
         caller_phone=other.phone,
     )
 
@@ -258,7 +271,7 @@ def test_concurrent_calls_cannot_double_book_the_same_slot(
             call_id=call_id,
             customer=customer,
             service_id="drain_cleaning",
-            slot_id=payload["slot_id"],
+            slot_id=payload["target"],
             confirmed=True,
             token=token.token,
         )
@@ -284,8 +297,8 @@ def test_concurrent_calls_cannot_double_book_the_same_slot(
 
 def test_same_key_with_different_payload_conflicts(tokens, service, harborlight, clock) -> None:
     slot = _offer(service).slots[0]
-    payload = canonical_booking_payload("drain_cleaning", slot.slot_id, CUSTOMER)
-    token = _token(ConversationPolicy(harborlight, clock, tokens), "call_1", slot.slot_id, payload)
+    readback = _book_readback(service, slot)
+    token = _token(ConversationPolicy(harborlight, clock, tokens), "call_1", readback)
     service.book(
         call_id="call_1",
         customer=CUSTOMER,
@@ -295,12 +308,12 @@ def test_same_key_with_different_payload_conflicts(tokens, service, harborlight,
         token=token.token,
     )
     other = CUSTOMER.model_copy(update={"name": "Someone Else"})
-    other_payload = canonical_booking_payload("drain_cleaning", slot.slot_id, other)
+    other_readback = _book_readback(service, slot, other)
+    other_readback.token_payload()
     other_token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_1",
-        slot.slot_id,
-        other_payload,
+        other_readback,
     )
 
     with pytest.raises(BookingError) as exc:
@@ -322,12 +335,12 @@ def test_double_booking_second_caller_gets_slot_unavailable(
     first_offer = _offer(service).slots[0]
     second_offer = _offer(service).slots[0]
     assert second_offer.slot_id == first_offer.slot_id
-    payload = canonical_booking_payload("drain_cleaning", first_offer.slot_id, CUSTOMER)
+    readback = _book_readback(service, first_offer)
+    readback.token_payload()
     token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_1",
-        first_offer.slot_id,
-        payload,
+        readback,
     )
     service.book(
         call_id="call_1",
@@ -338,12 +351,12 @@ def test_double_booking_second_caller_gets_slot_unavailable(
         token=token.token,
     )
     other = CUSTOMER.model_copy(update={"name": "Second Caller", "phone": "+14155550113"})
-    other_payload = canonical_booking_payload("drain_cleaning", second_offer.slot_id, other)
+    other_readback = _book_readback(service, second_offer, other)
+    other_readback.token_payload()
     other_token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_2",
-        second_offer.slot_id,
-        other_payload,
+        other_readback,
         caller_phone=other.phone,
     )
 
@@ -372,12 +385,12 @@ def test_slot_taken_after_offer_rolls_back_the_whole_write(
     tokens, service, store, harborlight, clock
 ) -> None:
     slot = _offer(service).slots[0]
-    payload = canonical_booking_payload("drain_cleaning", slot.slot_id, CUSTOMER)
+    readback = _book_readback(service, slot)
+    readback.token_payload()
     token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_1",
-        slot.slot_id,
-        payload,
+        readback,
     )
     store.set_slot_status("harborlight", slot.slot_id, "booked")
 
@@ -400,7 +413,7 @@ def test_slot_taken_after_offer_rolls_back_the_whole_write(
         )
         is None
     )
-    assert store.get_token(token.token).used_at is None
+    assert store.get_token("harborlight", token.token).used_at is None
 
 
 def test_expired_offer_is_rejected_then_refreshed_and_booked(
@@ -408,9 +421,10 @@ def test_expired_offer_is_rejected_then_refreshed_and_booked(
 ) -> None:
     first = _offer(service).slots[0]
     clock.advance(timedelta(seconds=harborlight.policies.offer_ttl_seconds + 1))
-    payload = canonical_booking_payload("drain_cleaning", first.slot_id, CUSTOMER)
+    readback = _book_readback(service, first)
+    readback.token_payload()
     policy = ConversationPolicy(harborlight, clock, tokens)
-    token = _token(policy, "call_1", first.slot_id, payload)
+    token = _token(policy, "call_1", readback)
 
     with pytest.raises(BookingError) as exc:
         service.book(
@@ -424,12 +438,10 @@ def test_expired_offer_is_rejected_then_refreshed_and_booked(
     assert exc.value.code == "slot_expired"
 
     refreshed = _offer(service).slots[0]
-    payload = canonical_booking_payload("drain_cleaning", refreshed.slot_id, CUSTOMER)
-    state = policy.start_call("call_1", CUSTOMER.phone)
-    policy.identify_intent(state, "book")
-    policy.record_readback(state, payload)
-    policy.confirm(state, "yes, that one")
-    fresh_token = policy.issue_confirmation(state, target=refreshed.slot_id, payload=payload)
+    readback = _book_readback(service, refreshed)
+    readback.token_payload()
+    policy = ConversationPolicy(harborlight, clock, tokens)
+    fresh_token = _token(policy, "call_1", readback)
 
     booked = service.book(
         call_id="call_1",
@@ -448,12 +460,12 @@ def test_reschedule_moves_same_booking_and_releases_old_slot(
 ) -> None:
     old = store.get_booking("harborlight", "bk_0001")
     offer = _offer(service, day=date(2026, 11, 10)).slots[0]
-    payload = canonical_reschedule_payload("bk_0001", offer.slot_id)
+    readback = _reschedule_readback(service, "bk_0001", offer)
+    readback.token_payload()
     token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_move",
-        offer.slot_id,
-        payload,
+        readback,
         intent="reschedule",
     )
 
@@ -483,12 +495,12 @@ def test_failed_reschedule_leaves_old_booking_and_slot_intact(
 ) -> None:
     old = store.get_booking("harborlight", "bk_0001")
     offer = _offer(service, day=date(2026, 11, 10)).slots[0]
-    payload = canonical_reschedule_payload("bk_0001", offer.slot_id)
+    readback = _reschedule_readback(service, "bk_0001", offer)
+    readback.token_payload()
     token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_move",
-        offer.slot_id,
-        payload,
+        readback,
         intent="reschedule",
     )
     store.set_slot_status("harborlight", offer.slot_id, "booked")
@@ -517,17 +529,17 @@ def test_failed_reschedule_leaves_old_booking_and_slot_intact(
         )
         is None
     )
-    assert store.get_token(token.token).used_at is None
+    assert store.get_token("harborlight", token.token).used_at is None
 
 
 def test_reschedule_rejects_wrong_ownership(tokens, service, store, harborlight, clock) -> None:
     offer = _offer(service, day=date(2026, 11, 10)).slots[0]
-    payload = canonical_reschedule_payload("bk_0001", offer.slot_id)
+    readback = _reschedule_readback(service, "bk_0001", offer)
+    readback.token_payload()
     token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_move",
-        offer.slot_id,
-        payload,
+        readback,
         caller_phone="+14155550999",
         intent="reschedule",
     )
@@ -549,12 +561,12 @@ def test_reschedule_rejects_cutoff(tokens, service, store, harborlight, clock) -
     offer = _offer(service, day=date(2026, 11, 10)).slots[0]
     booking = store.get_booking("harborlight", "bk_0003")
     clock.advance(booking.start - clock.now - timedelta(minutes=90))
-    cutoff_payload = canonical_reschedule_payload("bk_0003", offer.slot_id)
+    cutoff_readback = _reschedule_readback(service, "bk_0003", offer)
+    cutoff_readback.token_payload()
     cutoff_token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_late",
-        offer.slot_id,
-        cutoff_payload,
+        cutoff_readback,
         caller_phone=booking.contact_phone,
         intent="reschedule",
     )
@@ -575,12 +587,12 @@ def test_cancel_releases_slot_and_second_cancel_is_idempotent(
     tokens, service, store, outbox, harborlight, clock
 ) -> None:
     booking = store.get_booking("harborlight", "bk_0002")
-    payload = canonical_cancel_payload("bk_0002")
+    readback = _cancel_readback(service, "bk_0002")
+    readback.token_payload()
     token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_cancel",
-        "bk_0002",
-        payload,
+        readback,
         caller_phone=booking.contact_phone,
         utterance="yes, cancel it",
         intent="cancel",
@@ -618,12 +630,12 @@ def test_second_cancel_consumes_a_supplied_token(
     tokens, service, store, harborlight, clock
 ) -> None:
     booking = store.get_booking("harborlight", "bk_0002")
-    payload = canonical_cancel_payload("bk_0002")
+    readback = _cancel_readback(service, "bk_0002")
+    readback.token_payload()
     first = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_cancel",
-        "bk_0002",
-        payload,
+        readback,
         caller_phone=booking.contact_phone,
         utterance="yes, cancel it",
         intent="cancel",
@@ -639,8 +651,7 @@ def test_second_cancel_consumes_a_supplied_token(
     second = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_cancel_2",
-        "bk_0002",
-        payload,
+        readback,
         caller_phone=booking.contact_phone,
         utterance="yes, cancel it",
         intent="cancel",
@@ -656,7 +667,7 @@ def test_second_cancel_consumes_a_supplied_token(
     )
 
     assert result.already_cancelled is True
-    assert store.get_token(second.token).used_at is not None
+    assert store.get_token("harborlight", second.token).used_at is not None
 
 
 def test_cancel_rejects_wrong_ownership(tokens, service, store) -> None:
@@ -675,12 +686,12 @@ def test_cancel_rejects_wrong_ownership(tokens, service, store) -> None:
 def test_cancel_rejects_cutoff(tokens, service, store, harborlight, clock) -> None:
     booking = store.get_booking("harborlight", "bk_0003")
     clock.advance(booking.start - clock.now - timedelta(minutes=30))
-    payload = canonical_cancel_payload("bk_0003")
+    readback = _cancel_readback(service, "bk_0003")
+    readback.token_payload()
     token = _token(
         ConversationPolicy(harborlight, clock, tokens),
         "call_cancel_late",
-        "bk_0003",
-        payload,
+        readback,
         caller_phone=booking.contact_phone,
         utterance="yes, cancel it",
         intent="cancel",

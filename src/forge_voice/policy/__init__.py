@@ -7,9 +7,6 @@ from forge_voice.policy.booking import (
     BookingWrite,
     CustomerInput,
     Offer,
-    canonical_booking_payload,
-    canonical_cancel_payload,
-    canonical_reschedule_payload,
 )
 from forge_voice.policy.confirmation import (
     ConfirmationToken,
@@ -26,7 +23,9 @@ from forge_voice.policy.state import (
     CallOutcome,
     CallPhase,
     CallState,
+    ConfirmationDecision,
     CustomerSnapshot,
+    ReadbackPayload,
     SlotOffer,
     TransferStatus,
 )
@@ -41,6 +40,7 @@ __all__ = [
     "CallOutcome",
     "CallPhase",
     "CallState",
+    "ConfirmationDecision",
     "ConfirmationRequiredError",
     "ConfirmationToken",
     "ConfirmationTokenStore",
@@ -48,13 +48,11 @@ __all__ = [
     "CustomerInput",
     "CustomerSnapshot",
     "Offer",
+    "ReadbackPayload",
     "SlotOffer",
     "TokenBinding",
     "TokenCheck",
     "TokenStatus",
     "TransferStatus",
-    "canonical_booking_payload",
-    "canonical_cancel_payload",
-    "canonical_reschedule_payload",
     "payload_digest",
 ]

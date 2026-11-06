@@ -12,7 +12,7 @@ import sqlite3
 import threading
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import UTC, datetime
 from functools import wraps
 from pathlib import Path
 from typing import Any
@@ -203,6 +203,10 @@ CREATE TABLE IF NOT EXISTS calls (
 
 def _iso(value: datetime) -> str:
     return value.isoformat()
+
+
+def _iso_utc(value: datetime) -> str:
+    return value.astimezone(UTC).isoformat()
 
 
 def _address(row: Mapping[str, Any]) -> Address:
@@ -862,26 +866,18 @@ class SQLiteAdapter:
         )
         return record
 
-    def list_undrained_confirmations(
-        self, tenant_id: str | None = None
-    ) -> list[ConfirmationRecord]:
-        if tenant_id is None:
-            rows = self._conn.execute(
-                "SELECT * FROM confirmations WHERE drained_at IS NULL "
-                "ORDER BY created_at, message_id"
-            ).fetchall()
-        else:
-            rows = self._conn.execute(
-                "SELECT * FROM confirmations WHERE tenant_id = ? AND drained_at IS NULL "
-                "ORDER BY created_at, message_id",
-                (tenant_id,),
-            ).fetchall()
+    def list_undrained_confirmations(self, tenant_id: str) -> list[ConfirmationRecord]:
+        rows = self._conn.execute(
+            "SELECT * FROM confirmations WHERE tenant_id = ? AND drained_at IS NULL "
+            "ORDER BY created_at, message_id",
+            (tenant_id,),
+        ).fetchall()
         return [self._confirmation(row) for row in rows]
 
-    def mark_confirmation_drained(self, message_id: str, at: datetime) -> None:
+    def mark_confirmation_drained(self, tenant_id: str, message_id: str, at: datetime) -> None:
         self._conn.execute(
-            "UPDATE confirmations SET drained_at = ? WHERE message_id = ?",
-            (_iso(at), message_id),
+            "UPDATE confirmations SET drained_at = ? WHERE tenant_id = ? AND message_id = ?",
+            (_iso(at), tenant_id, message_id),
         )
 
     def list_confirmations(self, tenant_id: str) -> list[ConfirmationRecord]:
@@ -917,24 +913,25 @@ class SQLiteAdapter:
                 record.intent,
                 record.target,
                 record.payload_hash,
-                _iso(record.issued_at),
-                _iso(record.expires_at),
-                _iso(record.used_at) if record.used_at else None,
+                _iso_utc(record.issued_at),
+                _iso_utc(record.expires_at),
+                _iso_utc(record.used_at) if record.used_at else None,
             ),
         )
         return record
 
-    def get_token(self, token: str) -> TokenRecord | None:
+    def get_token(self, tenant_id: str, token: str) -> TokenRecord | None:
         row = self._conn.execute(
-            "SELECT * FROM confirmation_tokens WHERE token = ?", (token,)
+            "SELECT * FROM confirmation_tokens WHERE tenant_id = ? AND token = ?",
+            (tenant_id, token),
         ).fetchone()
         return self._token(row) if row else None
 
-    def consume_token(self, token: str, at: datetime) -> bool:
+    def consume_token(self, tenant_id: str, token: str, at: datetime) -> bool:
         cursor = self._conn.execute(
             "UPDATE confirmation_tokens SET used_at = ? "
-            "WHERE token = ? AND used_at IS NULL AND expires_at > ?",
-            (_iso(at), token, _iso(at)),
+            "WHERE tenant_id = ? AND token = ? AND used_at IS NULL AND expires_at > ?",
+            (_iso_utc(at), tenant_id, token, _iso_utc(at)),
         )
         return cursor.rowcount == 1
 

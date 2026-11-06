@@ -14,7 +14,7 @@ from forge_voice.policy.state import CallIntent
 
 class HandoffCaller(StrictModel):
     name: str | None = None
-    phone: str = Field(pattern=r"^\+1\d{10}$")
+    phone: str | None = Field(default=None, pattern=r"^\+1\d{10}$")
     verified: bool = False
 
 

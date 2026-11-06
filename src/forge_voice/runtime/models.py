@@ -23,11 +23,21 @@ class CallScenario(StrictModel):
     faults: dict[str, str] = Field(default_factory=dict)
 
     @classmethod
-    def from_text_scenario(cls, scenario: TextScenario) -> CallScenario:
+    def from_text_scenario(
+        cls,
+        scenario: TextScenario,
+        *,
+        caller_phone: str | None = None,
+        now: datetime | None = None,
+        faults: dict[str, str] | None = None,
+    ) -> CallScenario:
         return cls(
             id=scenario.id,
             tenant=scenario.tenant,
             turns=scenario.turns,
+            caller_phone=caller_phone,
+            now=now,
+            faults=faults or {},
         )
 
 

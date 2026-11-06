@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from forge_voice.models import StrictModel
 
@@ -27,12 +27,13 @@ class LookupCustomerArgs(StrictModel):
     phone: str | None = None
     name: str | None = None
     address: AddressArgs | None = None
+    booking_id: str | None = None
     include_bookings: bool = False
 
     @model_validator(mode="after")
     def has_a_lookup_key(self) -> LookupCustomerArgs:
-        if not self.phone and not self.name and not self.address:
-            raise ValueError("phone or name/address is required")
+        if not self.phone and not self.name and not self.address and not self.booking_id:
+            raise ValueError("phone, booking_id or name/address is required")
         if self.address is not None and not self.name:
             raise ValueError("an address lookup also needs a name")
         return self
@@ -78,11 +79,12 @@ class CancelAppointmentArgs(StrictModel):
     booking_id: str = Field(min_length=1)
     reason: str | None = Field(default=None, max_length=200)
 
-    @model_validator(mode="after")
-    def reason_is_supported(self) -> CancelAppointmentArgs:
-        if self.reason is not None and self.reason not in CANCEL_REASONS:
+    @field_validator("reason")
+    @classmethod
+    def reason_is_supported(cls, value: str | None) -> str | None:
+        if value is not None and value not in CANCEL_REASONS:
             raise ValueError(f"reason must be one of {sorted(CANCEL_REASONS)}")
-        return self
+        return value
 
 
 class CallbackWindowArgs(StrictModel):
@@ -99,7 +101,7 @@ class CallbackWindowArgs(StrictModel):
 class EmergencyTicketArgs(StrictModel):
     category: str = Field(min_length=1)
     severity: Literal["life_safety", "urgent", "priority"]
-    customer: CustomerArgs
+    customer: CustomerArgs | None = None
     description: str = Field(min_length=1, max_length=500)
     safety_instructions_given: list[str] = Field(min_length=1)
     transfer_mode: Literal["live", "callback"]

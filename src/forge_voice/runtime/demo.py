@@ -24,6 +24,7 @@ SCENARIOS = (
     CallScenario(
         id="demo_reschedule",
         tenant="harborlight",
+        caller_phone="+14155550101",
         turns=[
             "I need to move my drain cleaning appointment.",
             "Sam Rivera, 12 Alder Street, 94107.",
@@ -34,10 +35,11 @@ SCENARIOS = (
     CallScenario(
         id="demo_emergency",
         tenant="harborlight",
+        caller_phone="+14155550101",
         turns=[
             "I smell gas near my furnace.",
             "No one is hurt, but it's strong.",
-            "12 Alder Street, 94107.",
+            "Sam Rivera, 12 Alder Street, 94107.",
             "Okay, I'm leaving the house.",
         ],
     ),

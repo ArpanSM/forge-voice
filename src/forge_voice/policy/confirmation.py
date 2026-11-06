@@ -10,18 +10,23 @@ from __future__ import annotations
 
 import hashlib
 import json
-import secrets
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
-from typing import Any
+from typing import Any, Protocol
 
 from pydantic import Field
 
-from forge_voice.adapters.sqlite import SQLiteAdapter
 from forge_voice.clock import Clock
 from forge_voice.domain import TokenRecord
 from forge_voice.models import StrictModel
+from forge_voice.security import random_token
+
+
+class TokenBackend(Protocol):
+    def insert_token(self, record: TokenRecord) -> TokenRecord: ...
+    def get_token(self, tenant_id: str, token: str) -> TokenRecord | None: ...
+    def consume_token(self, tenant_id: str, token: str, at: datetime) -> bool: ...
 
 
 class TokenStatus(StrEnum):
@@ -60,9 +65,15 @@ class TokenCheck(StrictModel):
 class ConfirmationTokenStore:
     """Token registry; SQLite-backed when a database is supplied."""
 
-    def __init__(self, clock: Clock, store: SQLiteAdapter | None = None) -> None:
+    def __init__(
+        self,
+        clock: Clock,
+        backend: TokenBackend | None = None,
+        token_factory: Callable[[], str] | None = None,
+    ) -> None:
         self._clock = clock
-        self._store = store
+        self._backend = backend
+        self._token_factory = token_factory or random_token
         self._records: dict[str, ConfirmationToken] = {}
         self._used: set[str] = set()
         self._counter = 0
@@ -95,7 +106,7 @@ class ConfirmationTokenStore:
                 binding.payload_hash,
                 issued_at.isoformat(),
                 str(self._counter),
-                secrets.token_hex(8),
+                self._token_factory(),
             ]
         )
         token = "ct_" + hashlib.sha256(material.encode("utf-8")).hexdigest()[:32]
@@ -105,8 +116,8 @@ class ConfirmationTokenStore:
             issued_at=issued_at,
             expires_at=issued_at + timedelta(seconds=ttl_seconds),
         )
-        if self._store is not None:
-            self._store.insert_token(
+        if self._backend is not None:
+            self._backend.insert_token(
                 TokenRecord(
                     token=token,
                     tenant_id=tenant_id,
@@ -129,7 +140,7 @@ class ConfirmationTokenStore:
         *,
         at: datetime | None = None,
     ) -> TokenCheck:
-        record = self._lookup(token)
+        record = self._lookup(binding.tenant_id, token)
         if record is None:
             return TokenCheck(status=TokenStatus.unknown)
         if record.binding != binding:
@@ -143,7 +154,9 @@ class ConfirmationTokenStore:
     def consume(self, token: str, binding: TokenBinding) -> TokenCheck:
         check = self.validate(token, binding)
         if check.status is TokenStatus.valid:
-            if self._store is not None and not self._store.consume_token(token, self._clock.now):
+            if self._backend is not None and not self._backend.consume_token(
+                binding.tenant_id, token, self._clock.now
+            ):
                 return TokenCheck(status=TokenStatus.used, token=check.token)
             self._used.add(token)
             return TokenCheck(status=TokenStatus.valid, token=check.token)
@@ -154,8 +167,8 @@ class ConfirmationTokenStore:
         check = self.validate(token, binding)
         if check.status is not TokenStatus.valid:
             return check
-        if self._store is not None:
-            consumed = self._store.consume_token(token, self._clock.now)
+        if self._backend is not None:
+            consumed = self._backend.consume_token(binding.tenant_id, token, self._clock.now)
             return TokenCheck(
                 status=TokenStatus.valid if consumed else TokenStatus.used,
                 token=check.token,
@@ -163,9 +176,9 @@ class ConfirmationTokenStore:
         self._used.add(token)
         return TokenCheck(status=TokenStatus.valid, token=check.token)
 
-    def _lookup(self, token: str) -> ConfirmationToken | None:
-        if self._store is not None:
-            row = self._store.get_token(token)
+    def _lookup(self, tenant_id: str, token: str) -> ConfirmationToken | None:
+        if self._backend is not None:
+            row = self._backend.get_token(tenant_id, token)
             if row is None:
                 return None
             return ConfirmationToken(
@@ -185,7 +198,7 @@ class ConfirmationTokenStore:
     def _is_used(
         self, token: str, record: ConfirmationToken, *, at: datetime | None = None
     ) -> bool:
-        if self._store is not None:
-            row = self._store.get_token(token)
+        if self._backend is not None:
+            row = self._backend.get_token(record.binding.tenant_id, token)
             return row is not None and row.used_at is not None
         return token in self._used
