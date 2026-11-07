@@ -114,12 +114,11 @@ scenarios:
       - text: "Hi, I need an AC repair."
         pause_after_ms: 400
       - text: "The address is 88 Meridian Way, San Jose, 95125."
+      - text: "The ZIP is nine five one two five."
       - text: "My name is Dana Whitfield."
       - text: "My phone is four zero eight, five five five, zero one four two."
-      - text: "Monday at eleven works."
+      - text: "Monday at eleven works. Actually, make it Tuesday at eleven."
         pause_after_ms: 500
-      - text: "Actually, make it Tuesday at eleven."
-        pause_after_ms: 300
       - text: "Yes, that is correct."
         pause_after_ms: 300
 

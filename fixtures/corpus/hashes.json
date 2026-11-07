@@ -35,7 +35,7 @@
     },
     {
       "path": "scenarios/audio/audio_readback_01.txt",
-      "sha256": "47e22119629cc1a8d1835b7f3f7036394f7ab018d064d64652fa62efbff8a937"
+      "sha256": "6f9c7c8739f0e4e0f0ceef8357e8c79b4d133b7b3f2ab8ff14f2edc46a7f18d6"
     },
     {
       "path": "scenarios/audio/audio_silence_01.txt",
@@ -219,7 +219,7 @@
     },
     {
       "path": "scenarios/fixtures/audio/hashes.json",
-      "sha256": "79c65477c44b0a4bfd2e74113cffe1b701e8510d142b20180c68329d2cd4790f"
+      "sha256": "e44012a7ff261e1f07a135dbb852c1db12ed63c9f653e3321a68e4334fb4ff90"
     },
     {
       "path": "scenarios/fixtures/audio/lowmic_01.wav",
@@ -239,7 +239,7 @@
     },
     {
       "path": "scenarios/fixtures/audio/readback_01.wav",
-      "sha256": "87624d0a9b83f615199d8386bf563fa22868cacdfc6b8c32d21a1fa0205deb51"
+      "sha256": "9c1ba611c1d3da8b489f5bb797e66abc82b66fac568ee420fb94e0fde625dedf"
     },
     {
       "path": "scenarios/fixtures/audio/silence_01.wav",

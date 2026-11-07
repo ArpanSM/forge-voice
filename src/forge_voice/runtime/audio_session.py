@@ -167,6 +167,7 @@ class AudioCallSession:
         self.confirmation_queued = False
         self.emergency_active = False
         self.emergency_handoff_done = False
+        self.emergency_ticket_turn: int | None = None
         self.customer_name: str | None = None
         self.customer_phone: str | None = caller_phone
         self.address: Address | None = None
@@ -703,6 +704,7 @@ class AudioCallSession:
                 if field not in missing_fields:
                     missing_fields.append(field)
         self.emergency_active = True
+        self.emergency_ticket_turn = self._turn_index
         self.state.intent = CallIntent.emergency
         self.state.urgency = triage.severity
         self.state.outcome = CallOutcome.emergency_ticket
@@ -936,6 +938,18 @@ class AudioCallSession:
                 message=(
                     "Our on-call technician has the ticket and your details. Stay on the "
                     "line, and call 911 if anything gets worse."
+                ),
+            )
+        if (
+            self.emergency_ticket_turn is not None
+            and self._turn_index <= self.emergency_ticket_turn
+        ):
+            return ToolReply(
+                ok=True,
+                stage="ticket",
+                message=(
+                    "I have the emergency ticket open. Please give me your name, service "
+                    "address and callback number so I can pass them to the on-call technician."
                 ),
             )
         guard_note = self._emergency_guard_note(text)

@@ -11,17 +11,17 @@ Hi, I need an AC repair.
 The address is 88 Meridian Way, San Jose, 95125.
 [pause 120 ms]
 [pause 120 ms]
+The ZIP is nine five one two five.
+[pause 120 ms]
+[pause 120 ms]
 My name is Dana Whitfield.
 [pause 120 ms]
 [pause 120 ms]
 My phone is four zero eight, five five five, zero one four two.
 [pause 120 ms]
 [pause 120 ms]
-Monday at eleven works.
+Monday at eleven works. Actually, make it Tuesday at eleven.
 [pause 500 ms]
-[pause 120 ms]
-Actually, make it Tuesday at eleven.
-[pause 300 ms]
 [pause 120 ms]
 Yes, that is correct.
 [pause 300 ms]

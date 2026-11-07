@@ -105,17 +105,17 @@
       "turns_sha256": "cd97d18c0bcb3bd8429c833a26658393801ba1d6188cf92830c5ef143ee3c566"
     },
     {
-      "bytes": 1204844,
+      "bytes": 1319084,
       "channels": 1,
       "degradation": null,
-      "duration_ms": 25100,
+      "duration_ms": 27480,
       "fixture": "fixtures/audio/readback_01.wav",
       "sample_rate": 24000,
       "scenario_id": "audio_readback_01",
       "seed": 3741205312,
-      "sha256": "87624d0a9b83f615199d8386bf563fa22868cacdfc6b8c32d21a1fa0205deb51",
+      "sha256": "9c1ba611c1d3da8b489f5bb797e66abc82b66fac568ee420fb94e0fde625dedf",
       "tenant": "summit",
-      "turns_sha256": "15a5a205187e04fdddf7a0f463ee72c86e660b9a841a238b37f806b4e5c845e8"
+      "turns_sha256": "bd4f54c759c7bdb8845f474d837e56b0b29dac9569e4841b30099138815fec4b"
     },
     {
       "bytes": 1239404,
