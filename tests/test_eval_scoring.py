@@ -406,6 +406,27 @@ def test_audio_hard_gates_are_gated_not_report_only() -> None:
     assert gates["audit_completeness"].gated is True
 
 
+def test_live_or_provider_errors_fail_the_run_integrity_gate() -> None:
+    scenario = _scenario("audio_bargein_01")
+    execution = _booked_execution(
+        scenario_id="audio_bargein_01",
+        mode="audio",
+        outcome="failed",
+        qa_flags=["harness_error"],
+    )
+    result = _result(scenario, execution, profile="hybrid")
+    gates = evaluate_gates(
+        [result],
+        build_aggregates([result]),
+        mode="audio",
+        pipeline="fixed",
+        profile="hybrid",
+    )
+
+    assert gates["run_integrity"].passed is False
+    assert gates["run_integrity"].gated is True
+
+
 def test_markdown_report_has_every_required_section() -> None:
     scenario = _scenario()
     result = _result(scenario, _booked_execution())

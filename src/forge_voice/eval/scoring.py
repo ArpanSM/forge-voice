@@ -52,6 +52,7 @@ GATE_DESCRIPTIONS = {
     ),
     "barge_in_recovery": "Interrupted audio calls recover and keep the task.",
     "hybrid_provider": "The hybrid release profile has a working Groq key and model.",
+    "run_integrity": "No provider, transport or harness error affected a scenario.",
     "time_budget": "The command finished inside its wall-clock budget.",
 }
 
@@ -627,6 +628,10 @@ def build_scenario_result(
             "callback_count": execution.callback_count,
             "write_count": execution.write_count,
             "transfer_status": execution.transfer_status,
+            "barge_in_recovered": execution.barge_in_recovered,
+            "asr_source": execution.asr_source,
+            "in_area": _in_area(execution),
+            "duplicate_writes": _duplicate_write_count(execution),
             "qa_flags": execution.qa_flags,
         },
         **{"pass": verdict.passed},
@@ -1039,6 +1044,22 @@ def evaluate_gates(
             numerator=len(failures),
             denominator=len(all_runs),
         )
+
+    integrity_failures = [
+        result.scenario_id
+        for result in all_runs
+        if any(flag in {"harness_error", "provider_error"} for flag in result.execution.qa_flags)
+    ]
+    gates["run_integrity"] = _gate(
+        name="run_integrity",
+        passed=not integrity_failures,
+        value=f"{len(integrity_failures)} error(s)",
+        threshold="0",
+        failing=integrity_failures,
+        gated=gated,
+        numerator=len(integrity_failures),
+        denominator=len(all_runs),
+    )
 
     completion = aggregates["task_completion"]
     completion_threshold = 90.0

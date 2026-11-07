@@ -149,11 +149,11 @@ def _audio_lines(payload: dict[str, Any]) -> list[str]:
         "|---|---|---|---|---|",
     ]
     for scenario in scenarios:
-        execution = scenario.get("execution") or {}
+        actual = scenario.get("actual") or {}
         lines.append(
             f"| {_cell(scenario.get('scenario_id'))} | {_cell(scenario.get('category'))} | "
             f"{'yes' if _passed(scenario) else 'NO'} | "
-            f"{_cell(execution.get('barge_in_recovered'))} | "
+            f"{_cell(actual.get('barge_in_recovered'))} | "
             f"{_cell(', '.join(scenario.get('qa_flags') or []) or '-')} |"
         )
     return lines

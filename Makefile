@@ -76,24 +76,26 @@ demo-smoke: bootstrap
 
 EVAL_PYTHON ?= $(PYTHON) -m forge_voice.eval
 EVAL_AUDIO_TRANSPORT ?= livekit
+EVAL_RUN_ID ?=
+EVAL_RUN_ID_ARG = $(if $(EVAL_RUN_ID),--run-id $(EVAL_RUN_ID),)
 
 eval:
-	$(EVAL_PYTHON) --profile hybrid --mode text --split release --pipeline fixed --repeat-critical
+	$(EVAL_PYTHON) --profile hybrid --mode text --split release --pipeline fixed --repeat-critical $(EVAL_RUN_ID_ARG)
 
 eval-local:
-	$(EVAL_PYTHON) --profile local --mode text --split release --pipeline fixed
+	$(EVAL_PYTHON) --profile local --mode text --split release --pipeline fixed $(EVAL_RUN_ID_ARG)
 
 eval-audio: bootstrap
-	$(EVAL_PYTHON) --profile hybrid --mode audio --split audio --pipeline fixed --transport $(EVAL_AUDIO_TRANSPORT)
+	$(EVAL_PYTHON) --profile hybrid --mode audio --split audio --pipeline fixed --transport $(EVAL_AUDIO_TRANSPORT) $(EVAL_RUN_ID_ARG)
 
 eval-audio-local: bootstrap
-	$(EVAL_PYTHON) --profile local --mode audio --split audio-local --pipeline fixed --transport $(EVAL_AUDIO_TRANSPORT)
+	$(EVAL_PYTHON) --profile local --mode audio --split audio-local --pipeline fixed --transport $(EVAL_AUDIO_TRANSPORT) $(EVAL_RUN_ID_ARG)
 
 eval-heldout: bootstrap
-	$(EVAL_PYTHON) --profile hybrid --mode all --split heldout --pipeline fixed --transport livekit
+	$(EVAL_PYTHON) --profile hybrid --mode all --split heldout --pipeline fixed --transport livekit $(EVAL_RUN_ID_ARG)
 
 eval-smoke:
-	$(EVAL_PYTHON) --profile hybrid --mode text --split smoke --pipeline fixed --provider-check off --max-seconds 120
+	$(EVAL_PYTHON) --profile hybrid --mode text --split smoke --pipeline fixed --provider-check off --max-seconds 120 $(EVAL_RUN_ID_ARG)
 
 eval-baseline:
 	$(EVAL_PYTHON) --profile hybrid --mode text --split release --pipeline baseline --provider-check auto --compare-fixed

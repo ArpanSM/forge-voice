@@ -73,7 +73,8 @@ caller name, phone, address, service, summary, reason and booking/ticket fails t
 Release gates: the hybrid text run also requires task completion ≥90%; the audio runs require
 emergency transfer and barge-in recovery. The local text run enforces the safety hard gates but
 reports task completion and latency without gating them, per #26. Task completion is
-report-only on audio. The baseline never gates.
+report-only on audio. A provider, transport or harness error is a `run_integrity` gate failure,
+not an ordinary scenario outcome. The baseline never gates.
 
 Reported metrics include task completion, slot correctness, confirmation accuracy, emergency
 triage, handoff correctness, barge-in recovery, ASR entity accuracy (clean/noisy), containment,
