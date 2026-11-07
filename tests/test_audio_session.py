@@ -119,6 +119,75 @@ def test_replaying_the_same_booking_returns_it_without_a_second_write(
     assert session.store.count_bookings(session.tenant.tenant_id) == before + 1
 
 
+def test_close_marks_an_unwritten_call_abandoned(session: AudioCallSession) -> None:
+    session.note_caller_utterance("I need a drain cleaning.")
+    session.close()
+
+    assert session.state.outcome == "abandoned"
+
+
+def test_close_keeps_a_completed_booking_terminal(session: AudioCallSession) -> None:
+    slot = first_slot(session)
+    session.book_appointment(slot_id=slot["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    session.note_caller_utterance("Yes, book it.")
+    session.book_appointment()
+    session.close()
+
+    assert session.state.outcome == "booked"
+
+
+def test_audio_reschedule_readback_includes_the_old_start(tmp_path: Path) -> None:
+    session = AudioCallSession.from_repo(
+        ROOT,
+        "harborlight",
+        "call_reschedule_0001",
+        caller_phone="+14155550101",
+        outbox_path=tmp_path / "outbox.jsonl",
+        now=NOW,
+    )
+    assert session.lookup_customer(phone="+14155550101", include_bookings=True).ok
+    slots = session.get_availability(service_id="drain_cleaning", zip="94107").data["slots"]
+
+    reply = session.reschedule_appointment(booking_id="bk_0001", new_slot_id=slots[0]["slot_id"])
+
+    assert reply.ok
+    assert reply.stage == "readback"
+    assert "move your Drain cleaning from Monday 9 November at 9:00 AM" in reply.message
+    assert "Should I move it?" in reply.message
+
+    session.note_caller_utterance("Yes, move it.")
+    committed = session.reschedule_appointment()
+    assert committed.ok
+    assert committed.stage == "booked"
+    assert session.state.outcome == "rescheduled"
+
+
+def test_completed_call_rejects_a_second_distinct_slot_and_availability(
+    session: AudioCallSession,
+) -> None:
+    availability = session.get_availability(service_id="drain_cleaning", zip="94107")
+    first, second = availability.data["slots"][0], availability.data["slots"][1]
+    before = session.store.count_bookings(session.tenant.tenant_id)
+    session.book_appointment(slot_id=first["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    session.note_caller_utterance("Yes, book it.")
+    booked = session.book_appointment()
+    assert booked.ok
+
+    availability_again = session.get_availability(service_id="drain_cleaning", zip="94107")
+    second_write = session.book_appointment(
+        slot_id=second["slot_id"], service_id="drain_cleaning", **CUSTOMER
+    )
+
+    assert availability_again.ok is False
+    assert availability_again.error is not None
+    assert availability_again.error.code.value == "already_completed"
+    assert second_write.ok is False
+    assert second_write.error is not None
+    assert second_write.error.code.value == "already_completed"
+    assert session.store.count_bookings(session.tenant.tenant_id) == before + 1
+    assert session.state.write_count == 1
+
+
 def test_book_without_an_explicit_yes_is_refused(session: AudioCallSession) -> None:
     slot = first_slot(session)
     before = session.store.count_bookings(session.tenant.tenant_id)
@@ -294,12 +363,13 @@ def test_tool_failure_serializes_the_shared_error_envelope(session: AudioCallSes
 
     payload = json.loads(reply.to_json())
 
+    assert set(payload) == {"ok", "error", "request_id"}
     assert payload["ok"] is False
-    assert payload["stage"] == "error"
+    assert set(payload["error"]) == {"code", "message", "retryable", "details"}
     assert payload["error"]["code"] == "confirmation_required"
     assert payload["error"]["message"]
     assert payload["error"]["retryable"] is False
-    assert "details" in payload["error"]
+    assert payload["request_id"]
 
 
 def test_tool_success_omits_the_error_key(session: AudioCallSession) -> None:
@@ -307,8 +377,9 @@ def test_tool_success_omits_the_error_key(session: AudioCallSession) -> None:
 
     payload = json.loads(reply.to_json())
 
+    assert set(payload) == {"ok", "data", "request_id"}
     assert payload["ok"] is True
-    assert "error" not in payload
+    assert payload["request_id"]
 
 
 def test_audio_session_rejects_a_booking_id_from_another_tenant(tmp_path: Path) -> None:

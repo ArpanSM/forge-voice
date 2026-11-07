@@ -76,8 +76,8 @@ def _require_local_base(base_url: str) -> None:
     host = (urlparse(base_url).hostname or "").lower()
     if host not in LOCAL_HOSTS:
         raise SessionPlanningError(
-            "the local profile requires LFM3 on 127.0.0.1, localhost or "
-            f"host.docker.internal, not {host or base_url!r}"
+            "the LFM3 audio endpoint must be local (127.0.0.1, localhost or "
+            f"host.docker.internal), not {host or base_url!r}"
         )
 
 
@@ -91,13 +91,13 @@ def plan_session(profile: Profile | str, env: Mapping[str, str] | None = None) -
         ) from exc
 
     base_url = _lfm3_base(values)
+    _require_local_base(base_url)
     language = values.get("LFM3_LANG", "en")
     voice = values.get("LFM3_TTS_VOICE", "female")
     tts = EndpointPlan(provider="lfm3", base_url=base_url, model=LFM3_MODEL)
     stt = EndpointPlan(provider="lfm3", base_url=base_url, model=LFM3_MODEL)
 
     if selected is Profile.local:
-        _require_local_base(base_url)
         llm = EndpointPlan(
             provider="lfm3",
             base_url=f"{base_url}/v1",

@@ -2,20 +2,12 @@
 
 from __future__ import annotations
 
-import hashlib
-import hmac
 from datetime import UTC, datetime, timedelta
 
 import pytest
 from pydantic import ValidationError
 
-from forge_voice.web.claims import (
-    ClaimError,
-    TenantClaim,
-    TenantClaimSigner,
-    _b64encode,
-    _payload_bytes,
-)
+from forge_voice.web.claims import ClaimError, TenantClaim, TenantClaimSigner
 
 SECRET = "local-test-secret-that-is-long-enough-for-hmac"
 NOW = datetime(2026, 11, 7, 12, 0, tzinfo=UTC)
@@ -105,9 +97,22 @@ def test_claim_signer_rejects_an_expiry_before_issue_time() -> None:
         expires_at=NOW - timedelta(seconds=1),
         nonce="12345678",
     )
-    payload = _payload_bytes(claim)
-    signature = hmac.new(SECRET.encode("utf-8"), payload, hashlib.sha256).digest()
-    token = f"{_b64encode(payload)}.{_b64encode(signature)}"
+    token = signer().sign(claim)
 
     with pytest.raises(ClaimError, match="expiry"):
+        signer().verify(token, now=NOW)
+
+
+def test_claim_verifier_rejects_a_ttl_longer_than_the_cap() -> None:
+    claim = TenantClaim(
+        tenant="harborlight",
+        call_id="call_1",
+        room="forge-voice-harborlight-call_1",
+        issued_at=NOW,
+        expires_at=NOW + timedelta(seconds=121),
+        nonce="12345678",
+    )
+    token = signer().sign(claim)
+
+    with pytest.raises(ClaimError, match="ttl"):
         signer().verify(token, now=NOW)

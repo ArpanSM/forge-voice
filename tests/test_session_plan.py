@@ -73,3 +73,20 @@ def test_turn_taking_keeps_barge_in_short_replies_and_no_proactive_silence() -> 
 def test_plan_rejects_a_non_local_lfm3_url_for_the_local_profile() -> None:
     with pytest.raises(SessionPlanningError, match="local"):
         plan_session(Profile.local, {"LFM3_AUDIO_BASE_URL": "https://example.com"})
+
+
+def test_plan_rejects_a_non_local_lfm3_url_even_in_the_hybrid_profile() -> None:
+    with pytest.raises(SessionPlanningError, match="local"):
+        plan_session(
+            Profile.hybrid,
+            {
+                "GROQ_API_KEY": "test-key",
+                "LFM3_AUDIO_BASE_URL": "https://example.com",
+            },
+        )
+
+
+def test_hybrid_external_hosts_are_only_groq() -> None:
+    plan = plan_session(Profile.hybrid, {"GROQ_API_KEY": "test-key"})
+
+    assert plan.external_hosts() == ("api.groq.com",)

@@ -9,8 +9,9 @@ This is the exact local setup for the browser demo. It uses the open-source
 - LFM3-Audio-2B serving on the host GPU at `http://127.0.0.1:8082`.
   Start it with `lfm3 audio`; check `curl http://127.0.0.1:8082/health`.
 - No Docker is required. `make bootstrap` downloads the pinned LiveKit server into
-  `.tools/livekit-server` (gitignored) and verifies its SHA-256 from the release
-  `checksums.txt`.
+  `.tools/livekit-server` (gitignored) and verifies both the archive and installed binary
+  against SHA-256 values pinned in `scripts/bootstrap_livekit.sh`. It does not fetch a
+  release checksum file at install time. An existing binary is re-hashed on every run.
 
 ## 2. Install and bootstrap
 

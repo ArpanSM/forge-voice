@@ -250,6 +250,34 @@ def test_verify_rejects_byte_size_and_degradation_drift(
     assert any("degradation drift" in error for error in errors)
 
 
+def test_fixture_manifest_rejects_wrong_tts_model_voice_or_rate(tmp_path: Path) -> None:
+    original = json.loads(
+        (ROOT / "scenarios" / "fixtures" / "audio" / "hashes.json").read_text(encoding="utf-8")
+    )
+    for key, value in (("model", "other"), ("voice", "male"), ("sample_rate", 48000)):
+        raw = json.loads(json.dumps(original))
+        raw["tts"][key] = value
+        path = tmp_path / f"hashes-{key}.json"
+        path.write_text(json.dumps(raw), encoding="utf-8")
+        with pytest.raises(FixtureError, match="invalid fixture hashes"):
+            fixture_module.load_fixture_manifest(path)
+
+
+def test_verify_rejects_channel_metadata_drift(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original = fixture_module.load_fixture_manifest(
+        ROOT / "scenarios" / "fixtures" / "audio" / "hashes.json"
+    )
+    modified = original.model_copy(deep=True)
+    modified.fixtures[0].channels = 2
+    monkeypatch.setattr(fixture_module, "load_fixture_manifest", lambda path: modified)
+
+    errors = fixture_module.verify_fixtures(ROOT)
+
+    assert any("channels drift" in error for error in errors)
+
+
 def test_fixture_manifest_rejects_unknown_tts_fields(tmp_path: Path) -> None:
     raw = json.loads(
         (ROOT / "scenarios" / "fixtures" / "audio" / "hashes.json").read_text(encoding="utf-8")

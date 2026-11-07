@@ -19,12 +19,15 @@ the LFM3-Audio-2B server runs on the GPU at `127.0.0.1:8082`.
   `.env.local`.
 - Mint tokens in the local FastAPI process with `livekit-api`. A 120 s HMAC tenant claim
   (tenant, call id, room, issued/expiry, nonce) is embedded in participant metadata and
-  therefore protected by the LiveKit JWT as well. The browser cannot change the claim.
+  protected by the LiveKit JWT. Participant metadata is caller-mutable, so the control is
+  the server-signed claim **plus room binding**: the worker verifies the signature, tenant,
+  expiry and exact room name before creating any session.
 - Dispatch the worker explicitly with `RoomConfiguration(agents=[RoomAgentDispatch])` and
   a non-empty `agent_name="forge-voice"`. Automatic dispatch did not reliably start jobs
   on the self-hosted server in our smoke runs.
 - Verify the claim in the worker before constructing `AudioCallSession`; reject unknown
-  tenants, expired claims and invalid signatures by shutting the job down.
+  tenants, expired claims, over-120 s claims, wrong rooms and invalid signatures by shutting
+  the job down. The browser cannot substitute another tenant's claim into a different room.
 - Use LFM3 OpenAI-compatible STT and a small streaming TTS adapter for the same host
   service. The fully local profile keeps the LLM on LFM3; the hybrid profile swaps only the
   LLM to Groq.

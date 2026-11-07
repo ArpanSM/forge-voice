@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
-from pydantic import Field, ValidationError
+from pydantic import Field, ValidationError, model_validator
 
 from forge_voice.adapters.outbox import Outbox
 from forge_voice.adapters.sqlite import SQLiteAdapter
@@ -44,19 +44,53 @@ from forge_voice.transfer import TransferSimulator
 
 Stage = Literal["info", "readback", "booked", "ticket", "handoff", "error"]
 
+TERMINAL_OUTCOMES = frozenset(
+    {
+        CallOutcome.booked,
+        CallOutcome.rescheduled,
+        CallOutcome.cancelled,
+        CallOutcome.emergency_ticket,
+        CallOutcome.transferred,
+        CallOutcome.callback,
+        CallOutcome.failed,
+        CallOutcome.abandoned,
+    }
+)
+
 
 class ToolReply(StrictModel):
-    """One model-visible tool result with the shared #4 error envelope."""
+    """One model-visible tool result with the exact shared #4 envelope."""
 
     ok: bool
     stage: Stage
     message: str
     data: dict[str, Any] = Field(default_factory=dict)
     error: ToolError | None = None
-    request_id: str | None = None
+    request_id: str = "req_local"
+
+    @model_validator(mode="after")
+    def envelope_is_consistent(self) -> ToolReply:
+        if self.ok and self.error is not None:
+            raise ValueError("a successful tool reply cannot carry an error")
+        if not self.ok and self.error is None:
+            raise ValueError("a failed tool reply must carry an error")
+        return self
 
     def to_json(self) -> str:
-        return self.model_dump_json(exclude_none=True)
+        if self.ok:
+            payload: dict[str, Any] = {
+                "ok": True,
+                "data": self.data,
+                "request_id": self.request_id,
+            }
+        else:
+            assert self.error is not None
+            payload = {
+                "ok": False,
+                "error": self.error.model_dump(mode="json"),
+                "request_id": self.request_id,
+            }
+        return json.dumps(payload, sort_keys=True)
 
 
 @dataclass
@@ -157,6 +191,11 @@ class AudioCallSession:
     @property
     def greeting(self) -> str:
         return self.tenant.persona.greeting
+
+    @property
+    def completed(self) -> bool:
+        """True once the call has a terminal outcome that must not write again."""
+        return self.state.outcome in TERMINAL_OUTCOMES
 
     @property
     def instructions(self) -> str:
@@ -306,6 +345,8 @@ class AudioCallSession:
         window_days: int = 7,
         exclude_slot_ids: list[str] | None = None,
     ) -> ToolReply:
+        if self.completed:
+            return self._already_completed()
         resolved_service = self.resolve_service_id(service_id)
         if resolved_service is None:
             return self._error("service_not_offered", f"We do not offer {service_id!r}.")
@@ -364,6 +405,14 @@ class AudioCallSession:
             and (slot_id is None or slot_id == self.pending.target)
         ):
             return self._commit_pending()
+        if self.completed:
+            if self.pending is None and (
+                slot_id is None or slot_id == self.state.confirmed_slot_id
+            ):
+                replay = self._replayed_booking_reply()
+                if replay is not None:
+                    return replay
+            return self._already_completed()
         already_confirmed = self.booking_id is not None and (
             slot_id is None or slot_id == self.state.confirmed_slot_id
         )
@@ -427,6 +476,8 @@ class AudioCallSession:
         new_slot_id: str | None = None,
         reason: str | None = None,
     ) -> ToolReply:
+        if self.completed:
+            return self._already_completed()
         if (
             self.pending is not None
             and self.pending.intent is CallIntent.reschedule
@@ -440,10 +491,13 @@ class AudioCallSession:
                 "ownership_mismatch",
                 "I need to verify the caller owns that booking before I can move it.",
             )
+        old_booking = self.store.get_booking(self.tenant.tenant_id, booking_id)
+        old_start = old_booking.start if old_booking is not None else None
         try:
             readback = self.service.reschedule_readback(booking_id, new_slot_id)
         except BookingError as exc:
             return self._error(exc.code.value, exc.message)
+        message = format_readback(readback, action="move", old_start=old_start)
         self.state.intent = CallIntent.reschedule
         self.policy.begin_offer(self.state)
         self.policy.read_back(self.state, readback)
@@ -461,13 +515,15 @@ class AudioCallSession:
         return ToolReply(
             ok=True,
             stage="readback",
-            message=format_readback(readback, action="move"),
-            data={"readback": format_readback(readback, action="move")},
+            message=message,
+            data={"readback": message},
         )
 
     def cancel_appointment(
         self, *, booking_id: str | None = None, reason: str | None = None
     ) -> ToolReply:
+        if self.completed:
+            return self._already_completed()
         if (
             self.pending is not None
             and self.pending.intent is CallIntent.cancel
@@ -513,6 +569,8 @@ class AudioCallSession:
         state: str = "CA",
         zip: str | None = None,
     ) -> ToolReply:
+        if self.completed:
+            return self._already_completed()
         text = (description or self.last_utterance).strip()
         if not text:
             return self._error("invalid_argument", "I need the caller's emergency description.")
@@ -755,6 +813,8 @@ class AudioCallSession:
 
     # -------------------------------------------------------------------- internal
     def _commit_pending(self) -> ToolReply:
+        if self.completed:
+            return self._already_completed()
         pending = self.pending
         if pending is None:
             return self._error(
@@ -886,14 +946,20 @@ class AudioCallSession:
             return "The available times are ready."
         return "The tool completed."
 
-    @staticmethod
-    def _error(code: str, message: str, request_id: str | None = None) -> ToolReply:
+    def _already_completed(self) -> ToolReply:
+        return self._error(
+            "already_completed",
+            "This call already has a completed outcome. No further availability, "
+            "booking, reschedule, cancellation, emergency or transfer change is allowed.",
+        )
+
+    def _error(self, code: str, message: str, request_id: str | None = None) -> ToolReply:
         return ToolReply(
             ok=False,
             stage="error",
             message=message,
             error=ToolError(code=ErrorCode(code), message=message),
-            request_id=request_id,
+            request_id=request_id or f"req_{self.call_id}_local",
         )
 
     def _facts(self) -> Any:
@@ -1053,6 +1119,10 @@ class AudioCallSession:
             handle.write(json.dumps(record, default=str, sort_keys=True) + "\n")
 
     def close(self) -> None:
+        if self.state.outcome is None:
+            self.state.outcome = (
+                CallOutcome.failed if self.state.write_count else CallOutcome.abandoned
+            )
         self._trace(
             "call_finished",
             booking_id=self.booking_id,

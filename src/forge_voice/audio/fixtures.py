@@ -52,10 +52,10 @@ class AudioScriptSet(StrictModel):
 
 class FixtureTts(StrictModel):
     provider: Literal["lfm3"]
-    model: str = Field(min_length=1)
-    voice: str = Field(min_length=1)
-    language: str = Field(min_length=1)
-    sample_rate: int = Field(ge=8000)
+    model: Literal["lfm3-audio-2b"]
+    voice: Literal["female"]
+    language: Literal["en"]
+    sample_rate: Literal[24000]
     temperature: Literal[0.0]
 
 
@@ -66,8 +66,8 @@ class FixtureEntry(StrictModel):
     sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     bytes: int = Field(ge=1)
     duration_ms: int = Field(ge=1)
-    sample_rate: int = SAMPLE_RATE
-    channels: int = 1
+    sample_rate: Literal[24000] = SAMPLE_RATE
+    channels: Literal[1] = 1
     turns_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     degradation: Literal["badline", "lowmic", "packetloss", "noisy"] | None = None
     seed: int
@@ -362,8 +362,17 @@ def verify_fixtures(root: Path | str) -> list[str]:
             errors.append(f"{entry.scenario_id}: missing fixture {path}")
             continue
         data = path.read_bytes()
+        tts = fixture_manifest.tts
+        if tts.provider != "lfm3" or tts.model != "lfm3-audio-2b":
+            errors.append("fixture tts provider/model drift")
+        if tts.voice != DEFAULT_VOICE or tts.language != DEFAULT_LANGUAGE:
+            errors.append("fixture tts voice/language drift")
+        if tts.sample_rate != SAMPLE_RATE or tts.temperature != 0.0:
+            errors.append("fixture tts rate/temperature drift")
         if entry.tenant != scenario.tenant:
             errors.append(f"{entry.scenario_id}: tenant drift")
+        if entry.channels != 1:
+            errors.append(f"{entry.scenario_id}: channels drift")
         if entry.degradation != scripts[entry.scenario_id].degradation:
             errors.append(f"{entry.scenario_id}: degradation drift")
         if entry.seed != _seed_for(entry.scenario_id):

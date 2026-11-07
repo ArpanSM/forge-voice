@@ -7,8 +7,9 @@
  *   node scripts/browser_smoke.js
  *
  * It launches Chrome with a fake microphone, opens the real local page, presses
- * Start call, waits for a LiveKit connection and agent audio, and fails on page
- * errors. It is evidence for the browser path, not part of `make test`.
+ * Start call, and requires the page's "Agent audio connected." status (set only
+ * when an agent audio track is subscribed). Page/console errors fail the check.
+ * It is evidence for the browser path, not part of `make test`.
  */
 const { chromium } = require("playwright");
 
@@ -34,13 +35,20 @@ const { chromium } = require("playwright");
   await page.goto(webUrl, { waitUntil: "networkidle" });
   await page.click("#start");
   await page.waitForFunction(
-    () => document.querySelector("#status").textContent.includes("Connected to"),
+    () =>
+      document.querySelector("#status").textContent.includes("Agent audio connected."),
     { timeout: 90000 },
   );
   await page.waitForTimeout(12000);
   const status = await page.textContent("#status");
   const transcript = await page.textContent("#transcript");
-  console.log(JSON.stringify({ status, transcript, errors }, null, 2));
+  const agentAudioConnected = status.includes("Agent audio connected.");
+  if (!agentAudioConnected) {
+    errors.push("agent audio track was not observed");
+  }
+  console.log(
+    JSON.stringify({ status, transcript, agentAudioConnected, errors }, null, 2),
+  );
   await browser.close();
-  if (errors.length) process.exitCode = 1;
+  if (errors.length || !agentAudioConnected) process.exitCode = 1;
 })();

@@ -19,6 +19,7 @@ from pydantic import Field
 from forge_voice.models import StrictModel
 
 DEFAULT_TTL_SECONDS = 120
+MAX_TTL_SECONDS = 120
 MAX_CLOCK_SKEW_SECONDS = 30
 
 
@@ -27,6 +28,8 @@ class ClaimError(ValueError):
 
 
 class TenantClaim(StrictModel):
+    # Version is verified as v1 and nonce must be present. Nonces are not stored or
+    # replay-tracked; the 120 s TTL plus room/tenant binding are the replay controls.
     version: Literal[1] = 1
     tenant: str = Field(min_length=1)
     call_id: str = Field(min_length=1)
@@ -72,6 +75,12 @@ class TenantClaimSigner:
         self._secret = secret.encode("utf-8")
         self.ttl_seconds = ttl_seconds
 
+    def sign(self, claim: TenantClaim) -> str:
+        """Sign an arbitrary validated claim; used by issue and negative tests."""
+        payload = _payload_bytes(claim)
+        signature = hmac.new(self._secret, payload, hashlib.sha256).digest()
+        return f"{_b64encode(payload)}.{_b64encode(signature)}"
+
     def issue(
         self,
         tenant: str,
@@ -89,12 +98,7 @@ class TenantClaimSigner:
             expires_at=issued + timedelta(seconds=self.ttl_seconds),
             nonce=secrets.token_hex(8),
         )
-        payload = _payload_bytes(claim)
-        signature = hmac.new(self._secret, payload, hashlib.sha256).digest()
-        return SignedTenantClaim(
-            token=f"{_b64encode(payload)}.{_b64encode(signature)}",
-            claim=claim,
-        )
+        return SignedTenantClaim(token=self.sign(claim), claim=claim)
 
     def verify(
         self,
@@ -120,6 +124,8 @@ class TenantClaimSigner:
         current = (now or datetime.now(UTC)).astimezone(UTC)
         if claim.expires_at <= claim.issued_at:
             raise ClaimError("tenant claim expiry is not after issue time")
+        if claim.expires_at - claim.issued_at > timedelta(seconds=MAX_TTL_SECONDS):
+            raise ClaimError(f"tenant claim ttl exceeds {MAX_TTL_SECONDS} seconds")
         if claim.issued_at > current + timedelta(seconds=MAX_CLOCK_SKEW_SECONDS):
             raise ClaimError("tenant claim was issued in the future")
         if current >= claim.expires_at:
