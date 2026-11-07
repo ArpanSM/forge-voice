@@ -9,7 +9,7 @@ This file is generated from `report.json`; do not hand-edit it.
 - **Split:** audio-local
 - **Verdict:** **PASS**
 - **Task completion:** 5/6 (83.33%, 95% Wilson 43.65–96.99%)
-- **Git SHA:** `c728e92`
+- **Git SHA:** `e2d1d86`
 - **Manifest SHA:** `sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2`
 - **Held-out manifest SHA:** `sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd`
 
@@ -35,12 +35,12 @@ This file is generated from `report.json`; do not hand-edit it.
 
 | Scenario | Category | Tenant | Pass | Gate failures | Latency (ms) | QA flags |
 |---|---|---|---|---|---|---|
-| audio_bargein_01 | barge_in | harborlight | yes | - | 218726 | barge_in_recovered |
-| audio_silence_01 | silence | harborlight | yes | - | 93828 | - |
-| audio_badline_01 | bad_line | harborlight | yes | - | 97933 | degraded_audio |
-| audio_readback_01 | confirmation_readback | summit | NO | - | 76484 | - |
-| audio_emergency_01 | emergency_transfer | summit | yes | - | 72715 | emergency_triage |
-| audio_noisy_01 | noisy_background | harborlight | yes | - | 92012 | degraded_audio |
+| audio_bargein_01 | barge_in | harborlight | yes | - | 220246 | barge_in_recovered |
+| audio_silence_01 | silence | harborlight | yes | - | 87781 | - |
+| audio_badline_01 | bad_line | harborlight | yes | - | 98518 | degraded_audio |
+| audio_readback_01 | confirmation_readback | summit | NO | - | 76723 | - |
+| audio_emergency_01 | emergency_transfer | summit | yes | - | 62890 | emergency_triage |
+| audio_noisy_01 | noisy_background | harborlight | yes | - | 92470 | degraded_audio |
 
 ## Failure gallery
 
@@ -50,8 +50,8 @@ This file is generated from `report.json`; do not hand-edit it.
 - **Expected:** `{'outcome': 'booked', 'booking_count': 1, 'corrected_slot': True, 'confirmed_entities': True}`
 - **Actual:** `{'outcome': 'booked', 'booking_count': 1, 'ticket_count': 0, 'callback_count': 0, 'write_count': 1, 'transfer_status': None, 'barge_in_recovered': None, 'asr_source': 'live_asr', 'in_area': None, 'duplicate_writes': 0, 'qa_flags': []}`
 - **Reason:** failed checks: confirmed_entities
-- **Tool timeline:** get_availability, get_service_area, get_availability, book_appointment
-- **Transcript excerpt:** assistant: Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help? / assistant: I heard 4 digits. I need exactly five digits for the ZIP; please say them one at a time, for example nine five one / assistant: Just to confirm: Air conditioning repair on Tuesday 10 November at 11:30 AM with Casey at 88 Hyde Meridian Way, San Jose 95125, for Dana Whitfield at +14085550142. Should I book that? / assistant: Booked. Tuesday 10 November at 11:30 AM is confirmed and a text confirmation is queued.
+- **Tool timeline:** get_availability, get_service_area, book_appointment
+- **Transcript excerpt:** assistant: Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help? / assistant: I heard 4 digits. I need exactly five digits for the ZIP; please say them one at a time, for example nine five one two / assistant: Just to confirm: Air conditioning repair on Tuesday 10 November at 11:30 AM with Casey at 88 Tide Meridian Way, San Jose 95125, for Dana Whitfield at +14085550142. Should I book that? / assistant: Booked. Tuesday 10 November at 11:30 AM is confirmed and a text confirmation is queued.
 - **Transcript:** transcripts/audio_readback_01.json
 
 
@@ -110,10 +110,10 @@ Latency is demo evidence, not a production SLA. The measured profile uses free/l
 
 | Metric | Value |
 |---|---|
-| p50 wall | 92920.0 ms |
-| p95 wall | 188527.75 ms |
-| p50 tool path | 92920.0 ms |
-| p95 tool path | 188527.75 ms |
+| p50 wall | 90125.5 ms |
+| p95 wall | 189814.0 ms |
+| p50 tool path | 90125.5 ms |
+| p95 tool path | 189814.0 ms |
 | n | 6 |
 
 ## Baseline vs fixed

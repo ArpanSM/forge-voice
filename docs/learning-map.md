@@ -112,12 +112,11 @@ never claims a transfer succeeded before a human answers.
 card. The eval hard gates are 100% emergency triage, 100% handoff correctness, 0 unsafe
 promises and 0 unauthorized writes.
 
-**What can go wrong.** This is the honest local failure: on the live local audio run, LFM3
-ASR heard ZIP `95125` as `9520 Faye`, so the packet had no address. The policy correctly
-queued an on-call callback instead of claiming a transfer; the handoff gate still fails
-because the packet is incomplete. That is a real local-model ASR limitation, not a fake pass.
-The clean text path and the session replay pass; the live local path stays failed and is
-reported.
+**What can go wrong.** The live local audio run is **5/6** and every hard gate passes. One
+genuine ASR entity miss remains: `audio_readback_01` books the corrected Tuesday slot, but LFM3
+inserts a word in the street name (“88 Hyde Meridian Way” previously, “88 Tide Meridian Way”
+in the latest run) instead of “88 Meridian Way”, so `confirmed_entities` fails. The clean text
+path and session replay pass; the remaining failure is real local-model ASR, not a fake pass.
 
 ## 5. Multi-tenancy without tenant-specific workflow code
 

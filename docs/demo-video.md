@@ -30,7 +30,7 @@ browser-call recording is not done.**
 | Review page | Real `/review` route and weekly sample. |
 | Admin page | Real `/admin` validating YAML editor for both tenants. |
 | Runbook slide | The committed `docs/runbook.md` rendered locally. |
-| Eval numbers | The committed reports under `reports/`, including the failed local audio gate. |
+| Eval numbers | The committed reports under `reports/`, including the 5/6 local audio run and its one genuine ASR entity miss. |
 
 **Not real in the video:** the spoken call audio and the browser call. It is a captioned
 storyboard of the documented demo script and the real call records, not a screen recording of a
@@ -113,7 +113,7 @@ player's declared total duration, then save the video. Convert to MP4 if a site 
 11. Admin editor and the same schema the agent loads.
 12. YAML advanced fields and fail-closed validation.
 13. Runbook start/recover/stop.
-14. Eval gate status, including the failed local audio gate.
+14. Eval gate status, including the 5/6 local audio run with every hard gate passing and one genuine ASR entity miss.
 15. Known limits and the demo script that avoids them.
 16. Handover and the 30-day support boundary.
 

@@ -14,20 +14,20 @@ The `v0.1.0-demo` tag is a demo snapshot for these assets, not a release claim.
 
 | Command | Exit | Result | Report |
 |---|---:|---|---|
-| `make test` | 0 | **543 passed** in 72.07 s | — |
+| `make test` | 0 | **551 passed** in 72.11 s | — |
 | `make lint` | 0 | ruff check + format check pass | — |
 | `ruff format --check src tests scripts` | 0 | 138 files already formatted | — |
 | `make eval` | 2 | **not_run_missing_groq_key** (release gate; no Groq key in the final environment) | [report](../reports/release-hybrid-text/report.md) |
 | `make eval-orca` | 2 | **not_run_provider_quota** — optional fallback experiment, not the release gate; OrcaRouter free rate limit; retry 37,718 s | [report](../reports/release-hybrid-text-orca/report.md) |
 | `make eval-local` | 0 | **pass** safety gates; task completion **27/40 (67.5%)**, report-only; 124.9 s | [report](../reports/release-local-text/report.md) |
 | `make eval-audio` | 2 | **not_run_missing_groq_key** | [report](../reports/release-audio-hybrid/report.md) |
-| `make eval-audio-local` | 0 | **5/6**, 664.0 s; every hard gate passes; only a genuine ASR entity miss remains | [report](../reports/release-audio-local/report.md) |
+| `make eval-audio-local` | 0 | **5/6**, 650.9 s; every hard gate passes; only a genuine ASR entity miss remains | [report](../reports/release-audio-local/report.md) |
 | `make eval-heldout` | 2 | **not_run_missing_groq_key** | [report](../reports/release-heldout/report.md) |
 | `make eval-smoke` | 0 | **pass** 8/8 | [report](../reports/release-smoke/report.md) |
 | `make eval-baseline` | 0 | **local 0/40** (`00764f7`); hybrid **not_run_provider_quota 0/0** (`81e71cf`, prior evidence); never gates | [local](../reports/release-baseline-local/report.md) · [hybrid](../reports/release-baseline-hybrid/report.md) |
 
 **Evidence commit:** the local audio report was regenerated from code commit
-`c728e92`; the other sweep reports remain at
+`e2d1d86`; the other sweep reports remain at
 `00764f7d5a0442fe6c218d35b881535b38116f75`. The tag points at the final commit after the
 report-output commit. Do not describe a report as generated at the tag unless its `git_sha`
 matches the tag. The hybrid baseline report is prior-commit evidence (`81e71cf`) with
@@ -45,8 +45,9 @@ The scenario set, hard gates and scorer were not changed.
 passes every hard gate: confirmation 5/5, slot correctness 4/4, emergency triage 1/1, handoff
 1/1, audit 6/6, audio emergency transfer 1/1, barge-in 100%, and zero unsafe, cross-tenant or
 unauthorized writes. Five scenarios pass. The remaining failure is `audio_readback_01`: the
-booking itself succeeds on the corrected Tuesday slot, but LFM3 transcribed the caller's
-“88 Meridian Way” as “88 Hyde Meridian Way”. The guard books the address it actually heard, so
+booking itself succeeds on the corrected Tuesday slot, but LFM3 inserts a word in the caller's
+street name (“88 Hyde Meridian Way” previously, “88 Tide Meridian Way” in the latest run)
+instead of “88 Meridian Way”. The guard books the address it actually heard, so
 `confirmed_entities` fails; this is a genuine STT entity miss, not a harness gap. The scripts
 now provide a separate post-read-back yes for every booking and repeat the emergency ZIP; no
 gate or scenario expectation was weakened.
@@ -65,7 +66,7 @@ timeline and the violated gate. The representative entries:
 
 | Scenario | Gate / check | What happened |
 |---|---|---|
-| `audio_readback_01` | task completion (report-only) | The booking succeeds on the corrected Tuesday slot; LFM3 heard “88 Hyde Meridian Way” for “88 Meridian Way”, so `confirmed_entities` fails. Genuine ASR entity miss. |
+| `audio_readback_01` | task completion (report-only) | The booking succeeds on the corrected Tuesday slot; LFM3 inserts a word in the street name (“88 Hyde” previously, “88 Tide” in the latest run), so `confirmed_entities` fails. Genuine ASR entity miss. |
 | `audio_emergency_01` | PASS | Ticket, 911 script, ZIP/address read-back and on-call handoff/callback now pass; the repeated ZIP turn gives the guard a second chance. |
 | `audio_silence_01`, `audio_badline_01`, `audio_noisy_01` | PASS | Each script now has a separate yes after the read-back; the policy commits exactly one booking. |
 | `audio_bargein_01` | PASS | Interruption recovery still holds; the second slot is booked after a later yes. |

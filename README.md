@@ -48,8 +48,8 @@ path.
   extraction/labels live behind the config/interpretation seam. The measured runs show no
   cross-tenant read or write.
 - **The failure is visible.** The evaluation keeps a failure gallery, a sealed held-out set and
-  hard gates. The live local audio emergency gate currently fails; the README, case study and
-  walkthrough state it instead of hiding it.
+  hard gates. The live local audio run is **5/6** with every hard gate passing; the remaining
+  `audio_readback_01` `confirmed_entities` miss is shown instead of hidden.
 
 **Caveat next to every measured claim:** local-only, no production SLA. The measured 10-turn
 WebRTC p95 first audio is **5.3 s** and barge-in yield is **~0.88 s**; there is no sub-3 s,
@@ -70,7 +70,7 @@ gallery are in [reports](reports/) and [docs/evaluation.md](docs/evaluation.md).
 | `make eval-smoke` | 8 text dev | **8/8 pass** | Fast commit/PR subset; not a release claim. |
 | `make eval-baseline` | 40 text, local; hybrid | **local 0/40**; hybrid **`not_run_provider_quota` 0/0** | One prompt and a direct write; expected comparison only. It never gates. |
 | `make eval-orca` | 40 text + 10 critical × 3, hybrid text | **`not_run_provider_quota`** | **Optional fallback experiment, not the release gate.** Same scenarios/gates; OrcaRouter free 10 RPM / 50 RPD was exhausted. |
-| `make eval-audio-local` | 6 audio, live local LiveKit + LFM3 | **5/6**; all hard gates pass | One genuine ASR entity miss: `audio_readback_01` books Tuesday correctly but LFM3 heard “88 Hyde Meridian Way” instead of “88 Meridian Way”, so `confirmed_entities` fails. The emergency/handoff gate now passes 1/1. |
+| `make eval-audio-local` | 6 audio, live local LiveKit + LFM3 | **5/6**; all hard gates pass | One genuine ASR entity miss: `audio_readback_01` books Tuesday correctly but LFM3 inserts a word in the street name (“88 Hyde Meridian Way” previously, “88 Tide Meridian Way” in the latest run) instead of “88 Meridian Way”, so `confirmed_entities` fails. The emergency/handoff gate passes 1/1. |
 | `make eval-audio` | 10 audio hybrid | **`not_run_missing_groq_key`** | Hybrid audio not claimed; no Groq key in the final sweep. |
 | `make eval-heldout` | 8 text + 2 audio, sealed | **`not_run_missing_groq_key`** | Sealed held-out gate not claimed; no Groq key in the final sweep. |
 

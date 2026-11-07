@@ -84,17 +84,17 @@
     },
     "latency": {
       "n": 6,
-      "p50_tool_path_ms": 92920.0,
-      "p50_wall_ms": 92920.0,
-      "p95_tool_path_ms": 188527.75,
-      "p95_wall_ms": 188527.75,
+      "p50_tool_path_ms": 90125.5,
+      "p50_wall_ms": 90125.5,
+      "p95_tool_path_ms": 189814.0,
+      "p95_wall_ms": 189814.0,
       "wall_p50_bootstrap_ci": [
-        74599.5,
-        158329.5
+        69806.5,
+        159382.0
       ],
       "wall_p95_bootstrap_ci": [
-        93374.0,
-        218726.0
+        91297.75,
+        220246.0
       ]
     },
     "pipeline": "fixed",
@@ -153,14 +153,14 @@
   },
   "counts": {
     "audio": 6,
-    "elapsed_seconds": 664.001,
+    "elapsed_seconds": 650.916,
     "held_out": 1,
     "runs": 6,
     "scenarios": 6,
     "text": 0,
     "transcripts": "reports/release-audio-local/transcripts"
   },
-  "finished_at": "2026-11-07T18:42:40.165732Z",
+  "finished_at": "2026-11-07T19:12:40.886344Z",
   "gates": {
     "audio_emergency_transfer": {
       "denominator": 1,
@@ -308,7 +308,7 @@
       "value": "0 failure(s)"
     }
   },
-  "git_sha": "c728e92",
+  "git_sha": "e2d1d86",
   "heldout_manifest_sha": "sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd",
   "manifest_sha": "sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2",
   "mode": "audio",
@@ -366,7 +366,7 @@
         "outcome": "booked",
         "service_id": "drain_cleaning"
       },
-      "failure_excerpt": "assistant: I have three available slots for drain cleaning in your area:\n- November 9, 2026 at 7:00 AM (Technician: Alex)\n- November 10, 2026 at 11:30 AM (Technician: Alex)\n- November 11, 2026 at 9:30 AM (Technician: Alex)\n\nCould you please let me know which slot you'd like to book? / assistant: Just to confirm: Drain cleaning on Tuesday 10 November at 11:30 AM with Alex at 12 Alder Street, San Francisco 94107, for Sam Rivera at +15551234567. / assistant: Just to confirm: Drain cleaning on Tuesday 10 November at 11:30 AM with Alex at 12 Alder Street, San Francisco 94107, for Sam Rivera at +15551234567. Should I book that? / assistant: Booked. Tuesday 10 November at 11:30 AM is confirmed and a text confirmation is queued.",
+      "failure_excerpt": "assistant: I have three available slots for drain cleaning in your area:\n- November 9 at 7:00 AM (Technician: Alex)\n- November 10 at 11:30 AM (Technician: Alex)\n- November 11 at 9:30 AM (Technician: Alex)\n\nCould you please let me know which slot you'd like to book? / assistant: Just to confirm: Drain cleaning on Tuesday 10 November at 11:30 AM with Alex at 12 Alder Street, San Francisco 94107, for Sam Rivera at +15551234567. / assistant: Just to confirm: Drain cleaning on Tuesday 10 November at 11:30 AM with Alex at 12 Alder Street, San Francisco 94107, for Sam Rivera at +15551234567. Should I book that? / assistant: Booked. Tuesday 10 November at 11:30 AM is confirmed and a text confirmation is queued.",
       "failure_reason": null,
       "gate_labels": [
         "slot_correctness",
@@ -376,8 +376,8 @@
       "goal": "Book a drain cleaning; interrupt the agent mid-offer; recover and book the requested slot.",
       "held_out": false,
       "latency": {
-        "tool_path_ms": 218726,
-        "wall_ms": 218726
+        "tool_path_ms": 220246,
+        "wall_ms": 220246
       },
       "mode": "audio",
       "pass": true,
@@ -387,7 +387,7 @@
       "qa_flags": [
         "barge_in_recovered"
       ],
-      "recording_ref": "livekit:call_149f2a2cffe0a608",
+      "recording_ref": "livekit:call_cdc7db60adf120bc",
       "repeat_index": 0,
       "scenario_id": "audio_bargein_01",
       "split": "audio-local",
@@ -469,7 +469,7 @@
         "invented_entities": 0,
         "outcome": "booked_or_callback"
       },
-      "failure_excerpt": "assistant: I have three available slots for drain cleaning in zip 94107:\n- Slot slot_hl_00001 on 2026-11-09 at 07:00 (Technician: Alex)\n- Slot slot_hl_00010 on 2026-11-10 at 11:30 (Technician: Alex)\n- Slot slot_hl_00016 on 2026-11-11 at 09:30 (Technician: Alex)\n\nCould you please let me know which slot you would like to book? / assistant: I need the ZIP code to proceed. You / assistant: Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder Street, San Francisco 94107, for Sam Rivera at +15551234567. / assistant: Booked. Monday 9 November at 7:00 AM is confirmed and a text confirmation is queued.",
+      "failure_excerpt": "assistant: I have three available slots for drain cleaning in zip 94107:\n- Slot slot_hl_00001 on 2026-11-09 at 07:00 (Technician Alex)\n- Slot slot_hl_00010 on 2026-11-10 at 11:30 (Technician Alex)\n- Slot slot_hl_00016 on 2026-11-11 at 09:30 (Technician Alex)\n\nCould you please provide your name and phone number so I can book the appointment? / assistant: I need your phone number to proceed with / assistant: Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder Street, San Francisco 94107, for Sam Rivera at +15551234567. / assistant: Booked. Monday 9 November at 7:00 AM is confirmed and a text confirmation is queued.",
       "failure_reason": null,
       "gate_labels": [
         "confirmation_accuracy",
@@ -478,8 +478,8 @@
       "goal": "Pause, then recover and book or hand off after the caller speaks; no proactive silence prompt is claimed (known gap).",
       "held_out": false,
       "latency": {
-        "tool_path_ms": 93828,
-        "wall_ms": 93828
+        "tool_path_ms": 87781,
+        "wall_ms": 87781
       },
       "mode": "audio",
       "pass": true,
@@ -487,7 +487,7 @@
       "pipeline": "fixed",
       "profile": "local",
       "qa_flags": [],
-      "recording_ref": "livekit:call_617679959a1e6824",
+      "recording_ref": "livekit:call_421a18db4ccbcf0e",
       "repeat_index": 0,
       "scenario_id": "audio_silence_01",
       "split": "audio-local",
@@ -574,8 +574,8 @@
       "goal": "Book a drain cleaning while repeating ZIP and phone; confirm entities before booking.",
       "held_out": false,
       "latency": {
-        "tool_path_ms": 97933,
-        "wall_ms": 97933
+        "tool_path_ms": 98518,
+        "wall_ms": 98518
       },
       "mode": "audio",
       "pass": true,
@@ -585,7 +585,7 @@
       "qa_flags": [
         "degraded_audio"
       ],
-      "recording_ref": "livekit:call_6ed4105934cec6c3",
+      "recording_ref": "livekit:call_0f774c4e7a10999c",
       "repeat_index": 0,
       "scenario_id": "audio_badline_01",
       "split": "audio-local",
@@ -667,7 +667,7 @@
         "corrected_slot": true,
         "outcome": "booked"
       },
-      "failure_excerpt": "assistant: Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help? / assistant: I heard 4 digits. I need exactly five digits for the ZIP; please say them one at a time, for example nine five one / assistant: Just to confirm: Air conditioning repair on Tuesday 10 November at 11:30 AM with Casey at 88 Hyde Meridian Way, San Jose 95125, for Dana Whitfield at +14085550142. Should I book that? / assistant: Booked. Tuesday 10 November at 11:30 AM is confirmed and a text confirmation is queued.",
+      "failure_excerpt": "assistant: Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help? / assistant: I heard 4 digits. I need exactly five digits for the ZIP; please say them one at a time, for example nine five one two / assistant: Just to confirm: Air conditioning repair on Tuesday 10 November at 11:30 AM with Casey at 88 Tide Meridian Way, San Jose 95125, for Dana Whitfield at +14085550142. Should I book that? / assistant: Booked. Tuesday 10 November at 11:30 AM is confirmed and a text confirmation is queued.",
       "failure_reason": "failed checks: confirmed_entities",
       "gate_labels": [
         "slot_correctness",
@@ -677,8 +677,8 @@
       "goal": "Book an AC repair; the caller corrects the day during read-back; re-read and book the corrected day.",
       "held_out": false,
       "latency": {
-        "tool_path_ms": 76484,
-        "wall_ms": 76484
+        "tool_path_ms": 76723,
+        "wall_ms": 76723
       },
       "mode": "audio",
       "pass": false,
@@ -686,7 +686,7 @@
       "pipeline": "fixed",
       "profile": "local",
       "qa_flags": [],
-      "recording_ref": "livekit:call_0f43eec422b89b80",
+      "recording_ref": "livekit:call_9c0c5506d80feffa",
       "repeat_index": 0,
       "scenario_id": "audio_readback_01",
       "split": "audio-local",
@@ -704,11 +704,6 @@
         },
         {
           "error_code": "ok",
-          "name": "get_availability",
-          "ok": true
-        },
-        {
-          "error_code": "ok",
           "name": "book_appointment",
           "ok": true
         }
@@ -716,7 +711,6 @@
       "tool_timeline": [
         "get_availability",
         "get_service_area",
-        "get_availability",
         "book_appointment"
       ],
       "transcript_ref": "transcripts/audio_readback_01.json",
@@ -773,7 +767,7 @@
         "transfer_status": "connected_or_callback",
         "vulnerable_occupant": true
       },
-      "failure_excerpt": "assistant: I'll treat this as urgent. If / assistant: I / assistant:  I have 88 Meridian Way, San Jose 95125. A person has answered. I'm transferring you now with your details and what happened. / assistant: Our on-call technician has the ticket and your details. Stay on the line, and call 911 if anything gets worse.",
+      "failure_excerpt": "assistant: Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help? / assistant: I'll treat this as urgent. If / assistant:  I have 88 Meridian Way, San Jose 95125. A person has answered. I'm transferring you now with your details and what happened. / assistant: Our on-call technician has the ticket and your details. Stay on the line, and call 911 if anything gets worse.",
       "failure_reason": null,
       "gate_labels": [
         "emergency_triage",
@@ -783,8 +777,8 @@
       "goal": "Report no cooling above 95\u00b0F with a newborn; get the 911/medical check, ticket and on-call transfer.",
       "held_out": true,
       "latency": {
-        "tool_path_ms": 72715,
-        "wall_ms": 72715
+        "tool_path_ms": 62890,
+        "wall_ms": 62890
       },
       "mode": "audio",
       "pass": true,
@@ -794,7 +788,7 @@
       "qa_flags": [
         "emergency_triage"
       ],
-      "recording_ref": "livekit:call_dbd2ff378844159b",
+      "recording_ref": "livekit:call_8240f711539e13af",
       "repeat_index": 0,
       "scenario_id": "audio_emergency_01",
       "split": "audio-local",
@@ -869,7 +863,7 @@
         "outcome": "booked",
         "service_id": "drain_cleaning"
       },
-      "failure_excerpt": "assistant: I have some available time slots for the drain cleaning. Here are the options:\n\n1. November 9, 2026 at 7:00 AM (Technician: Alex)\n2. November 10, 2026 at 11:30 AM (Technician: Alex)\n3. November 11, 2026 at 9:30 AM (Technician: Alex)\n\nCould you please let me know which slot you prefer? / assistant: Could you also provide your full address and the / assistant: Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder Street, San Francisco 94107, for Sam Rivera at +15551234567. / assistant: Booked. Monday 9 November at 7:00 AM is confirmed and a text confirmation is queued.",
+      "failure_excerpt": "assistant: I have some available time slots for drain cleaning in your area. Here are the options:\n\n1. November 9, 2026 at 7:00 AM (Technician: Alex)\n2. November 10, 2026 at 11:30 AM (Technician: Alex)\n3. November 11, 2026 at 9:30 AM (Technician: Alex)\n\nCould you please let me know which slot you prefer? / assistant: Could you also provide your full address and the / assistant: Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder Street, San Francisco 94107, for Sam Rivera at +15551234567. / assistant: Booked. Monday 9 November at 7:00 AM is confirmed and a text confirmation is queued.",
       "failure_reason": null,
       "gate_labels": [
         "slot_correctness",
@@ -879,8 +873,8 @@
       "goal": "Book a drain cleaning over background noise; confirm ZIP and phone; book the correct slot.",
       "held_out": false,
       "latency": {
-        "tool_path_ms": 92012,
-        "wall_ms": 92012
+        "tool_path_ms": 92470,
+        "wall_ms": 92470
       },
       "mode": "audio",
       "pass": true,
@@ -890,7 +884,7 @@
       "qa_flags": [
         "degraded_audio"
       ],
-      "recording_ref": "livekit:call_ea3ab029d51a197e",
+      "recording_ref": "livekit:call_00cd6f154b674cf8",
       "repeat_index": 0,
       "scenario_id": "audio_noisy_01",
       "split": "audio-local",
@@ -948,6 +942,6 @@
   ],
   "schema_version": 1,
   "split": "audio-local",
-  "started_at": "2026-11-07T18:31:36.165027Z",
+  "started_at": "2026-11-07T19:01:49.970679Z",
   "verdict": "pass"
 }
