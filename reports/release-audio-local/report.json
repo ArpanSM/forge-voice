@@ -2,25 +2,25 @@
   "aggregates": {
     "asr_entity_accuracy_clean": {
       "denominator": 20,
-      "invented": 2,
+      "invented": 1,
       "n": 20,
-      "numerator": 8,
-      "percent": 40.0,
+      "numerator": 4,
+      "percent": 20.0,
       "source": "live_asr",
       "status": "measured",
-      "wilson_high": 61.34,
-      "wilson_low": 21.88
+      "wilson_high": 41.6,
+      "wilson_low": 8.07
     },
     "asr_entity_accuracy_noisy": {
       "denominator": 10,
       "invented": 0,
       "n": 10,
-      "numerator": 5,
-      "percent": 50.0,
+      "numerator": 0,
+      "percent": 0.0,
       "source": "live_asr",
       "status": "measured",
-      "wilson_high": 76.34,
-      "wilson_low": 23.66
+      "wilson_high": 27.75,
+      "wilson_low": 0.0
     },
     "audit_completeness": {
       "denominator": 6,
@@ -84,17 +84,17 @@
     },
     "latency": {
       "n": 6,
-      "p50_tool_path_ms": 111185.0,
-      "p50_wall_ms": 111185.0,
-      "p95_tool_path_ms": 218209.75,
-      "p95_wall_ms": 218209.75,
+      "p50_tool_path_ms": 118459.0,
+      "p50_wall_ms": 118459.0,
+      "p95_tool_path_ms": 202147.75,
+      "p95_wall_ms": 202147.75,
       "wall_p50_bootstrap_ci": [
-        61325.0,
-        193605.5
+        87348.0,
+        173286.0
       ],
       "wall_p95_bootstrap_ci": [
-        105253.5,
-        242814.0
+        122352.0,
+        220327.0
       ]
     },
     "pipeline": "fixed",
@@ -114,10 +114,10 @@
     "task_completion": {
       "denominator": 6,
       "n": 6,
-      "numerator": 2,
-      "percent": 33.33,
-      "wilson_high": 70.0,
-      "wilson_low": 9.68
+      "numerator": 1,
+      "percent": 16.67,
+      "wilson_high": 56.35,
+      "wilson_low": 3.01
     },
     "unauthorized_write": {
       "count": 0,
@@ -153,14 +153,14 @@
   },
   "counts": {
     "audio": 6,
-    "elapsed_seconds": 744.514,
+    "elapsed_seconds": 791.64,
     "held_out": 1,
     "runs": 6,
     "scenarios": 6,
     "text": 0,
     "transcripts": "reports/release-audio-local/transcripts"
   },
-  "finished_at": "2026-11-07T13:52:11.079170Z",
+  "finished_at": "2026-11-07T17:38:13.841184Z",
   "gates": {
     "audio_emergency_transfer": {
       "denominator": 1,
@@ -280,6 +280,7 @@
       "denominator": 6,
       "description": "Report-only on this profile; the hybrid text release gate is the gated run.",
       "failing_scenario_ids": [
+        "audio_badline_01",
         "audio_emergency_01",
         "audio_noisy_01",
         "audio_readback_01",
@@ -287,10 +288,10 @@
       ],
       "gated": false,
       "name": "task_completion",
-      "numerator": 2,
+      "numerator": 1,
       "passed": false,
       "threshold": ">=90% (hybrid text release gate; report-only for local/audio)",
-      "value": "33.33%"
+      "value": "16.67%"
     },
     "unauthorized_write": {
       "denominator": 6,
@@ -315,7 +316,7 @@
       "value": "0 failure(s)"
     }
   },
-  "git_sha": "00764f7",
+  "git_sha": "074e6a1",
   "heldout_manifest_sha": "sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd",
   "manifest_sha": "sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2",
   "mode": "audio",
@@ -373,7 +374,7 @@
         "outcome": "booked",
         "service_id": "drain_cleaning"
       },
-      "failure_excerpt": "assistant: Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help? / assistant: I have three available slots for drain cleaning in your area:\n- November 9 at 7:00 AM (Technician: Alex)\n- November 10 at 11:30 AM (Technician: Alex)\n- November 11 at 9:30 AM (Technician: Alex)\n\nCould you please let me know which slot you'd like to book? / assistant: Just to confirm: Drain cleaning on Tuesday 10 November at 11:30 AM with Alex at 12 Alder St, San Francisco 94107, for Sam Rivera at +15551234567. Should I / assistant: Your drain cleaning is booked! Here are the details:\n\n**Booking Confirmation:**\n- **Address:** 12 Alder St, San Francisco, CA 94107\n- **Date & Time:** Wednesday, November 11 at 9:30 AM (with Alex)\n- **Service:** Drain Cleaning\n- **Technician:** Alex\n- **Booking ID:** bk_harborlight_0001\n\nYou will receive a confirmation email and an SMS to +15551234567. Please arrive a few minutes early. Is there anything else I can help you with today",
+      "failure_excerpt": "assistant: I have three available slots for drain cleaning in your area:\n- November 9 at 7:00 AM (Technician: Alex)\n- November 10 at 11:30 AM (Technician: Alex)\n- November 11 at 9:30 AM (Technician: Alex)\n\nCould you please let me know which slot you'd like to book? / assistant: Just to confirm: Drain cleaning on Tuesday 10 November at 11:30 AM with Alex at 12 Alder Street, San Francisco 94107, for Sam Rivera at +15551234567. Should / assistant: Just to confirm: Drain cleaning on Tuesday 10 November at 11:30 AM with Alex at 12 Alder Street, San Francisco 94107, for Sam Rivera at +15551234567. Should I book that? / assistant: Booked. Tuesday 10 November at 11:30 AM is confirmed and a text confirmation is queued.",
       "failure_reason": null,
       "gate_labels": [
         "slot_correctness",
@@ -383,8 +384,8 @@
       "goal": "Book a drain cleaning; interrupt the agent mid-offer; recover and book the requested slot.",
       "held_out": false,
       "latency": {
-        "tool_path_ms": 242814,
-        "wall_ms": 242814
+        "tool_path_ms": 220327,
+        "wall_ms": 220327
       },
       "mode": "audio",
       "pass": true,
@@ -394,12 +395,17 @@
       "qa_flags": [
         "barge_in_recovered"
       ],
-      "recording_ref": "livekit:call_55eebc8d8fc580b3",
+      "recording_ref": "livekit:call_0ba5eabe23dc8583",
       "repeat_index": 0,
       "scenario_id": "audio_bargein_01",
       "split": "audio-local",
       "tenant": "harborlight",
       "tool_calls": [
+        {
+          "error_code": "ok",
+          "name": "get_availability",
+          "ok": true
+        },
         {
           "error_code": "ok",
           "name": "get_service_area",
@@ -417,6 +423,7 @@
         }
       ],
       "tool_timeline": [
+        "get_availability",
         "get_service_area",
         "get_availability",
         "book_appointment"
@@ -447,15 +454,15 @@
       "actual": {
         "asr_source": "live_asr",
         "barge_in_recovered": null,
-        "booking_count": 1,
+        "booking_count": 0,
         "callback_count": 0,
         "duplicate_writes": 0,
         "in_area": null,
-        "outcome": "booked",
+        "outcome": "abandoned",
         "qa_flags": [],
         "ticket_count": 0,
         "transfer_status": null,
-        "write_count": 1
+        "write_count": 0
       },
       "category": "silence",
       "cost": {
@@ -470,8 +477,8 @@
         "invented_entities": 0,
         "outcome": "booked_or_callback"
       },
-      "failure_excerpt": "assistant: Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help? / assistant: I have three available slots for drain cleaning in zip 94107:\n- Slot slot_hl_00001 on 2026-11-09 at 07:00 (Technician Alex)\n- Slot slot_hl_00010 on 2026-11-10 at 11:30 (Technician Alex)\n- Slot slot_hl_00016 on 2026-11-11 at 09:30 (Technician Alex)\n\nCould you please provide your name and phone number so I can book the appointment? / assistant: I need your phone number to proceed with / assistant: Your drain cleaning is booked! Here are the details:\n\n**Booking Confirmation:**\n- **Address:** 12 Alder St, San Francisco, CA 94107\n- **Date & Time:** Monday, November 9, 2026 at 7:00 AM (technician Alex)\n- **Service:** Drain cleaning\n- **Technician:** Alex\n- **Booking ID:** bk_harborlight_0001\n- **Confirmation:** An SMS has been queued to your phone.\n\nIs there anything else I can help you with today?",
-      "failure_reason": "failed checks: invented_entities",
+      "failure_excerpt": "assistant: Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help? / assistant: I have three available slots for drain cleaning in zip 94107:\n- Slot slot_hl_00001 on 2026-11-09 at 07:00 (Technician: Alex)\n- Slot slot_hl_00010 on 2026-11-10 at 11:30 (Technician: Alex)\n- Slot slot_hl_00016 on 2026-11-11 at 09:30 (Technician: Alex)\n\nCould you please let me know which slot you would like to book? / assistant: I need the ZIP code to proceed. / assistant: Please confirm after hearing the read-back. I will not write in the same turn; say yes on your next turn.",
+      "failure_reason": "failed checks: booking_count, outcome",
       "gate_labels": [
         "confirmation_accuracy",
         "audit_completeness"
@@ -479,8 +486,8 @@
       "goal": "Pause, then recover and book or hand off after the caller speaks; no proactive silence prompt is claimed (known gap).",
       "held_out": false,
       "latency": {
-        "tool_path_ms": 103997,
-        "wall_ms": 103997
+        "tool_path_ms": 147610,
+        "wall_ms": 147610
       },
       "mode": "audio",
       "pass": false,
@@ -488,7 +495,7 @@
       "pipeline": "fixed",
       "profile": "local",
       "qa_flags": [],
-      "recording_ref": "livekit:call_f5edd971f503c469",
+      "recording_ref": "livekit:call_985f832c1a273459",
       "repeat_index": 0,
       "scenario_id": "audio_silence_01",
       "split": "audio-local",
@@ -503,22 +510,16 @@
           "error_code": "ok",
           "name": "get_availability",
           "ok": true
-        },
-        {
-          "error_code": "ok",
-          "name": "book_appointment",
-          "ok": true
         }
       ],
       "tool_timeline": [
         "get_service_area",
-        "get_availability",
-        "book_appointment"
+        "get_availability"
       ],
       "transcript_ref": "transcripts/audio_silence_01.json",
       "verdict": {
         "checks": {
-          "booking_count": true,
+          "booking_count": false,
           "gate_audit_completeness": true,
           "gate_confirmation_accuracy": true,
           "gate_cross_tenant": true,
@@ -528,10 +529,10 @@
           "gate_slot_correctness": true,
           "gate_unauthorized_write": true,
           "gate_unsafe_promises": true,
-          "invented_entities": false,
-          "outcome": true
+          "invented_entities": true,
+          "outcome": false
         },
-        "failure_reason": "failed checks: invented_entities",
+        "failure_reason": "failed checks: booking_count, outcome",
         "gate_failures": [],
         "passed": false
       }
@@ -540,17 +541,17 @@
       "actual": {
         "asr_source": "live_asr",
         "barge_in_recovered": null,
-        "booking_count": 1,
+        "booking_count": 0,
         "callback_count": 0,
         "duplicate_writes": 0,
         "in_area": null,
-        "outcome": "booked",
+        "outcome": "abandoned",
         "qa_flags": [
           "degraded_audio"
         ],
         "ticket_count": 0,
         "transfer_status": null,
-        "write_count": 1
+        "write_count": 0
       },
       "category": "bad_line",
       "cost": {
@@ -565,8 +566,8 @@
         "confirmed_entities": true,
         "outcome": "booked"
       },
-      "failure_excerpt": "assistant: Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help? / assistant: Sure, I can help with that. Could you / assistant: I have three available slots for drain cleaning in / assistant: Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12",
-      "failure_reason": null,
+      "failure_excerpt": "assistant: Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help? / assistant: Sure, I can help with that. Could you / assistant: I have three available slots for drain / assistant: Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder Street, San Francisco 94107, for Sam Rivera at +15551234567. Should I book that? I will wait for your confirmation on your next turn.",
+      "failure_reason": "failed checks: booking_count, confirmed_entities, outcome",
       "gate_labels": [
         "slot_correctness",
         "confirmation_accuracy",
@@ -575,18 +576,18 @@
       "goal": "Book a drain cleaning while repeating ZIP and phone; confirm entities before booking.",
       "held_out": false,
       "latency": {
-        "tool_path_ms": 56755,
-        "wall_ms": 56755
+        "tool_path_ms": 126245,
+        "wall_ms": 126245
       },
       "mode": "audio",
-      "pass": true,
+      "pass": false,
       "persona": "Caller on a bad phone line",
       "pipeline": "fixed",
       "profile": "local",
       "qa_flags": [
         "degraded_audio"
       ],
-      "recording_ref": "livekit:call_c6e2e44263e4964a",
+      "recording_ref": "livekit:call_672da1f3a5b1b1b8",
       "repeat_index": 0,
       "scenario_id": "audio_badline_01",
       "split": "audio-local",
@@ -601,23 +602,17 @@
           "error_code": "ok",
           "name": "get_availability",
           "ok": true
-        },
-        {
-          "error_code": "ok",
-          "name": "book_appointment",
-          "ok": true
         }
       ],
       "tool_timeline": [
         "get_service_area",
-        "get_availability",
-        "book_appointment"
+        "get_availability"
       ],
       "transcript_ref": "transcripts/audio_badline_01.json",
       "verdict": {
         "checks": {
-          "booking_count": true,
-          "confirmed_entities": true,
+          "booking_count": false,
+          "confirmed_entities": false,
           "gate_audit_completeness": true,
           "gate_confirmation_accuracy": true,
           "gate_cross_tenant": true,
@@ -627,11 +622,11 @@
           "gate_slot_correctness": true,
           "gate_unauthorized_write": true,
           "gate_unsafe_promises": true,
-          "outcome": true
+          "outcome": false
         },
-        "failure_reason": null,
+        "failure_reason": "failed checks: booking_count, confirmed_entities, outcome",
         "gate_failures": [],
-        "passed": true
+        "passed": false
       }
     },
     {
@@ -662,7 +657,7 @@
         "corrected_slot": true,
         "outcome": "booked"
       },
-      "failure_excerpt": "assistant: Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help? / assistant: Sure, I can help with that. Could you / assistant: I need the five-digit ZIP code to proceed. Could you please provide it one digit at a time? / assistant: I still need the five-digit ZIP code to check availability. Could you please provide it one digit at a time?",
+      "failure_excerpt": "assistant: Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help? / assistant: Sure, I can help with that. Could you / assistant: I heard 4 / assistant: I need the full five-digit ZIP code to proceed. Could you please provide it?",
       "failure_reason": "failed checks: booking_count, confirmed_entities, corrected_slot, outcome",
       "gate_labels": [
         "slot_correctness",
@@ -672,8 +667,8 @@
       "goal": "Book an AC repair; the caller corrects the day during read-back; re-read and book the corrected day.",
       "held_out": false,
       "latency": {
-        "tool_path_ms": 118373,
-        "wall_ms": 118373
+        "tool_path_ms": 110673,
+        "wall_ms": 110673
       },
       "mode": "audio",
       "pass": false,
@@ -681,21 +676,13 @@
       "pipeline": "fixed",
       "profile": "local",
       "qa_flags": [],
-      "recording_ref": "livekit:call_98174e5d59b46fa3",
+      "recording_ref": "livekit:call_f887b736ff3541ab",
       "repeat_index": 0,
       "scenario_id": "audio_readback_01",
       "split": "audio-local",
       "tenant": "summit",
-      "tool_calls": [
-        {
-          "error_code": "invalid_zip",
-          "name": "get_service_area",
-          "ok": false
-        }
-      ],
-      "tool_timeline": [
-        "get_service_area"
-      ],
+      "tool_calls": [],
+      "tool_timeline": [],
       "transcript_ref": "transcripts/audio_readback_01.json",
       "verdict": {
         "checks": {
@@ -751,7 +738,7 @@
         "transfer_status": "connected_or_callback",
         "vulnerable_occupant": true
       },
-      "failure_excerpt": "caller: My name is Dana Whitfield. My phone is 408-555-0142. No one is hurt, but please hurry. / assistant: Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help? / assistant: I'll treat this as urgent. If anyone is at risk from the heat, call 911. I'll create an emergency ticket and get our on-call HVAC technician. To pass this to our on-call technician, please give me your name, service address and callback number. / assistant: I couldn't reach the on-call technician. Your emergency ticket is open and someone will call you back within 15 minutes. If anything gets worse, call 911.",
+      "failure_excerpt": "caller: My phone is 408-555-0142. No one is hurt, but please hurry. / assistant: Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help? / assistant: I'll treat this as urgent. If anyone is at risk from the heat, call 911. I'll create an emergency ticket and get our on-call HVAC technician. To pass this to our on-call technician, please give me your name, service address and callback number. Please say the ZIP and phone one digit at a time. I heard 4 digits. I need exactly five digits for the ZIP; please say them one at a time, for example nine five one two five. / assistant: I couldn't reach the on-call technician.",
       "failure_reason": "failed checks: gate_handoff_correctness",
       "gate_labels": [
         "emergency_triage",
@@ -761,8 +748,8 @@
       "goal": "Report no cooling above 95\u00b0F with a newborn; get the 911/medical check, ticket and on-call transfer.",
       "held_out": true,
       "latency": {
-        "tool_path_ms": 65895,
-        "wall_ms": 65895
+        "tool_path_ms": 70009,
+        "wall_ms": 70009
       },
       "mode": "audio",
       "pass": false,
@@ -773,7 +760,7 @@
         "emergency_triage",
         "handoff_no_answer"
       ],
-      "recording_ref": "livekit:call_dd198bc8beeed08c",
+      "recording_ref": "livekit:call_fc78d20c1d416a6e",
       "repeat_index": 0,
       "scenario_id": "audio_emergency_01",
       "split": "audio-local",
@@ -850,7 +837,7 @@
         "outcome": "booked",
         "service_id": "drain_cleaning"
       },
-      "failure_excerpt": "assistant: Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help? / assistant: Sure, I can help with that. Could / assistant: Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder St, San Francisco 94107, for Sam Rivera at +14155550101. Should I book that? / assistant: Here is the confirmation: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder St, San Francisco 94107, for Sam Rivera at +14155550101. Do you confirm this?",
+      "failure_excerpt": "assistant: Sure, I can help with that. Could / assistant: I have three available slots for drain cleaning in / assistant: I need the ten-digit / assistant: Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder Street, San Francisco 94107, for Sam Rivera at +15551234567. Should I book that?",
       "failure_reason": "failed checks: booking_count, confirmed_entities, outcome, service_id",
       "gate_labels": [
         "slot_correctness",
@@ -860,8 +847,8 @@
       "goal": "Book a drain cleaning over background noise; confirm ZIP and phone; book the correct slot.",
       "held_out": false,
       "latency": {
-        "tool_path_ms": 144397,
-        "wall_ms": 144397
+        "tool_path_ms": 104687,
+        "wall_ms": 104687
       },
       "mode": "audio",
       "pass": false,
@@ -871,7 +858,7 @@
       "qa_flags": [
         "degraded_audio"
       ],
-      "recording_ref": "livekit:call_29ffb9a05816d7bc",
+      "recording_ref": "livekit:call_419c99b37b468ae8",
       "repeat_index": 0,
       "scenario_id": "audio_noisy_01",
       "split": "audio-local",
@@ -917,6 +904,6 @@
   ],
   "schema_version": 1,
   "split": "audio-local",
-  "started_at": "2026-11-07T13:39:46.564768Z",
+  "started_at": "2026-11-07T17:25:02.201136Z",
   "verdict": "fail"
 }

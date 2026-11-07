@@ -125,5 +125,7 @@ player's declared total duration, then save the video. Convert to MP4 if a site 
 - The known gaps are real: no proactive silence prompt, degraded ZIP recognition and no
   long-utterance turn-taking guard. The demo uses clean audio, short turns, ZIP digits one at a
   time and no long silence.
-- The local audio emergency handoff currently fails on a real LFM3 ASR miss (ZIP misheard);
-  see the eval report and case study. The video does not hide that.
+- The live local audio gate is **1/6**: the guard reprompts an uncertain ZIP rather than
+  inferring another customer's address, so the emergency packet is partial and marked; the
+  booking scenarios need a later yes after the spoken read-back. See the eval report and case
+  study. The video does not hide that.

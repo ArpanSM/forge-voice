@@ -261,7 +261,7 @@
       <tr><th>Check</th><th>Result</th><th>Caveat</th></tr>
       <tr><td>Hybrid text release gate (40 text + 10 critical repeats)</td><td class="bad">not_run_missing_groq_key</td><td>No Groq key in the final sweep. The optional Orca fallback is not the release gate and is also quota-blocked.</td></tr>
       <tr><td>Local text safety report (40 text)</td><td class="ok">pass</td><td>Task completion and latency are report-only.</td></tr>
-      <tr><td>Local audio safety report (6 audio)</td><td class="bad">emergency handoff fails</td><td>Real LFM3 ASR misheard the ZIP; packet incomplete; policy queued an honest callback.</td></tr>
+      <tr><td>Local audio safety report (6 audio)</td><td class="bad">1/6 · emergency handoff fails</td><td>Guard reprompts an uncertain ZIP instead of inferring it; packet partial and marked; same-turn yes rejected.</td></tr>
       <tr><td>Latency</td><td>p95 5.3 s · barge-in ~0.88 s</td><td>One 10-turn sample per profile; no production SLA; no sub-3 s claim.</td></tr>
     </table>
     <div class="caption"><p>The report keeps the failure gallery and caveats. A failed gate is not hidden behind
