@@ -29,9 +29,9 @@ these assets, not a release claim.
 **Evidence commit:** the reports below were regenerated from code commit
 `00764f7d5a0442fe6c218d35b881535b38116f75`; the tag points at the final commit after the
 report-output commit. Do not describe a report as generated at the tag unless its `git_sha`
-matches the tag. The
-hybrid baseline report is prior-commit evidence (`81e71cf`) with `not_run_provider_quota` 0/0;
-the local baseline report was regenerated at `00764f7` and is 0/40.
+matches the tag. The hybrid baseline report is prior-commit evidence (`81e71cf`) with
+`not_run_provider_quota` 0/0; the local baseline report was regenerated at `00764f7` and is
+0/40.
 
 **Why the hybrid gate is not green.** The final sweep had no Groq key, so the release-gate
 report is `not_run_missing_groq_key`. Earlier, Groq's free daily token budget had also been
