@@ -46,9 +46,12 @@ SERVICE_KEYWORDS: dict[str, tuple[tuple[str, str], ...]] = {
 
 INJECTION_RE = re.compile(
     r"(ignore your rules|ignore the rules|system prompt|for free|reveal your|"
-    r"another tenant|summit record|bk_summit|developer mode|jailbreak)",
+    r"another tenant|developer mode|jailbreak)",
     re.IGNORECASE,
 )
+OTHER_TENANT = {"harborlight": "summit", "summit": "harborlight"}
+OTHER_TENANT_PREFIX = {"harborlight": "bk_summit_", "summit": "bk_harborlight_"}
+CROSS_ACCESS_RE = re.compile(r"\b(booking|record|address|account|details)\b", re.IGNORECASE)
 HUMAN_RE = re.compile(
     r"(talk to|speak to|transfer me to)\s+(a\s+)?(person|human|someone|manager)"
     r"|want (a )?(person|human)|have (a )?(manager|person) call",
@@ -114,6 +117,15 @@ def extract_facts(
     preferred_day = _preferred_day(text, now)
     preferred_window = _preferred_window(text)
     preferred_hour = _preferred_hour(text)
+    other_tenant = OTHER_TENANT.get(tenant.tenant_id)
+    mentions_other = bool(
+        other_tenant
+        and (
+            re.search(rf"\b{other_tenant}\b", text, re.IGNORECASE)
+            or OTHER_TENANT_PREFIX.get(tenant.tenant_id, "") in text.lower()
+        )
+    )
+    cross_access = bool(mentions_other and CROSS_ACCESS_RE.search(text))
     return CallerFacts(
         text=text,
         service_id=_service_id(tenant, text),
@@ -128,10 +140,8 @@ def extract_facts(
         ),
         last_data_index=last_data_index,
         asks_again=bool(re.search(r"\bagain\b|\bonce more\b|\bto be sure\b", text, re.I)),
-        injection=bool(INJECTION_RE.search(text)),
-        mentions_other_tenant=bool(
-            re.search(r"\bsummit\b|\bother tenant\b|\bbk_summit_", text, re.I)
-        ),
+        injection=bool(INJECTION_RE.search(text)) or cross_access,
+        mentions_other_tenant=mentions_other,
         wants_human=bool(HUMAN_RE.search(text)),
         human_mode="live" if re.search(r"\btransfer me\b", text, re.I) else "callback",
         emergency_text=text,
@@ -213,6 +223,9 @@ STREET_SUFFIXES = {
 
 
 def _find_name(text: str) -> str:
+    match = INTRO_NAME_RE.search(text)
+    if match:
+        return match.group(1)
     for match in NAME_RE.finditer(text):
         name = match.group(1)
         for prefix in ("It's ", "I'm ", "My name is "):
@@ -221,9 +234,6 @@ def _find_name(text: str) -> str:
         if name.split()[-1].lower() in STREET_SUFFIXES:
             continue
         return name
-    match = INTRO_NAME_RE.search(text)
-    if match:
-        return match.group(1)
     return "Caller"
 
 

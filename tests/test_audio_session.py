@@ -396,3 +396,53 @@ def test_audio_session_rejects_a_booking_id_from_another_tenant(tmp_path: Path) 
     assert reply.ok is False
     assert reply.error is not None
     assert reply.error.code.value == "not_found"
+
+
+def test_trace_records_booking_details_for_the_eval_and_dashboard(tmp_path: Path) -> None:
+    trace = tmp_path / "trace.jsonl"
+    session = AudioCallSession.from_repo(
+        ROOT,
+        "harborlight",
+        "call_trace_0001",
+        outbox_path=tmp_path / "outbox.jsonl",
+        trace_path=trace,
+        now=NOW,
+    )
+    slot = first_slot(session)
+    session.book_appointment(slot_id=slot["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    session.note_caller_utterance("Yes, book it.")
+    session.book_appointment()
+
+    events = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines()]
+    booked = next(event for event in events if event["event"] == "booked")
+    assert booked["booking_id"] == session.booking_id
+    assert booked["service_id"] == "drain_cleaning"
+    assert booked["start"]
+    assert booked["address"]["zip"] == "94107"
+
+
+def test_trace_records_the_emergency_script_and_vulnerable_occupant(tmp_path: Path) -> None:
+    trace = tmp_path / "trace.jsonl"
+    session = AudioCallSession.from_repo(
+        ROOT,
+        "summit",
+        "call_trace_0002",
+        outbox_path=tmp_path / "outbox.jsonl",
+        trace_path=trace,
+        now=NOW,
+    )
+    session.create_emergency_ticket(
+        description="Our AC is out and I have a newborn baby.",
+        name="Dana Whitfield",
+        phone="+14085550142",
+        line1="88 Meridian Way",
+        city="San Jose",
+        state="CA",
+        zip="95125",
+    )
+
+    events = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines()]
+    ticket = next(event for event in events if event["event"] == "emergency_ticket")
+    assert ticket["category"] == "no_cooling"
+    assert ticket["safety_script"] == "no_cooling"
+    assert ticket["vulnerable_occupant"] is True

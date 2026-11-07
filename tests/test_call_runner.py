@@ -916,3 +916,53 @@ def test_outbox_write_failure_does_not_update_memory(tmp_path) -> None:
         outbox.send(record)
 
     assert outbox.messages == []
+
+
+def test_cancellation_noun_is_recognized_and_an_already_cancelled_booking_is_not_rewritten(
+    runner,
+) -> None:
+    def cancel_bk_0002(store) -> None:
+        store.cancel_booking(
+            "harborlight",
+            "bk_0002",
+            reason="eval_precondition",
+            cancelled_at=datetime(2026, 11, 6, 8, 0, tzinfo=LA),
+        )
+
+    result = runner.run_call(
+        _scenario(
+            [
+                "Did my cancellation go through?",
+                "Sam Rivera, 12 Alder Street, 94107.",
+                "Then cancel it again just to be sure.",
+                "Okay, thanks.",
+            ],
+            caller_phone="+14155550101",
+        ),
+        prepare=cancel_bk_0002,
+    )
+
+    assert result.outcome == "cancelled"
+    assert result.booking_id == "bk_0002"
+    assert result.already_cancelled is True
+    assert result.cancel_count == 0
+    assert result.write_count == 0
+
+
+def test_a_same_tenant_booking_id_is_not_a_cross_tenant_prompt_injection(runner) -> None:
+    result = runner.run_call(
+        _scenario(
+            [
+                "I need to cancel my AC appointment, booking bk_summit_0002.",
+                "Priya Shah, 88 Meridian Way, 95125.",
+                "I found another company.",
+                "Yes, cancel it.",
+            ],
+            tenant="summit",
+        )
+    )
+
+    assert result.outcome == "cancelled"
+    assert result.booking_id == "bk_summit_0002"
+    assert "prompt_injection_blocked" not in result.qa_flags
+    assert "cross_tenant_attempt" not in result.qa_flags

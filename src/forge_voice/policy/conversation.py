@@ -97,7 +97,7 @@ class ConversationPolicy:
             return CallIntent.human
         if any(pattern in text for pattern in PRICING_PATTERNS):
             return CallIntent.pricing_faq
-        if re.search(r"\bcancel\b", text):
+        if re.search(r"\b(cancel|cancellation)\b", text):
             return CallIntent.cancel
         if re.search(
             r"\b(reschedule|move\b.*\b(appointment|booking)|"

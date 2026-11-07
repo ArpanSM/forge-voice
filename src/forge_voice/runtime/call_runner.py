@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -102,7 +102,12 @@ class CallRunner:
         }
         return cls(tenants, seeds, now=now, outbox_path=outbox_path, transfer=transfer)
 
-    def run_call(self, scenario: TextScenario | CallScenario) -> CallResult:
+    def run_call(
+        self,
+        scenario: TextScenario | CallScenario,
+        *,
+        prepare: Callable[[SQLiteAdapter], None] | None = None,
+    ) -> CallResult:
         if isinstance(scenario, TextScenario):
             scenario = CallScenario.from_text_scenario(scenario)
         tenant = self._tenants.get(scenario.tenant)
@@ -114,6 +119,8 @@ class CallRunner:
         store = SQLiteAdapter(":memory:")
         for data in self._seeds.values():
             store.seed(data)
+        if prepare is not None:
+            prepare(store)
         outbox = Outbox(self._outbox_path)
         service = BookingService(tenant, store, outbox, clock)
         policy = ConversationPolicy(tenant, clock, service.tokens)
@@ -829,6 +836,10 @@ class _Run:
             ]
             if matching:
                 bookings = matching
+        if "cancel" in self.facts.text.lower():
+            cancelled = [booking for booking in bookings if booking.status == "cancelled"]
+            if cancelled:
+                bookings = cancelled
         return bookings[0] if bookings else None
 
     def _verify_ownership(self, booking: Any) -> bool:
