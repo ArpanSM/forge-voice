@@ -69,7 +69,10 @@ class LFM3ChunkedStream(tts.ChunkedStream):
             seed=_stable_seed(self.input_text),
         )
         payload["stream"] = True
-        parser = WavPcmStreamParser()
+        parser = WavPcmStreamParser(
+            expected_sample_rate=self._tts.sample_rate,
+            expected_channels=1,
+        )
         async with (
             httpx.AsyncClient(timeout=self._tts._timeout) as client,
             client.stream("POST", f"{self._tts._base_url}/tts", json=payload) as response,

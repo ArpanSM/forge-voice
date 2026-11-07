@@ -16,7 +16,7 @@ This is the exact local setup for the browser demo. It uses the open-source
 
 ```bash
 make install     # pip install -e ".[dev,demo]"
-make bootstrap   # livekit-server v1.13.11 (override with LIVEKIT_SERVER_VERSION)
+make bootstrap   # pinned, SHA-256-verified livekit-server v1.13.11
 ```
 
 `make bootstrap` is the only step that needs the network. Once `.tools/livekit-server`
@@ -43,9 +43,11 @@ Ports:
 Logs: `data/demo/livekit.log`, `data/demo/web.log`, `data/demo/agent.log`.
 Per-call traces: `data/calls/<call_id>.jsonl`.
 
-The first run writes `.env.local` with a random `LIVEKIT_API_SECRET` and the local
-`devkey`. It is gitignored and file mode 0600. Do not commit it or reuse the generated
-secret outside this local demo. `.env.example` contains placeholders only.
+`scripts/prepare_local_env.sh` writes `.env.local` with a random
+`LIVEKIT_API_SECRET` and the local `devkey`, or fills an empty secret in a copied
+`.env.example`. It is gitignored and file mode 0600. Do not commit it or reuse the
+generated secret outside this local demo. The server receives the key/secret through
+`LIVEKIT_KEYS` in its environment, never through argv, so `ps` does not show the secret.
 
 ## 4. Profiles
 
@@ -56,7 +58,9 @@ secret outside this local demo. `.env.example` contains placeholders only.
 
 STT and TTS are always local LFM3. If a container needs the host service, set
 `LFM3_AUDIO_BASE_URL=http://host.docker.internal:8082`; the session plan accepts that
-host for the local profile. The agent's LLM URL becomes `/v1` on the same base.
+host for the local profile. This is a **#8 Compose deployment path**: `make demo` runs
+host processes and uses `127.0.0.1`, so the container hostname is covered by a plan test
+but is not exercised by the #5 demo.
 
 `make demo-hybrid` fails closed with a clear message when `GROQ_API_KEY` is missing.
 
@@ -67,10 +71,12 @@ host for the local profile. The agent's LLM URL becomes `/v1` on the same base.
 3. The server issues a 120 s HMAC claim bound to tenant, call id, room and expiry.
 4. The claim is embedded in the LiveKit participant metadata, inside a JWT signed by the
    local LiveKit API secret, together with an explicit agent dispatch for `forge-voice`.
-5. The agent verifies the HMAC, expiry and tenant before constructing any policy state.
-   A missing/tampered claim shuts the job down.
+5. The agent verifies the HMAC, expiry and tenant, then requires the claim's room to
+   equal the joined LiveKit room and the room name to match the claim's tenant/call id.
+   A missing/tampered/wrong-room claim shuts the job down before any policy state exists.
 
-Room names are convenience only; the agent does not derive tenancy from them.
+Participant metadata is caller-mutable; the room binding is what prevents a caller from
+reusing another tenant's otherwise valid claim.
 
 ## 6. Demo script
 
@@ -92,6 +98,10 @@ Expected: one booking, one queued confirmation, no second write if the yes is re
 have a newborn baby." The policy intercepts before the model, creates a `no_cooling`
 ticket, speaks the 911-first script and then transfers or queues the on-call callback.
 
+**Silence:** the agent does not proactively prompt "Are you still there?" in this slice.
+The `audio_silence_01` scenario records recovery after the caller speaks again; the
+proactive prompt remains a known gap/backlog item, not a demo claim.
+
 **Barge-in:** while the agent is speaking, interrupt with a short phrase. The agent stops
 after ~0.3 s of speech and answers again. The first 3 s of a session are an AEC warmup
 where LiveKit disables interruptions by default; the scripted smoke waits past it.
@@ -106,7 +116,26 @@ the trace state and exactly one booking.
 make demo-smoke                                      # booking
 SMOKE_MODE=emergency SMOKE_TENANT=summit make demo-smoke
 SMOKE_MODE=barge-in make demo-smoke
+SMOKE_MODE=barge-in-booking make demo-smoke          # interrupt mid-booking, then commit
 ```
+
+`barge-in-booking` interrupts the slot offer with "Wait, the first slot is fine.", checks
+that the agent yields and recovers, then continues to "Yes, book it." and asserts exactly
+one committed booking. It does not lose the task.
+
+Optional browser-origin proof (Playwright + Chrome fake microphone, not a Python test
+dependency):
+
+```bash
+mkdir -p /tmp/opencode/pw && cd /tmp/opencode/pw && npm install playwright
+cd /path/to/forge-voice
+NODE_PATH=/tmp/opencode/pw/node_modules \
+  CHROME_PATH=/usr/bin/google-chrome node scripts/browser_smoke.js
+```
+
+The browser smoke opens the real page, presses Start call, waits for LiveKit connection
+and agent audio, and fails on page errors. In our run the agent trace recorded a `browser-*` participant, proving the browser-origin
+path rather than only the scripted caller.
 
 The smoke is a manual/smoke check, not a unit test. `make test` is offline and does not
 need LiveKit, LFM3 or a network.
@@ -123,6 +152,9 @@ degradation and writes:
 
 `make audio-check` verifies those hashes offline. `make corpus` copies the WAVs and hash
 manifest into `fixtures/corpus/scenarios/` so `make corpus-check` covers them.
+A full `make audio-fixtures` rerun on this host reproduced every displayed hash; the
+committed manifest verifies byte size, duration, tenant, seed, script digest and
+degradation. Unit tests use a fake TTS for the same deterministic assembly.
 
 ## 9. Troubleshooting
 

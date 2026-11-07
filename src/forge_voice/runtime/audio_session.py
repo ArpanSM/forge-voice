@@ -21,7 +21,7 @@ from forge_voice.adapters.outbox import Outbox
 from forge_voice.adapters.sqlite import SQLiteAdapter
 from forge_voice.clock import FixedClock
 from forge_voice.domain import Address
-from forge_voice.errors import StableError
+from forge_voice.errors import ErrorCode, StableError
 from forge_voice.models import StrictModel
 from forge_voice.policy import (
     BookingError,
@@ -35,25 +35,28 @@ from forge_voice.policy import (
 from forge_voice.policy.emergency import EmergencyTriage, triage_emergency
 from forge_voice.policy.handoff import HandoffCaller, HandoffPacket, HandoffService
 from forge_voice.runtime.interpreter import INTRO_NAME_RE, extract_facts
+from forge_voice.runtime.readback import format_readback
 from forge_voice.scheduling import next_business_day_window
 from forge_voice.tenants import TenantConfig, load_all_tenants
 from forge_voice.tools import ToolRegistry, ToolResult, ToolSession
-from forge_voice.tools.envelope import sanitize_args
+from forge_voice.tools.envelope import ToolError, sanitize_args
 from forge_voice.transfer import TransferSimulator
 
 Stage = Literal["info", "readback", "booked", "ticket", "handoff", "error"]
 
 
 class ToolReply(StrictModel):
+    """One model-visible tool result with the shared #4 error envelope."""
+
     ok: bool
     stage: Stage
     message: str
     data: dict[str, Any] = Field(default_factory=dict)
-    error: str | None = None
+    error: ToolError | None = None
     request_id: str | None = None
 
     def to_json(self) -> str:
-        return self.model_dump_json()
+        return self.model_dump_json(exclude_none=True)
 
 
 @dataclass
@@ -370,7 +373,7 @@ class AudioCallSession:
                 return replay
         if not slot_id or not service_id:
             return self._error(
-                "readback_required",
+                "confirmation_required",
                 "Choose a real slot from get_availability and collect the customer details "
                 "before I can read the booking back.",
             )
@@ -413,8 +416,8 @@ class AudioCallSession:
         return ToolReply(
             ok=True,
             stage="readback",
-            message=self._readback_text(readback),
-            data={"readback": self._readback_text(readback), "target": slot_id},
+            message=format_readback(readback),
+            data={"readback": format_readback(readback), "target": slot_id},
         )
 
     def reschedule_appointment(
@@ -458,8 +461,8 @@ class AudioCallSession:
         return ToolReply(
             ok=True,
             stage="readback",
-            message=self._readback_text(readback, action="move"),
-            data={"readback": self._readback_text(readback, action="move")},
+            message=format_readback(readback, action="move"),
+            data={"readback": format_readback(readback, action="move")},
         )
 
     def cancel_appointment(
@@ -495,8 +498,8 @@ class AudioCallSession:
         return ToolReply(
             ok=True,
             stage="readback",
-            message=self._readback_text(readback, action="cancel"),
-            data={"readback": self._readback_text(readback, action="cancel")},
+            message=format_readback(readback, action="cancel"),
+            data={"readback": format_readback(readback, action="cancel")},
         )
 
     def create_emergency_ticket(
@@ -755,7 +758,7 @@ class AudioCallSession:
         pending = self.pending
         if pending is None:
             return self._error(
-                "readback_required",
+                "confirmation_required",
                 "There is no read-back to confirm. Collect the details and read them back first.",
             )
         decision = self.policy.confirm(self.state, self.last_utterance)
@@ -771,7 +774,10 @@ class AudioCallSession:
                     "I did not hear a clear yes. Do not write anything. Repeat the read-back and "
                     "ask for an explicit yes or no."
                 ),
-                error="explicit_confirmation_required",
+                error=ToolError(
+                    code=ErrorCode.explicit_confirmation_required,
+                    message="The caller did not give an explicit yes.",
+                ),
             )
         token = self.policy.issue_confirmation(self.state)
         self.tool_session.confirmed = True
@@ -789,6 +795,7 @@ class AudioCallSession:
             self.booking_id = booking["booking_id"]
             self.policy.mark_written(self.state, target=pending.target, booking_id=self.booking_id)
             self.confirmation_queued = booking.get("confirmation", {}).get("sms") == "queued"
+            self.state.outcome = CallOutcome.booked
             message = (
                 f"Booked. {self._format(datetime.fromisoformat(booking['start']))} is "
                 "confirmed and a text confirmation is queued."
@@ -852,7 +859,13 @@ class AudioCallSession:
     def _from_result(self, result: ToolResult) -> ToolReply:
         if not result.ok:
             assert result.error is not None
-            return self._error(result.error.code.value, result.error.message, result.request_id)
+            return ToolReply(
+                ok=False,
+                stage="error",
+                message=result.error.message,
+                error=result.error,
+                request_id=result.request_id,
+            )
         return ToolReply(
             ok=True,
             stage="info",
@@ -879,7 +892,7 @@ class AudioCallSession:
             ok=False,
             stage="error",
             message=message,
-            error=str(code),
+            error=ToolError(code=ErrorCode(code), message=message),
             request_id=request_id,
         )
 
@@ -981,27 +994,6 @@ class AudioCallSession:
         self.customer_phone = customer.phone
         self.address = customer.address
         self.tool_session.caller_phone = customer.phone
-
-    def _readback_text(self, payload: ReadbackPayload, *, action: str = "book") -> str:
-        location = f"{payload.address.line1}, {payload.address.city} {payload.address.zip}"
-        when = self._format(datetime.fromisoformat(payload.start))
-        if action == "move":
-            return (
-                f"Just to confirm: move your {payload.service_name} to {when} with "
-                f"{payload.technician_name} at {location}, for {payload.customer_name} at "
-                f"{payload.contact_phone}. Should I move it?"
-            )
-        if action == "cancel":
-            return (
-                f"Just to confirm: cancel the {payload.service_name} on {when} with "
-                f"{payload.technician_name} at {location}, for {payload.customer_name} at "
-                f"{payload.contact_phone}. Should I cancel it?"
-            )
-        return (
-            f"Just to confirm: {payload.service_name} on {when} with "
-            f"{payload.technician_name} at {location}, for {payload.customer_name} at "
-            f"{payload.contact_phone}. Should I book that?"
-        )
 
     @staticmethod
     def _format(value: datetime) -> str:

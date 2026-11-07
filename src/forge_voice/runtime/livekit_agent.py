@@ -27,10 +27,11 @@ from livekit.plugins import openai, silero
 
 from forge_voice.config import AGENT_NAME, load_local_env
 from forge_voice.runtime.audio_session import AudioCallSession
+from forge_voice.runtime.claim_validation import validate_entrypoint
 from forge_voice.runtime.lfm3_audio import LFM3TTS
 from forge_voice.runtime.session import Profile, SessionPlan, plan_session
 from forge_voice.tenants import load_all_tenants
-from forge_voice.web.claims import ClaimError, TenantClaimSigner
+from forge_voice.web.claims import ClaimError
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_TRACE_DIR = ROOT / "data" / "calls"
@@ -323,18 +324,6 @@ def _trace_path(call_id: str) -> Path:
     return DEFAULT_TRACE_DIR / f"{call_id}.jsonl"
 
 
-def parse_participant_claim(metadata: str, secret: str) -> Any:
-    try:
-        payload = json.loads(metadata or "{}")
-    except json.JSONDecodeError as exc:
-        raise ClaimError("participant metadata is not valid JSON") from exc
-    token = payload.get("tenant_claim")
-    tenant = payload.get("tenant")
-    if not token or not tenant:
-        raise ClaimError("participant metadata has no signed tenant claim")
-    return TenantClaimSigner(secret, ttl_seconds=120).verify(token, expected_tenant=tenant)
-
-
 server = AgentServer()
 
 
@@ -346,20 +335,17 @@ async def entrypoint(ctx: JobContext) -> None:
     if not secret:
         ctx.shutdown(reason="LIVEKIT_API_SECRET is required to verify tenant claims")
         return
+    tenants = load_all_tenants(ROOT / "tenants")
     try:
-        claim = parse_participant_claim(participant.metadata, secret)
+        tenant, claim = validate_entrypoint(participant.metadata, ctx.room.name, secret, tenants)
     except ClaimError as exc:
         ctx.shutdown(reason=f"tenant claim rejected: {exc}")
-        return
-    tenants = load_all_tenants(ROOT / "tenants")
-    if claim.tenant not in tenants:
-        ctx.shutdown(reason=f"tenant claim names unknown tenant {claim.tenant!r}")
         return
 
     trace_path = _trace_path(claim.call_id)
     call = AudioCallSession.from_repo(
         ROOT,
-        claim.tenant,
+        tenant.tenant_id,
         claim.call_id,
         outbox_path=ROOT / "data" / "outbox.jsonl",
         trace_path=trace_path,
@@ -367,7 +353,7 @@ async def entrypoint(ctx: JobContext) -> None:
     call.trace_event(
         "room_connected",
         room=ctx.room.name,
-        tenant=claim.tenant,
+        tenant=tenant.tenant_id,
         participant=participant.identity,
     )
     plan = plan_session(os.environ.get("FORGE_VOICE_PROFILE", Profile.local.value), os.environ)

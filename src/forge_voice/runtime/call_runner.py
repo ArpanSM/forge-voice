@@ -37,6 +37,7 @@ from forge_voice.runtime.models import (
     ToolCallRecord,
     TranscriptTurn,
 )
+from forge_voice.runtime.readback import format_readback
 from forge_voice.scenarios.models import TextScenario
 from forge_voice.scheduling import next_business_day_window
 from forge_voice.tenants import TenantConfig, load_all_tenants
@@ -271,7 +272,7 @@ class _Run:
         self.policy.begin_offer(self.state)
         readback = self.service.booking_readback(slot["slot_id"], customer)
         self.state.service_id = readback.service_id
-        if not self._authorize_write(readback, self._readback_text(readback, action="book")):
+        if not self._authorize_write(readback, format_readback(readback)):
             return
         args = {
             "service_id": readback.service_id,
@@ -292,9 +293,7 @@ class _Run:
                 slot = self._choose_slot(slots)
                 self.policy.begin_offer(self.state)
                 readback = self.service.booking_readback(slot["slot_id"], customer)
-                if not self._authorize_write(
-                    readback, self._readback_text(readback, action="book")
-                ):
+                if not self._authorize_write(readback, format_readback(readback)):
                     return
                 args["slot_id"] = slot["slot_id"]
                 result = self._tool("book_appointment", args)
@@ -375,7 +374,7 @@ class _Run:
         readback = self.service.reschedule_readback(booking.booking_id, slot["slot_id"])
         if not self._authorize_write(
             readback,
-            self._readback_text(readback, action="move", old_start=booking.start),
+            format_readback(readback, action="move", old_start=booking.start),
         ):
             return
         old_slot = self.store.get_slot(self.tenant.tenant_id, booking.slot_id)
@@ -404,7 +403,7 @@ class _Run:
                 readback = self.service.reschedule_readback(booking.booking_id, slot["slot_id"])
                 if not self._authorize_write(
                     readback,
-                    self._readback_text(readback, action="move", old_start=booking.start),
+                    format_readback(readback, action="move", old_start=booking.start),
                 ):
                     return
                 args["new_slot_id"] = slot["slot_id"]
@@ -471,7 +470,7 @@ class _Run:
         self.state.intent = CallIntent.cancel
         self.policy.begin_offer(self.state)
         readback = self.service.cancel_readback(booking.booking_id)
-        if not self._authorize_write(readback, self._readback_text(readback, action="cancel")):
+        if not self._authorize_write(readback, format_readback(readback, action="cancel")):
             return
         result = self._tool(
             "cancel_appointment",
@@ -928,30 +927,6 @@ class _Run:
         if self.tenant.knowledge_base.faq:
             return self.tenant.knowledge_base.faq[0].answer
         return None
-
-    def _readback_text(
-        self, payload: ReadbackPayload, *, action: str, old_start: datetime | None = None
-    ) -> str:
-        location = f"{payload.address.line1}, {payload.address.city} {payload.address.zip}"
-        when = self._format(datetime.fromisoformat(payload.start))
-        if action == "move" and old_start is not None:
-            return (
-                f"Just to confirm: move your {payload.service_name} from "
-                f"{self._format(old_start)} to {when} with {payload.technician_name} "
-                f"at {location}, for {payload.customer_name} at {payload.contact_phone}. "
-                "Should I move it?"
-            )
-        if action == "cancel":
-            return (
-                f"Just to confirm: cancel the {payload.service_name} on {when} with "
-                f"{payload.technician_name} at {location}, for {payload.customer_name} "
-                f"at {payload.contact_phone}. Should I cancel it?"
-            )
-        return (
-            f"Just to confirm: {payload.service_name} on {when} with "
-            f"{payload.technician_name} at {location}, for {payload.customer_name} "
-            f"at {payload.contact_phone}. Should I book that?"
-        )
 
     def _record_booking(self, booking_id: str, *, replayed: bool = False) -> None:
         if booking_id not in self.booking_ids:

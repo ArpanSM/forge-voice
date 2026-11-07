@@ -64,22 +64,36 @@ def parse_pcm16_wav(data: bytes) -> Pcm16Wav:
 class WavPcmStreamParser:
     """Parse a streaming RIFF/WAVE response into raw PCM chunks.
 
-    The parser keeps the full RIFF prefix until the `data` chunk is found, so a
-    header split across arbitrary network chunks is parsed correctly. Once the
-    declared data length is reached, any trailing bytes are ignored.
+    The parser validates the `fmt ` chunk (PCM16, expected rate and channels)
+    before emitting audio. A finite `data` chunk must be complete by `finish()`;
+    the local LFM3 streaming endpoint uses the 0x7fffffff sentinel for an
+    unknown length, which is accepted and closed at end of stream.
     """
 
-    def __init__(self) -> None:
+    STREAMING_SIZE = 0x7FFFFFFF
+
+    def __init__(
+        self,
+        *,
+        expected_sample_rate: int = 24000,
+        expected_channels: int = 1,
+    ) -> None:
+        self.expected_sample_rate = expected_sample_rate
+        self.expected_channels = expected_channels
+        self.sample_rate: int | None = None
+        self.channels: int | None = None
         self._buf = bytearray()
         self._pos = 0
         self._riff_checked = False
+        self._fmt_seen = False
+        self._data_started = False
+        self._streaming = False
         self._data_remaining: int | None = None
+        self._streamed_bytes = 0
         self._done = False
 
     def feed(self, chunk: bytes) -> list[bytes]:
-        if not chunk:
-            return []
-        if self._done:
+        if not chunk or self._done:
             return []
         self._buf.extend(chunk)
         out: list[bytes] = []
@@ -92,7 +106,7 @@ class WavPcmStreamParser:
             self._riff_checked = True
             self._pos = 12
 
-        if self._data_remaining is not None:
+        if self._data_started:
             out.extend(self._drain_data())
             return out
 
@@ -102,33 +116,81 @@ class WavPcmStreamParser:
             chunk_id = bytes(self._buf[self._pos : self._pos + 4])
             size = struct.unpack_from("<I", self._buf, self._pos + 4)[0]
             body_start = self._pos + 8
+            if chunk_id == b"fmt ":
+                if len(self._buf) < body_start + size:
+                    return out
+                self._parse_fmt(bytes(self._buf[body_start : body_start + size]))
+                self._pos = body_start + size + (size % 2)
+                continue
             if chunk_id == b"data":
-                self._data_remaining = size
+                if not self._fmt_seen:
+                    raise WavFormatError("WAV data chunk appeared before a fmt chunk")
+                self._data_started = True
+                self._streaming = size >= self.STREAMING_SIZE
+                self._data_remaining = None if self._streaming else size
                 self._pos = body_start
                 out.extend(self._drain_data())
                 return out
             if len(self._buf) < body_start + size:
                 return out
-            self._pos = body_start + size
-            if size % 2 == 1:
-                self._pos += 1
+            self._pos = body_start + size + (size % 2)
+
+    def _parse_fmt(self, body: bytes) -> None:
+        if len(body) < 16:
+            raise WavFormatError("WAV fmt chunk is too short")
+        audio_format, channels, sample_rate, byte_rate, block_align, bits = struct.unpack(
+            "<HHIIHH", body[:16]
+        )
+        if audio_format != 1:
+            raise WavFormatError("LFM3 audio must be uncompressed PCM")
+        if bits != 16:
+            raise WavFormatError("LFM3 audio must be 16-bit PCM")
+        if channels != self.expected_channels:
+            raise WavFormatError(
+                f"LFM3 audio has {channels} channels; expected {self.expected_channels}"
+            )
+        if sample_rate != self.expected_sample_rate:
+            raise WavFormatError(
+                f"LFM3 audio is {sample_rate} Hz; expected {self.expected_sample_rate} Hz"
+            )
+        if block_align != channels * 2 or byte_rate != sample_rate * block_align:
+            raise WavFormatError("WAV fmt chunk has inconsistent block alignment")
+        self.sample_rate = sample_rate
+        self.channels = channels
+        self._fmt_seen = True
 
     def _drain_data(self) -> list[bytes]:
-        out: list[bytes] = []
-        if self._data_remaining is None or self._data_remaining <= 0:
-            self._done = True
-            return out
+        if not self._data_started:
+            return []
         available = len(self._buf) - self._pos
+        if available <= 0:
+            if not self._streaming and self._data_remaining == 0:
+                self._done = True
+            return []
+        if self._streaming:
+            out = [bytes(self._buf[self._pos :])]
+            self._streamed_bytes += len(out[0])
+            self._pos = len(self._buf)
+            return out
+        if self._data_remaining is None:
+            return []
         take = min(self._data_remaining, available)
-        if take:
-            out.append(bytes(self._buf[self._pos : self._pos + take]))
-            self._pos += take
-            self._data_remaining -= take
+        out = [bytes(self._buf[self._pos : self._pos + take])]
+        self._pos += take
+        self._data_remaining -= take
         if self._data_remaining == 0:
             self._done = True
         return out
 
     def finish(self) -> list[bytes]:
+        if not self._fmt_seen:
+            raise WavFormatError("WAV stream ended before a fmt chunk")
+        if not self._data_started:
+            raise WavFormatError("WAV stream ended before a data chunk")
+        if not self._streaming and not self._done:
+            raise WavFormatError("truncated WAV data")
+        if self._streaming and self._streamed_bytes == 0:
+            raise WavFormatError("streamed WAV contained no audio data")
         return []
 
 

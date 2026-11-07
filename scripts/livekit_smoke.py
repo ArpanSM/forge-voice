@@ -12,6 +12,8 @@ import argparse
 import asyncio
 import hashlib
 import json
+import os
+import sys
 import time
 import urllib.request
 import wave
@@ -164,6 +166,14 @@ class AgentAudio:
     def has_voice(self) -> bool:
         return bool(self.frames)
 
+    async def aclose(self) -> None:
+        for stream in self.streams:
+            await stream.aclose()
+        for task in self.tasks:
+            task.cancel()
+        if self.tasks:
+            await asyncio.gather(*self.tasks, return_exceptions=True)
+
 
 async def publish_wav(source: rtc.AudioSource, path: Path, *, trailing_ms: int = 500) -> float:
     rate, samples = read_wav(path)
@@ -196,7 +206,11 @@ async def publish_wav(source: rtc.AudioSource, path: Path, *, trailing_ms: int =
 
 
 async def run(web_url: str, tenant: str, timeout: float, mode: str) -> dict:
-    barge_path = tts_wav("Wait, I need a drain cleaning.", seed=999) if mode == "barge-in" else None
+    barge_path = None
+    if mode == "barge-in":
+        barge_path = tts_wav("Wait, I need a drain cleaning.", seed=999)
+    elif mode == "barge-in-booking":
+        barge_path = tts_wav("Wait, the first slot is fine.", seed=998)
     token = http_json(f"{web_url}/token", payload={"tenant": tenant, "identity": "smoke-caller"})
     call_id = token["call_id"]
     trace = Trace(ROOT / "data" / "calls" / f"{call_id}.jsonl")
@@ -236,11 +250,33 @@ async def run(web_url: str, tenant: str, timeout: float, mode: str) -> dict:
         await audio.wait_quiet(timeout=timeout)
         script = EMERGENCY_TURNS if mode == "emergency" else BOOKING_TURNS
         turns: list[dict] = []
+        barge_result: dict | None = None
         for index, text in enumerate(script, start=1):
             path = tts_wav(text, seed=700 + index)
             await trace.state({"listening", "idle"}, timeout)
             speech_end = await publish_wav(source, path)
             speaking = await trace.state({"speaking"}, timeout, since=speech_end)
+            if mode == "barge-in-booking" and index == 5:
+                assert barge_path is not None
+                interrupt_start = time.time()
+                await publish_wav(source, barge_path, trailing_ms=200)
+                stopped = await trace.state({"listening", "idle"}, timeout, since=interrupt_start)
+                recovered = await trace.state({"speaking"}, timeout, since=stopped["ts"])
+                await trace.state({"listening", "idle"}, timeout, since=recovered["ts"])
+                barge_result = {
+                    "yield_ms": round((stopped["ts"] - interrupt_start) * 1000),
+                    "recovered": True,
+                }
+                turns.append(
+                    {
+                        "turn": index,
+                        "text": text,
+                        "spoken": True,
+                        "interrupted_with": "Wait, the first slot is fine.",
+                    }
+                )
+                print(f"  turn {index}: {text}  [interrupted mid-booking]", flush=True)
+                continue
             await trace.state({"listening", "idle"}, timeout, since=speaking["ts"])
             await audio.wait_quiet(quiet_s=0.6, timeout=15)
             turns.append({"turn": index, "text": text, "spoken": True})
@@ -285,28 +321,39 @@ async def run(web_url: str, tenant: str, timeout: float, mode: str) -> dict:
             "booking_id": booked.get("booking_id"),
             "replayed": booked.get("replayed"),
             "confirmation_queued": booked.get("confirmation_queued"),
+            "barge_in_booking": barge_result,
             "agent_audio_frames": len(audio.frames),
             "trace": str(trace.path),
         }
     finally:
+        await audio.aclose()
         await room.disconnect()
+        # Let the LiveKit FFI teardown settle before interpreter shutdown.
+        await asyncio.sleep(0.4)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--web-url", default="http://127.0.0.1:8000")
     parser.add_argument("--tenant", default="harborlight")
-    parser.add_argument("--mode", choices=["booking", "emergency", "barge-in"], default="booking")
+    parser.add_argument(
+        "--mode",
+        choices=["booking", "emergency", "barge-in", "barge-in-booking"],
+        default="booking",
+    )
     parser.add_argument("--timeout", type=float, default=240.0)
     args = parser.parse_args()
     try:
         result = asyncio.run(run(args.web_url, args.tenant, args.timeout, args.mode))
     except Exception as exc:
         print(f"SMOKE FAILED: {type(exc).__name__}: {exc}")
-        return 1
+        sys.stdout.flush()
+        os._exit(1)
     print("SMOKE PASSED")
     print(json.dumps(result, indent=2, default=str))
-    return 0
+    sys.stdout.flush()
+    # The LiveKit FFI can panic in a non-unwinding teardown after a short call.
+    os._exit(0)
 
 
 if __name__ == "__main__":

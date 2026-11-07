@@ -2,14 +2,28 @@
 
 from __future__ import annotations
 
+import html
 import json
+
+
+def _safe_json(value: object) -> str:
+    return (
+        json.dumps(value, separators=(",", ":"))
+        .replace("&", "\\u0026")
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
+    )
 
 
 def render_page(tenants: list[dict[str, str]]) -> str:
     options = "\n".join(
-        f'<option value="{tenant["slug"]}">{tenant["name"]}</option>' for tenant in tenants
+        f'<option value="{html.escape(str(tenant["slug"]), quote=True)}">'
+        f"{html.escape(str(tenant['name']), quote=True)}</option>"
+        for tenant in tenants
     )
-    tenant_json = json.dumps(tenants, separators=(",", ":")).replace("</", "<\\/")
+    tenant_json = _safe_json(tenants)
     return _PAGE.replace("__TENANT_OPTIONS__", options).replace("__TENANTS_JSON__", tenant_json)
 
 
@@ -19,6 +33,7 @@ _PAGE = """<!doctype html>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Forge Voice — local browser demo</title>
+  <link rel="icon" href="data:," />
   <script src="/static/livekit-client.umd.min.js"></script>
   <style>
     :root { color-scheme: light dark; font-family: system-ui, sans-serif; }

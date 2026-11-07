@@ -79,7 +79,12 @@ make demo-smoke     # start the stack and run a scripted WebRTC booking
 ```bash
 SMOKE_MODE=emergency SMOKE_TENANT=summit make demo-smoke
 SMOKE_MODE=barge-in make demo-smoke
+SMOKE_MODE=barge-in-booking make demo-smoke   # interrupt mid-booking, then commit
 ```
+
+An optional Playwright/Chrome fake-microphone check of the real page is documented in
+`docs/local-voice-demo.md`. The scripted WebRTC caller remains the repeatable automated
+proof; the human browser check is manual.
 
 ## Layout
 
@@ -126,4 +131,7 @@ These are documented, not hidden, and are not fixed by #5:
 - Local LFM3 is a 2B model on a 4 GB GPU. The spike measured p95 first audio 5.3 s and
   barge-in ~0.88 s; latency is report-only, not a sub-3 s claim.
 - The automated smoke uses synthetic LFM3 caller audio, not a human handset or acoustic echo
-  path. The hybrid profile requires a free Groq key.
+  path. The optional browser check uses Chrome's fake microphone and is not a human test.
+  The hybrid profile requires a free Groq key.
+- `host.docker.internal:8082` is accepted by the session plan for the #8 container
+  deployment; the #5 `make demo` host process path uses `127.0.0.1` and does not exercise it.

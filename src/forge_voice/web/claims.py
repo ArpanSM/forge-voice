@@ -12,8 +12,14 @@ import hmac
 import json
 import secrets
 from datetime import UTC, datetime, timedelta
+from typing import Literal
+
+from pydantic import Field
 
 from forge_voice.models import StrictModel
+
+DEFAULT_TTL_SECONDS = 120
+MAX_CLOCK_SKEW_SECONDS = 30
 
 
 class ClaimError(ValueError):
@@ -21,13 +27,13 @@ class ClaimError(ValueError):
 
 
 class TenantClaim(StrictModel):
-    version: int = 1
-    tenant: str
-    call_id: str
-    room: str
+    version: Literal[1] = 1
+    tenant: str = Field(min_length=1)
+    call_id: str = Field(min_length=1)
+    room: str = Field(min_length=1)
     issued_at: datetime
     expires_at: datetime
-    nonce: str
+    nonce: str = Field(min_length=8)
 
 
 class SignedTenantClaim(StrictModel):
@@ -58,7 +64,7 @@ def _payload_bytes(claim: TenantClaim) -> bytes:
 class TenantClaimSigner:
     """Issue and verify the signed tenant identity used by the audio path."""
 
-    def __init__(self, secret: str, *, ttl_seconds: int = 120) -> None:
+    def __init__(self, secret: str, *, ttl_seconds: int = DEFAULT_TTL_SECONDS) -> None:
         if not secret:
             raise ClaimError("a signing secret is required")
         if ttl_seconds <= 0:
@@ -112,6 +118,10 @@ class TenantClaimSigner:
         except (ValueError, TypeError) as exc:
             raise ClaimError("tenant claim payload is invalid") from exc
         current = (now or datetime.now(UTC)).astimezone(UTC)
+        if claim.expires_at <= claim.issued_at:
+            raise ClaimError("tenant claim expiry is not after issue time")
+        if claim.issued_at > current + timedelta(seconds=MAX_CLOCK_SKEW_SECONDS):
+            raise ClaimError("tenant claim was issued in the future")
         if current >= claim.expires_at:
             raise ClaimError("tenant claim expired")
         if expected_tenant is not None and claim.tenant != expected_tenant:

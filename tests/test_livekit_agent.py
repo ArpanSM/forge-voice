@@ -1,69 +1,75 @@
-"""The LiveKit worker wires the tested plan and tools without changing policy."""
+"""The LiveKit worker wires the tested plan and tools without changing policy.
+
+These tests need the optional demo extra. The offline plan/tools/policy tests run
+without LiveKit and are the fallback when this module is skipped explicitly.
+"""
 
 from __future__ import annotations
 
-import json
-from datetime import datetime
+import warnings
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 import pytest
 
-pytest.importorskip("livekit.agents")
+try:
+    import livekit.agents  # noqa: F401
+
+    HAS_LIVEKIT = True
+except ImportError:
+    HAS_LIVEKIT = False
+
+if not HAS_LIVEKIT:
+    pytest.skip(
+        "livekit-agents is an optional demo dependency; offline policy tests still run",
+        allow_module_level=True,
+    )
 
 from forge_voice.runtime import livekit_agent
-from forge_voice.runtime.audio_session import AudioCallSession
 from forge_voice.runtime.session import plan_session
-from forge_voice.web.claims import ClaimError, TenantClaimSigner
 
 ROOT = Path(__file__).resolve().parents[1]
-NOW = datetime(2026, 11, 6, 8, 0, tzinfo=ZoneInfo("America/Los_Angeles"))
 
 
-class RecordingSession:
-    def __init__(self, **kwargs) -> None:
-        self.kwargs = kwargs
-
-
-class RecordingStt:
-    def __init__(self, **kwargs) -> None:
-        self.kwargs = kwargs
-
-
-class RecordingLlm:
-    def __init__(self, **kwargs) -> None:
-        self.kwargs = kwargs
-
-
-class RecordingTts:
-    def __init__(self, **kwargs) -> None:
-        self.kwargs = kwargs
-
-
-def test_build_agent_session_routes_hybrid_llm_to_groq_and_audio_to_lfm3(monkeypatch) -> None:
-    monkeypatch.setattr(livekit_agent, "AgentSession", RecordingSession)
-    monkeypatch.setattr(livekit_agent, "LFM3TTS", RecordingTts)
-    monkeypatch.setattr(livekit_agent.openai, "STT", RecordingStt)
-    monkeypatch.setattr(livekit_agent.openai, "LLM", RecordingLlm)
-    monkeypatch.setattr(livekit_agent.silero.VAD, "load", lambda: "vad")
-
+def test_build_agent_session_uses_local_lfm3_audio_and_hybrid_groq_llm() -> None:
     plan = plan_session("hybrid", {"GROQ_API_KEY": "test-key"})
-    session = livekit_agent.build_agent_session(plan)
 
-    assert isinstance(session, RecordingSession)
-    assert session.kwargs["stt"].kwargs["base_url"] == "http://127.0.0.1:8082/v1"
-    assert session.kwargs["tts"].kwargs["base_url"] == "http://127.0.0.1:8082"
-    llm = session.kwargs["llm"]
-    assert llm.kwargs["base_url"] == "https://api.groq.com/openai/v1"
-    assert llm.kwargs["model"] == "qwen/qwen3.8-27b"
-    assert session.kwargs["user_away_timeout"] is None
-    turn = session.kwargs["turn_handling"]
-    assert turn["interruption"]["enabled"] is True
-    assert turn["endpointing"]["max_delay"] == 1.0
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        session = livekit_agent.build_agent_session(plan)
+
+    assert session.stt.model == "lfm3-audio-2b"
+    assert session.tts.model == "lfm3-audio-2b"
+    assert session.llm.model == "qwen/qwen3.8-27b"
+    assert session.options.user_away_timeout is None
+    assert session.options.turn_handling["interruption"]["enabled"] is True
+    assert session.options.turn_handling["interruption"]["min_words"] == 0
+    assert session.options.turn_handling["endpointing"]["max_delay"] == 1.0
+
+
+def test_build_agent_session_keeps_the_local_profile_fully_local() -> None:
+    plan = plan_session("local", {})
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        session = livekit_agent.build_agent_session(plan)
+
+    assert session.llm.model == "lfm3-audio-2b"
+    assert session.stt.model == "lfm3-audio-2b"
+    assert session.tts.provider == "lfm3"
 
 
 def test_build_tools_exposes_exactly_the_eight_product_tools() -> None:
-    call = AudioCallSession.from_repo(ROOT, "harborlight", "call_tools_0001", now=NOW)
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from forge_voice.runtime.audio_session import AudioCallSession
+
+    call = AudioCallSession.from_repo(
+        ROOT,
+        "harborlight",
+        "call_tools_0001",
+        now=datetime(2026, 11, 6, 8, 0, tzinfo=ZoneInfo("America/Los_Angeles")),
+    )
 
     tools = livekit_agent.build_tools(call)
 
@@ -77,21 +83,3 @@ def test_build_tools_exposes_exactly_the_eight_product_tools() -> None:
         "create_emergency_ticket",
         "transfer_to_human",
     ]
-
-
-def test_participant_claim_must_be_signed_and_match_its_tenant() -> None:
-    signer = TenantClaimSigner("local-test-secret-that-is-long-enough", ttl_seconds=120)
-    signed = signer.issue(
-        "harborlight",
-        call_id="call_1",
-        room="forge-voice-harborlight-call_1",
-        now=datetime.now().astimezone(),
-    )
-    metadata = json.dumps({"tenant": "harborlight", "tenant_claim": signed.token})
-
-    claim = livekit_agent.parse_participant_claim(metadata, "local-test-secret-that-is-long-enough")
-    assert claim.tenant == "harborlight"
-
-    tampered = metadata.replace("harborlight", "summit")
-    with pytest.raises(ClaimError):
-        livekit_agent.parse_participant_claim(tampered, "local-test-secret-that-is-long-enough")

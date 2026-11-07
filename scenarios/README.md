@@ -8,6 +8,8 @@ hard-gate labels and required fields.
 `audio_scripts.yaml` is the caller-script source for the ten audio scenarios. It is validated
 against the manifest audio ids, tenants and degradation method. Each turn has optional
 `pause_before_ms` / `pause_after_ms`; `audio_silence_01` starts with three seconds of silence.
+The silence scenario records recovery after the caller resumes; it does **not** claim a
+proactive "Are you still there?" prompt. That prompt is a documented known gap.
 
 `make corpus` derives the following paths:
 

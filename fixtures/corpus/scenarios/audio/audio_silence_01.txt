@@ -1,7 +1,7 @@
 # scenario: audio_silence_01
 # tenant: harborlight
 # persona: Caller goes silent after the greeting
-# goal: Pause, prompt once or twice, then recover and book or hand off; no invented data.
+# goal: Pause, then recover and book or hand off after the caller speaks; no proactive silence prompt is claimed (known gap).
 # degradation: none
 
 [pause 3000 ms]

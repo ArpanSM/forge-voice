@@ -22,7 +22,7 @@ from pydantic import Field
 
 from forge_voice.models import StrictModel
 from forge_voice.tenants import TenantConfig, load_all_tenants
-from forge_voice.web.claims import ClaimError, TenantClaimSigner
+from forge_voice.web.claims import DEFAULT_TTL_SECONDS, ClaimError, TenantClaimSigner
 from forge_voice.web.page import render_page
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -192,7 +192,7 @@ def create_app_from_env(root: Path | str | None = None) -> FastAPI:
     signer = None
     if api_secret:
         try:
-            signer = TenantClaimSigner(api_secret, ttl_seconds=120)
+            signer = TenantClaimSigner(api_secret, ttl_seconds=DEFAULT_TTL_SECONDS)
         except ClaimError:
             signer = None
     minter = None

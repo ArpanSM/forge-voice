@@ -2,11 +2,20 @@
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from pydantic import ValidationError
 
-from forge_voice.web.claims import ClaimError, TenantClaimSigner
+from forge_voice.web.claims import (
+    ClaimError,
+    TenantClaim,
+    TenantClaimSigner,
+    _b64encode,
+    _payload_bytes,
+)
 
 SECRET = "local-test-secret-that-is-long-enough-for-hmac"
 NOW = datetime(2026, 11, 7, 12, 0, tzinfo=UTC)
@@ -69,3 +78,36 @@ def test_tenant_claim_rejects_an_unknown_tenant_when_expected_tenant_is_checked(
 
     with pytest.raises(ClaimError, match="tenant"):
         signer().verify(signed.token, now=NOW, expected_tenant="summit")
+
+
+def test_claim_schema_rejects_an_unknown_version_or_short_nonce() -> None:
+    base = {
+        "tenant": "harborlight",
+        "call_id": "call_1",
+        "room": "forge-voice-harborlight-call_1",
+        "issued_at": NOW,
+        "expires_at": NOW + timedelta(seconds=120),
+        "nonce": "12345678",
+    }
+
+    with pytest.raises(ValidationError):
+        TenantClaim.model_validate({**base, "version": 2})
+    with pytest.raises(ValidationError):
+        TenantClaim.model_validate({**base, "nonce": "short"})
+
+
+def test_claim_signer_rejects_an_expiry_before_issue_time() -> None:
+    claim = TenantClaim(
+        tenant="harborlight",
+        call_id="call_1",
+        room="forge-voice-harborlight-call_1",
+        issued_at=NOW,
+        expires_at=NOW - timedelta(seconds=1),
+        nonce="12345678",
+    )
+    payload = _payload_bytes(claim)
+    signature = hmac.new(SECRET.encode("utf-8"), payload, hashlib.sha256).digest()
+    token = f"{_b64encode(payload)}.{_b64encode(signature)}"
+
+    with pytest.raises(ClaimError, match="expiry"):
+        signer().verify(token, now=NOW)

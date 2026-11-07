@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -95,6 +96,7 @@ def test_book_commits_exactly_one_booking_after_explicit_yes(session: AudioCallS
     assert session.store.count_bookings(session.tenant.tenant_id) == before + 1
     assert session.store.count_confirmations(session.tenant.tenant_id) == 1
     assert session.state.write_count == 1
+    assert session.state.outcome == "booked"
 
 
 def test_replaying_the_same_booking_returns_it_without_a_second_write(
@@ -126,7 +128,9 @@ def test_book_without_an_explicit_yes_is_refused(session: AudioCallSession) -> N
     reply = session.book_appointment()
 
     assert reply.ok is False
-    assert reply.error == "explicit_confirmation_required"
+    assert reply.error is not None
+    assert reply.error.code.value == "explicit_confirmation_required"
+    assert reply.error.message
     assert session.store.count_bookings(session.tenant.tenant_id) == before
 
 
@@ -139,7 +143,8 @@ def test_a_new_offer_clears_the_pending_readback(session: AudioCallSession) -> N
     reply = session.book_appointment()
 
     assert reply.ok is False
-    assert reply.error == "readback_required"
+    assert reply.error is not None
+    assert reply.error.code.value == "confirmation_required"
 
 
 def test_emergency_triage_creates_a_ticket_with_a_911_script(tmp_path: Path) -> None:
@@ -217,7 +222,8 @@ def test_incomplete_live_handoff_does_not_claim_a_transfer(tmp_path: Path) -> No
     refused = session.transfer_to_human(reason="caller_request", mode="live")
 
     assert refused.ok is False
-    assert refused.error == "invalid_phone"
+    assert refused.error is not None
+    assert refused.error.code.value == "invalid_phone"
     assert "number" in refused.message.lower()
 
     queued = session.transfer_to_human(
@@ -283,6 +289,28 @@ def test_non_emergency_text_does_not_trigger_the_emergency_step(tmp_path: Path) 
     assert len(session.store.list_tickets("harborlight")) == before
 
 
+def test_tool_failure_serializes_the_shared_error_envelope(session: AudioCallSession) -> None:
+    reply = session.book_appointment()
+
+    payload = json.loads(reply.to_json())
+
+    assert payload["ok"] is False
+    assert payload["stage"] == "error"
+    assert payload["error"]["code"] == "confirmation_required"
+    assert payload["error"]["message"]
+    assert payload["error"]["retryable"] is False
+    assert "details" in payload["error"]
+
+
+def test_tool_success_omits_the_error_key(session: AudioCallSession) -> None:
+    reply = session.get_service_area(zip="94107", service_id="drain_cleaning")
+
+    payload = json.loads(reply.to_json())
+
+    assert payload["ok"] is True
+    assert "error" not in payload
+
+
 def test_audio_session_rejects_a_booking_id_from_another_tenant(tmp_path: Path) -> None:
     session = AudioCallSession.from_repo(
         ROOT,
@@ -295,4 +323,5 @@ def test_audio_session_rejects_a_booking_id_from_another_tenant(tmp_path: Path) 
     reply = session.lookup_customer(booking_id="bk_summit_0001", include_bookings=True)
 
     assert reply.ok is False
-    assert reply.error == "not_found"
+    assert reply.error is not None
+    assert reply.error.code.value == "not_found"

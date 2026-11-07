@@ -8,6 +8,8 @@ import hashlib
 import io
 import json
 import math
+import os
+import shutil
 import sys
 import wave
 from collections.abc import Mapping
@@ -48,6 +50,15 @@ class AudioScriptSet(StrictModel):
     scenarios: dict[str, AudioScript]
 
 
+class FixtureTts(StrictModel):
+    provider: Literal["lfm3"]
+    model: str = Field(min_length=1)
+    voice: str = Field(min_length=1)
+    language: str = Field(min_length=1)
+    sample_rate: int = Field(ge=8000)
+    temperature: Literal[0.0]
+
+
 class FixtureEntry(StrictModel):
     scenario_id: str
     tenant: str
@@ -58,14 +69,14 @@ class FixtureEntry(StrictModel):
     sample_rate: int = SAMPLE_RATE
     channels: int = 1
     turns_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    degradation: str | None = None
+    degradation: Literal["badline", "lowmic", "packetloss", "noisy"] | None = None
     seed: int
 
 
 class FixtureManifest(StrictModel):
     schema_version: Literal[1]
     generator: str
-    tts: dict[str, Any]
+    tts: FixtureTts
     fixtures: list[FixtureEntry]
 
 
@@ -236,8 +247,6 @@ def _entry(
     script: AudioScript,
     data: bytes,
     *,
-    voice: str,
-    lang: str,
     seed: int,
 ) -> FixtureEntry:
     parsed = parse_pcm16_wav(data)
@@ -263,42 +272,61 @@ def generate_fixtures(
     voice: str = DEFAULT_VOICE,
     lang: str = DEFAULT_LANGUAGE,
 ) -> FixtureManifest:
+    """Synthesize all fixtures into staging, then publish WAVs and hashes last.
+
+    Existing fixture bytes and the previous hash manifest stay intact if synthesis
+    or a staging write fails. Publishing uses `os.replace`, and `hashes.json` is
+    replaced only after every WAV has moved into place.
+    """
     root = Path(root).resolve()
     from forge_voice.scenarios import load_manifest
 
     tenants = {path.stem for path in (root / "tenants").glob("*.yaml")}
     manifest = load_manifest(root / "scenarios" / "manifest.yaml", known_tenants=tenants)
     scripts = load_audio_scripts(root / "scenarios" / "audio_scripts.yaml", manifest)
-    entries: list[FixtureEntry] = []
     fixtures_dir = root / "scenarios" / "fixtures" / "audio"
     fixtures_dir.mkdir(parents=True, exist_ok=True)
-    for scenario in sorted(manifest.audio_scenarios, key=lambda item: item.id):
-        seed = _seed_for(scenario.id)
-        data = synthesize_fixture(scripts[scenario.id], tts, voice=voice, lang=lang, seed=seed)
-        target = root / "scenarios" / scenario.audio.fixture
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(data)
-        entries.append(
-            _entry(scenario, scripts[scenario.id], data, voice=voice, lang=lang, seed=seed)
+    staging = root / "scenarios" / "fixtures" / ".audio.staging"
+    shutil.rmtree(staging, ignore_errors=True)
+    staging.mkdir(parents=True)
+    entries: list[FixtureEntry] = []
+    staged: dict[str, bytes] = {}
+    try:
+        for scenario in sorted(manifest.audio_scenarios, key=lambda item: item.id):
+            seed = _seed_for(scenario.id)
+            data = synthesize_fixture(scripts[scenario.id], tts, voice=voice, lang=lang, seed=seed)
+            name = Path(scenario.audio.fixture).name
+            staged[name] = data
+            entries.append(_entry(scenario, scripts[scenario.id], data, seed=seed))
+            (staging / name).write_bytes(data)
+
+        manifest_out = FixtureManifest(
+            schema_version=1,
+            generator=GENERATOR,
+            tts=FixtureTts(
+                provider="lfm3",
+                model="lfm3-audio-2b",
+                voice=voice,
+                language=lang,
+                sample_rate=SAMPLE_RATE,
+                temperature=0.0,
+            ),
+            fixtures=entries,
         )
-    manifest_out = FixtureManifest(
-        schema_version=1,
-        generator=GENERATOR,
-        tts={
-            "provider": "lfm3",
-            "model": "lfm3-audio-2b",
-            "voice": voice,
-            "language": lang,
-            "sample_rate": SAMPLE_RATE,
-            "temperature": 0.0,
-        },
-        fixtures=entries,
-    )
-    (fixtures_dir / "hashes.json").write_text(
-        json.dumps(manifest_out.model_dump(mode="json"), indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-    return manifest_out
+        hashes_bytes = (
+            json.dumps(manifest_out.model_dump(mode="json"), indent=2, sort_keys=True) + "\n"
+        ).encode("utf-8")
+        (staging / "hashes.json").write_bytes(hashes_bytes)
+
+        for name in sorted(staged):
+            os.replace(staging / name, fixtures_dir / name)
+        os.replace(staging / "hashes.json", fixtures_dir / "hashes.json")
+        for path in fixtures_dir.glob("*.wav"):
+            if path.name not in staged:
+                path.unlink()
+        return manifest_out
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
 
 
 def verify_fixtures(root: Path | str) -> list[str]:
@@ -334,6 +362,14 @@ def verify_fixtures(root: Path | str) -> list[str]:
             errors.append(f"{entry.scenario_id}: missing fixture {path}")
             continue
         data = path.read_bytes()
+        if entry.tenant != scenario.tenant:
+            errors.append(f"{entry.scenario_id}: tenant drift")
+        if entry.degradation != scripts[entry.scenario_id].degradation:
+            errors.append(f"{entry.scenario_id}: degradation drift")
+        if entry.seed != _seed_for(entry.scenario_id):
+            errors.append(f"{entry.scenario_id}: seed drift")
+        if len(data) != entry.bytes:
+            errors.append(f"{entry.scenario_id}: byte-size drift")
         if fixture_hash(data) != entry.sha256:
             errors.append(f"{entry.scenario_id}: sha256 drift")
         try:
@@ -393,6 +429,7 @@ __all__ = [
     "FixtureEntry",
     "FixtureError",
     "FixtureManifest",
+    "FixtureTts",
     "TtsClient",
     "fixture_hash",
     "generate_fixtures",

@@ -105,3 +105,27 @@ make format   # apply formatting while developing
   different safety script.
 - The LFM3 TTS fixture generator passes a fixed seed and `temperature: 0`. The local server is
   deterministic for a fixed model build; hashes capture the committed bytes.
+
+## Accepted first-slice smells (#5)
+
+These are deliberate at this size and are documented rather than refactored indefinitely:
+
+- `AudioCallSession` is one large object: it composes the store, policy, tool session,
+  confirmation gate, emergency step and trace. Splitting it would move policy state across
+  objects and make the confirmation invariant harder to audit; revisit if a third transport
+  arrives.
+- The per-call trace is an append-only JSONL file, not the dashboard's event store. Ticket #7
+  owns retrieval, retention and aggregation.
+- Audio WAVs are committed both under `scenarios/fixtures/audio/` (source) and
+  `fixtures/corpus/scenarios/fixtures/audio/` (generated corpus). The duplication is ~11 MB;
+  it keeps the corpus self-contained and hash-checked with the other generated artifacts.
+- `host.docker.internal:8082` is accepted by the session-plan test for the #8 container
+  deployment but is not exercised by the #5 host demo. The docs say so explicitly.
+- Emergency detection is intercepted in `BookingAgent.llm_node` before the model. This is
+  intentional: a 2B model must not decide whether an emergency exists or choose a different
+  safety script.
+- LFM3 TTS is deterministic only for a fixed model build with a fixed seed and temperature 0.
+  The committed hashes are the stable contract; regeneration on a different build is expected
+  to require a fixture review.
+- `prepare_local_env.sh` uses a small inline Python block to replace an empty secret line. A
+  full dotenv parser is unnecessary for the two local demo files and would add a dependency.

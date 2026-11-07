@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 from forge_voice.tenants import load_all_tenants
 from forge_voice.web.app import MintedToken, create_app
 from forge_voice.web.claims import TenantClaimSigner
+from forge_voice.web.page import render_page
 
 SECRET = "local-test-secret-that-is-long-enough-for-hmac"
 NOW = datetime(2026, 11, 7, 12, 0, tzinfo=UTC)
@@ -143,3 +144,20 @@ def test_packaged_livekit_browser_client_is_served_locally(client: TestClient) -
     assert response.status_code == 200
     assert len(response.content) > 100_000
     assert b"LivekitClient" in response.content
+
+
+def test_tenant_picker_escapes_html_and_javascript_payloads() -> None:
+    html = render_page(
+        [
+            {
+                "slug": 'x"><script>alert(1)</script>',
+                "name": '<img src=x onerror="alert(2)">',
+            }
+        ]
+    )
+
+    assert "<script>alert(1)</script>" not in html
+    assert '<img src=x onerror="alert(2)">' not in html
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
+    assert "&lt;img src=x onerror=&quot;alert(2)&quot;&gt;" in html
+    assert "\\u003cscript\\u003e" in html

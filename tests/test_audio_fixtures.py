@@ -3,15 +3,20 @@
 from __future__ import annotations
 
 import io
+import json
+import shutil
 import wave
 from pathlib import Path
 
 import pytest
 
+from forge_voice.audio import fixtures as fixture_module
 from forge_voice.audio.fixtures import (
     AudioScript,
     AudioTurn,
+    FixtureError,
     fixture_hash,
+    generate_fixtures,
     load_audio_scripts,
     load_fixture_manifest,
     synthesize_fixture,
@@ -162,3 +167,115 @@ def test_audio_scripts_reject_a_scenario_the_manifest_does_not_know() -> None:
 
     with pytest.raises(ValueError, match="audio_unknown_01"):
         load_audio_scripts_data(bad, manifest)
+
+
+def _temp_repo(tmp_path: Path) -> Path:
+    root = tmp_path / "repo"
+    shutil.copytree(ROOT / "tenants", root / "tenants")
+    (root / "scenarios").mkdir(parents=True)
+    shutil.copyfile(ROOT / "scenarios" / "manifest.yaml", root / "scenarios" / "manifest.yaml")
+    shutil.copyfile(
+        ROOT / "scenarios" / "audio_scripts.yaml",
+        root / "scenarios" / "audio_scripts.yaml",
+    )
+    return root
+
+
+def test_fake_tts_generation_is_byte_stable(tmp_path: Path) -> None:
+    root = _temp_repo(tmp_path)
+
+    first = generate_fixtures(root, FakeTts())
+    hashes_first = (root / "scenarios" / "fixtures" / "audio" / "hashes.json").read_bytes()
+    wavs_first = {
+        path.name: path.read_bytes()
+        for path in (root / "scenarios" / "fixtures" / "audio").glob("*.wav")
+    }
+
+    second = generate_fixtures(root, FakeTts())
+    hashes_second = (root / "scenarios" / "fixtures" / "audio" / "hashes.json").read_bytes()
+    wavs_second = {
+        path.name: path.read_bytes()
+        for path in (root / "scenarios" / "fixtures" / "audio").glob("*.wav")
+    }
+
+    assert first.model_dump() == second.model_dump()
+    assert hashes_first == hashes_second
+    assert wavs_first == wavs_second
+    assert len(wavs_first) == 10
+
+
+def test_generation_keeps_the_old_fixtures_when_staging_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _temp_repo(tmp_path)
+    generate_fixtures(root, FakeTts())
+    audio_dir = root / "scenarios" / "fixtures" / "audio"
+    old_hashes = (audio_dir / "hashes.json").read_bytes()
+    old_wav = (audio_dir / "bargein_01.wav").read_bytes()
+
+    original_write = Path.write_bytes
+    calls = {"count": 0}
+
+    def flaky_write(self: Path, data: bytes) -> int:
+        if self.parent.name == ".audio.staging":
+            calls["count"] += 1
+            if calls["count"] == 2:
+                raise OSError("disk full")
+        return original_write(self, data)
+
+    monkeypatch.setattr(Path, "write_bytes", flaky_write)
+    with pytest.raises(OSError, match="disk full"):
+        generate_fixtures(root, FakeTts())
+
+    assert (audio_dir / "hashes.json").read_bytes() == old_hashes
+    assert (audio_dir / "bargein_01.wav").read_bytes() == old_wav
+    assert not (root / "scenarios" / "fixtures" / ".audio.staging").exists()
+
+
+def test_verify_rejects_byte_size_and_degradation_drift(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original = fixture_module.load_fixture_manifest(
+        ROOT / "scenarios" / "fixtures" / "audio" / "hashes.json"
+    )
+    modified = original.model_copy(deep=True)
+    modified.fixtures[0].bytes = 1
+    clean = next(entry for entry in modified.fixtures if entry.degradation is None)
+    clean.degradation = "noisy"
+    monkeypatch.setattr(fixture_module, "load_fixture_manifest", lambda path: modified)
+
+    errors = fixture_module.verify_fixtures(ROOT)
+
+    assert any("byte-size drift" in error for error in errors)
+    assert any("degradation drift" in error for error in errors)
+
+
+def test_fixture_manifest_rejects_unknown_tts_fields(tmp_path: Path) -> None:
+    raw = json.loads(
+        (ROOT / "scenarios" / "fixtures" / "audio" / "hashes.json").read_text(encoding="utf-8")
+    )
+    raw["tts"]["unexpected"] = "field"
+    path = tmp_path / "hashes.json"
+    path.write_text(json.dumps(raw), encoding="utf-8")
+
+    with pytest.raises(FixtureError, match="invalid fixture hashes"):
+        fixture_module.load_fixture_manifest(path)
+
+
+def test_generation_keeps_the_old_hashes_when_publishing_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _temp_repo(tmp_path)
+    generate_fixtures(root, FakeTts())
+    audio_dir = root / "scenarios" / "fixtures" / "audio"
+    old_hashes = (audio_dir / "hashes.json").read_bytes()
+
+    def fail_replace(source, target):
+        raise OSError("replace failed")
+
+    monkeypatch.setattr(fixture_module.os, "replace", fail_replace)
+    with pytest.raises(OSError, match="replace failed"):
+        generate_fixtures(root, FakeTts())
+
+    assert (audio_dir / "hashes.json").read_bytes() == old_hashes
+    assert not (root / "scenarios" / "fixtures" / ".audio.staging").exists()
