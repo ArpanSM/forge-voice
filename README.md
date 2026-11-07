@@ -12,10 +12,8 @@ passes every hard gate; task completion there is report-only. The **release gate
 hybrid text run**, and it is **not claimed**: the final sweep had no Groq key, so its report is
 `not_run_missing_groq_key`. The optional OrcaRouter fallback experiment is also not claimed
 (`not_run_provider_quota`). The hybrid audio and sealed held-out reports are
-`not_run_missing_groq_key`; the live local audio gate remains **failed** after the entity guard:
-the emergency packet stays partial because the guard refuses to infer a ZIP, and the
-booking scenarios do not get a later yes after the spoken read-back. This is a demo, not a
-release. Full status:
+`not_run_missing_groq_key`; the live local audio run is **5/6** and every hard gate passes,
+with one genuine ASR entity miss left. This is a demo, not a release. Full status:
 [release report](docs/release-report.md), [evaluation](docs/evaluation.md) and the committed
 [reports](reports/).
 
@@ -72,7 +70,7 @@ gallery are in [reports](reports/) and [docs/evaluation.md](docs/evaluation.md).
 | `make eval-smoke` | 8 text dev | **8/8 pass** | Fast commit/PR subset; not a release claim. |
 | `make eval-baseline` | 40 text, local; hybrid | **local 0/40**; hybrid **`not_run_provider_quota` 0/0** | One prompt and a direct write; expected comparison only. It never gates. |
 | `make eval-orca` | 40 text + 10 critical × 3, hybrid text | **`not_run_provider_quota`** | **Optional fallback experiment, not the release gate.** Same scenarios/gates; OrcaRouter free 10 RPM / 50 RPD was exhausted. |
-| `make eval-audio-local` | 6 audio, live local LiveKit + LFM3 | **1/6**; emergency handoff **FAIL** | After the entity guard, LFM3's "9520 Faye" ZIP is reprompted, not inferred from another customer; the emergency ticket is created but the packet is partial and the gate stays failed. Four booking scenarios end after a read-back without a later explicit yes. |
+| `make eval-audio-local` | 6 audio, live local LiveKit + LFM3 | **5/6**; all hard gates pass | One genuine ASR entity miss: `audio_readback_01` books Tuesday correctly but LFM3 heard “88 Hyde Meridian Way” instead of “88 Meridian Way”, so `confirmed_entities` fails. The emergency/handoff gate now passes 1/1. |
 | `make eval-audio` | 10 audio hybrid | **`not_run_missing_groq_key`** | Hybrid audio not claimed; no Groq key in the final sweep. |
 | `make eval-heldout` | 8 text + 2 audio, sealed | **`not_run_missing_groq_key`** | Sealed held-out gate not claimed; no Groq key in the final sweep. |
 
@@ -188,9 +186,8 @@ hybrid profile fails closed without `GROQ_API_KEY` and the fully local demo stil
    profile. Do not claim sub-3 s, sub-2 s or sub-1 s. Production APIs must be re-measured.
 3. **Known product gaps.** No proactive silence prompt; degraded ZIP recognition is fragile; no
    long-utterance turn-taking guard. The demo avoids them with clean audio, short turns, ZIP
-   digits one at a time and no long silence. The live local audio gate is currently **1/6**:
-   the emergency packet remains partial rather than inventing a ZIP, and four booking calls
-   need a later explicit yes after the read-back.
+   digits one at a time and no long silence. The live local audio gate is **5/6**: all hard
+   gates pass; the remaining failure is a genuine ASR word insertion in the address read-back.
 
 **Docs index**
 

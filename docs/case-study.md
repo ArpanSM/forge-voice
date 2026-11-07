@@ -61,7 +61,7 @@ Text, audio, hybrid and local are reported separately and never pooled.
 | `make eval-orca` (40 text + 10 critical × 3, hybrid text) | **not_run_provider_quota** — OrcaRouter free daily limit | **Optional fallback experiment, not the release gate.** OrcaRouter free (10 RPM / 50 RPD) was exhausted; no green hybrid claim. |
 | `make eval-smoke` (8 text dev) | **8/8 pass** | Fast commit/PR subset; not a release claim. |
 | `make eval-baseline` (40 text) | **local 0/40**; hybrid **not_run_provider_quota 0/0** | One prompt and a direct write; the comparison never gates. |
-| `make eval-audio-local` (6 audio, live self-hosted LiveKit + LFM3) | **1/6**, emergency handoff gate fails | The entity guard now rejects same-turn writes and refuses to infer a ZIP from another customer's record. LFM3 still hears ZIP `95125` as `9520 Faye`, so the emergency packet is partial and marked; the other calls end after a read-back without a later yes. See “What went wrong”. |
+| `make eval-audio-local` (6 audio, live self-hosted LiveKit + LFM3) | **5/6**, every hard gate passes | Five scenarios pass, including emergency/handoff and all booking/read-back flows. One genuine ASR entity miss remains: LFM3 heard “88 Hyde Meridian Way” for “88 Meridian Way”. See “What went wrong”. |
 | `make eval-audio` (10 audio hybrid) | **not_run_missing_groq_key** | Hybrid audio not claimed; no Groq key in the final sweep. |
 | `make eval-heldout` (8 text + 2 audio sealed) | **not_run_missing_groq_key** | Sealed held-out gate not claimed; no Groq key in the final sweep. |
 
@@ -85,17 +85,15 @@ The demo marginal cost is **$0** on free tiers plus the local GPU; the productio
    exhausted during the live attempts and probes. The Orca path is an **optional fallback
    experiment, not the release gate**, and its final report is `not_run_provider_quota`. This
    is a harness fix, not a product pass; the same gates still run.
-3. **The live local audio emergency handoff still fails, for a safer reason.** The transcript
-   heard “88 Meridian Way, San Jose, 9520 Faye” for ZIP `95125`; the guard reprompted instead
-   of recovering a ZIP from another customer's address record. The ticket and 911 script pass,
-   the packet is partial with the missing address named, and the policy queues a callback. The
-   gate stays failed and is stated in the README, this case study and the walkthrough.
-4. **Same-turn confirmation and degraded audio are also weak.** The guard now allows only a
-   later explicit yes after the spoken read-back; the compressed audio scenarios frequently
-   place the yes in the same caller turn, so they fail closed with no write. LFM3 also misheard
-   ZIPs (`95125` as `9521`) and turn boundaries; those task-completion failures are reported,
-   not hidden. The local text safety gates pass because the deterministic policy owns the
-   writes; the text run still uses LFM3 extraction, so its 27/40 task completion is honest.
+3. **The live local audio emergency handoff now passes.** The scripts repeat the ZIP/address
+   turn and separate the yes from the read-back; the guard reprompts instead of inferring a
+   ZIP, and the ticket, 911 script and on-call handoff/callback pass the hard gates.
+4. **One genuine ASR entity miss remains.** The `audio_readback_01` booking succeeds on the
+   corrected Tuesday slot, but LFM3 heard “88 Hyde Meridian Way” for “88 Meridian Way”, so
+   `confirmed_entities` fails. LFM3 also remains sensitive to turn boundaries; the scripts now
+   put every explicit yes on a later caller turn, and the failures are reported, not hidden.
+   The local text safety gates pass because the deterministic policy owns the writes; the text
+   run still uses LFM3 extraction, so its 27/40 task completion is honest.
 5. **The known product gaps remain.** No proactive silence prompt, degraded ZIP recognition,
    no long-utterance turn-taking guard, one 10-turn sample per profile and no acoustic echo
    test with a human handset. The demo avoids them: clean audio, short turns, ZIP digits one at
@@ -108,9 +106,9 @@ The demo marginal cost is **$0** on free tiers plus the local GPU; the productio
 its hard gates. The #2/#26 release gate is the Groq hybrid text run; the final sweep had no
 Groq key, so its report is `not_run_missing_groq_key` and the gate is not claimed. The optional
 OrcaRouter fallback is also not claimed (`not_run_provider_quota`). The hybrid audio and sealed
-held-out reports are `not_run_missing_groq_key`. The live local audio gate is **1/6** and
-genuinely failed. The full sweep did **not** pass. This is a **demo**, not a production
-release.
+held-out reports are `not_run_missing_groq_key`. The live local audio run is **5/6** with every
+hard gate green and one genuine ASR entity miss. The full sweep did **not** pass. This is a
+**demo**, not a production release.
 
 ## The offer
 

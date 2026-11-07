@@ -4,9 +4,9 @@
 the test that protects it and the eval gate that measures it.
 **For:** engineers reviewing the repo, and anyone who wants to explain the system end to end.
 **Status:** matches `v0.1.0-demo`. The full sweep did **not** pass: local text safety gates pass;
-live local audio is **1/6** with emergency/handoff failing; the Groq hybrid text/audio and
-sealed held-out reports are `not_run_missing_groq_key`; the optional Orca fallback is
-`not_run_provider_quota`.
+live local audio is **5/6** with every hard gate green and one genuine ASR entity miss; the
+Groq hybrid text/audio and sealed held-out reports are `not_run_missing_groq_key`; the optional
+Orca fallback is `not_run_provider_quota`.
 
 Start with [CONTEXT.md](../CONTEXT.md) for the vocabulary, then read this page with the code
 open. Every section follows the same shape: **idea → where it lives → what to run → what can
