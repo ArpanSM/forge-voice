@@ -132,6 +132,31 @@ def test_hybrid_text_interpreter_fails_closed_without_a_key() -> None:
         build_text_interpreter(ROOT, "hybrid", {})
 
 
+def test_hybrid_text_interpreter_can_use_the_orcarouter_override() -> None:
+    interpreter = build_text_interpreter(
+        ROOT,
+        "hybrid",
+        {
+            "EVAL_LLM_PROVIDER": "orcarouter",
+            "ORCAROUTER_API_KEY": "test-orca-key",
+        },
+    )
+
+    assert interpreter.model == "deepseek/deepseek-v4.1-flash-free"
+    assert interpreter.provider.name == "orcarouter"
+    assert interpreter.min_interval_seconds >= 6.0
+
+
+def test_orcarouter_override_fails_closed_without_its_key() -> None:
+    with pytest.raises(TextProviderError, match="ORCAROUTER_API_KEY"):
+        build_text_interpreter(ROOT, "hybrid", {"EVAL_LLM_PROVIDER": "orcarouter"})
+
+
+def test_unknown_provider_override_fails_closed() -> None:
+    with pytest.raises(TextProviderError, match="unsupported"):
+        build_text_interpreter(ROOT, "hybrid", {"EVAL_LLM_PROVIDER": "not-a-provider"})
+
+
 def test_local_text_interpreter_fails_closed_when_lfm3_is_unhealthy(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

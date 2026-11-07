@@ -49,6 +49,8 @@ class LiveKitStack:
         self.profile = profile
         self.web_port = web_port
         self.livekit_port = livekit_port
+        self.rtc_tcp_port = livekit_port + 1
+        self.rtc_udp_port = livekit_port + 2
         self.log_dir = (
             Path(log_dir) if log_dir else Path(tempfile.mkdtemp(prefix="forge-eval-stack-"))
         )
@@ -87,10 +89,29 @@ class LiveKitStack:
             raise LiveKitStackError(
                 "the local livekit-server is missing; run make bootstrap before the audio eval"
             )
-        self._spawn(
-            [str(server), "--dev", "--bind", "127.0.0.1", "--node-ip", "127.0.0.1"],
-            "livekit.log",
-        )
+        server_command = [
+            str(server),
+            "--dev",
+            "--bind",
+            "127.0.0.1",
+            "--node-ip",
+            "127.0.0.1",
+        ]
+        if self.livekit_port != 7880:
+            # Allow a second local stack when another worktree already owns the default
+            # signal/RTC ports. Signal, TCP and UDP stay in one contiguous block.
+            server_command.extend(
+                [
+                    "--config-body",
+                    (
+                        f"port: {self.livekit_port}\n"
+                        "rtc:\n"
+                        f"  tcp_port: {self.rtc_tcp_port}\n"
+                        f"  udp_port: {self.rtc_udp_port}\n"
+                    ),
+                ]
+            )
+        self._spawn(server_command, "livekit.log")
         self._wait_http(f"http://127.0.0.1:{self.livekit_port}/", "livekit-server")
         self._spawn(
             [sys.executable, "-m", "forge_voice.web.app"],

@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Forge Voice — 90-second captioned demo</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0b1020; color: #eef2ff;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #stage { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+  .slide { position: absolute; inset: 0; display: none; padding: 46px 64px 130px;
+    background: radial-gradient(1200px 600px at 85% 0%, #172554 0%, #0b1020 60%); }
+  .slide.active { display: block; animation: fade .35s ease; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .eyebrow { font-size: 15px; letter-spacing: .16em; text-transform: uppercase;
+    color: #93c5fd; font-weight: 700; margin-bottom: 18px; }
+  h1 { font-size: 54px; line-height: 1.06; margin: 0 0 20px; letter-spacing: -.02em; }
+  h2 { font-size: 34px; line-height: 1.12; margin: 0 0 14px; letter-spacing: -.01em; }
+  p.lead { font-size: 24px; line-height: 1.35; color: #c7d2fe; max-width: 980px; margin: 0; }
+  .shots { display: grid; grid-template-columns: 1.45fr 1fr; gap: 26px; align-items: start;
+    height: 480px; }
+  .shot { border: 1px solid #3b4a78; border-radius: 14px; overflow: hidden;
+    background: #111a35; box-shadow: 0 20px 60px #0008; }
+  .shot img { display: block; width: 100%; height: 100%; object-fit: contain;
+    object-position: top; background: #f8fafc; }
+  .shot.tall { height: 480px; }
+  .shot.tall img { object-fit: contain; background: #f8fafc; }
+  .side { display: grid; gap: 16px; align-content: start; }
+  .kpi { border: 1px solid #3b4a78; border-radius: 12px; padding: 16px 18px; background: #101936; }
+  .kpi strong { display: block; font-size: 30px; color: #bfdbfe; }
+  .kpi span { font-size: 15px; color: #a5b4fc; line-height: 1.35; display: block; }
+  .caption { position: absolute; left: 0; right: 0; bottom: 0; min-height: 104px;
+    padding: 22px 64px 26px; background: linear-gradient(180deg, #0b102000, #0b1020 30%);
+    border-top: 1px solid #26345c; }
+  .caption p { margin: 0; font-size: 25px; line-height: 1.35; color: #f8fafc; }
+  .caption small { display: block; margin-top: 8px; color: #93a4d4; font-size: 14px; }
+  #progress { position: absolute; left: 0; top: 0; height: 5px; background: #60a5fa;
+    width: 0; z-index: 10; }
+  .disclaimer { position: absolute; right: 22px; top: 16px; z-index: 11;
+    font-size: 12px; letter-spacing: .05em; color: #94a3b8; text-transform: uppercase; }
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 14px;
+    background: #1d4ed8; color: white; font-weight: 700; }
+  .warn { color: #fbbf24; }
+  .ok { color: #4ade80; }
+  ul { margin: 10px 0 0; padding-left: 26px; font-size: 23px; line-height: 1.5; color: #dbeafe; }
+  li { margin: 7px 0; }
+  .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
+  .panel { border: 1px solid #3b4a78; border-radius: 14px; padding: 20px 24px; background: #101936; }
+  .panel h3 { margin: 0 0 10px; font-size: 21px; color: #bfdbfe; }
+  .panel p, .panel li { font-size: 17px; line-height: 1.45; color: #cbd5e1; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em;
+    background: #1e293b; padding: 1px 6px; border-radius: 5px; }
+  .diagram { width: 100%; height: 470px; }
+  .diagram text { font-family: Inter, system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="progress"></div>
+  <div class="disclaimer">Storyboard · not a live call recording</div>
+
+  <section class="slide active" data-duration="6500">
+    <div class="eyebrow">Forge Voice · 90-second demo</div>
+    <h1>A home-services booking agent<br>that can prove what it did.</h1>
+    <p class="lead">Local-first LiveKit voice agent · two synthetic tenants · eight typed tools ·
+      deterministic confirmation, emergency triage and handoff.</p>
+    <p class="lead" style="margin-top:22px;color:#93a4d4;font-size:19px">This captioned storyboard
+      is assembled from the real local dashboard records and the documented demo script. The live
+      call audio demo runs on a laptop GPU by appointment; it is not a hosted service.</p>
+  </section>
+
+  <section class="slide" data-duration="7000">
+    <div class="eyebrow">The problem</div>
+    <h2>Most voice demos show the first call and stop.</h2>
+    <ul>
+      <li>They talk over the caller, invent a slot, lose the caller on transfer.</li>
+      <li>They write before an explicit yes, or double-book on a retry.</li>
+      <li>They leak one tenant's data into another and cannot explain the call.</li>
+    </ul>
+    <p class="lead" style="margin-top:24px">The hard parts are turn-taking, typed writes,
+      confirmation, emergency triage, handoff, tenancy, evaluation and monitoring.</p>
+  </section>
+
+  <section class="slide" data-duration="8000">
+    <div class="eyebrow">Architecture</div>
+    <svg class="diagram" viewBox="0 0 1120 470" role="img" aria-label="Local architecture">
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#60a5fa"/>
+        </marker>
+        <style>
+          .box { fill:#111c3d; stroke:#3b82f6; stroke-width:2; rx:12; }
+          .lbl { fill:#e0e7ff; font-size:20px; font-weight:700; }
+          .sub { fill:#93a4d4; font-size:15px; }
+          .edge { stroke:#60a5fa; stroke-width:2; fill:none; marker-end:url(#arrow); }
+          .edge2 { stroke:#a78bfa; stroke-width:2; fill:none; marker-end:url(#arrow); stroke-dasharray:6 5; }
+        </style>
+      </defs>
+      <rect class="box" x="20" y="170" width="190" height="96"/>
+      <text class="lbl" x="42" y="207">Browser</text>
+      <text class="sub" x="42" y="236">localhost:8000 · WebRTC</text>
+
+      <rect class="box" x="290" y="40" width="220" height="96"/>
+      <text class="lbl" x="312" y="77">LiveKit server</text>
+      <text class="sub" x="312" y="106">self-hosted · dev mode</text>
+
+      <rect class="box" x="290" y="170" width="220" height="96"/>
+      <text class="lbl" x="312" y="207">FastAPI web app</text>
+      <text class="sub" x="312" y="236">token · dashboard · admin</text>
+
+      <rect class="box" x="290" y="300" width="220" height="96"/>
+      <text class="lbl" x="312" y="337">LFM3-Audio-2B</text>
+      <text class="sub" x="312" y="366">host GPU · STT/TTS</text>
+
+      <rect class="box" x="600" y="170" width="235" height="96"/>
+      <text class="lbl" x="622" y="207">Agent worker</text>
+      <text class="sub" x="622" y="236">policy · 8 tools · handoff</text>
+
+      <rect class="box" x="900" y="40" width="190" height="96"/>
+      <text class="lbl" x="922" y="77">SQLite + JSONL</text>
+      <text class="sub" x="922" y="106">synthetic call records</text>
+
+      <rect class="box" x="900" y="170" width="190" height="96"/>
+      <text class="lbl" x="922" y="207">Groq</text>
+      <text class="sub" x="922" y="236">hybrid LLM only</text>
+
+      <rect class="box" x="900" y="300" width="190" height="96"/>
+      <text class="lbl" x="922" y="337">Eval + reports</text>
+      <text class="sub" x="922" y="366">40 text · 10 audio</text>
+
+      <path class="edge" d="M210 218 L286 100"/>
+      <path class="edge" d="M210 218 L286 218"/>
+      <path class="edge" d="M400 136 L400 168"/>
+      <path class="edge" d="M510 218 L596 218"/>
+      <path class="edge2" d="M835 218 L896 218"/>
+      <path class="edge" d="M400 266 L400 298"/>
+      <path class="edge" d="M720 170 L896 100"/>
+      <path class="edge" d="M835 240 L896 330"/>
+    </svg>
+    <div class="caption"><p>One local stack: browser, self-hosted LiveKit, FastAPI, LiveKit Agents and LFM3.
+      Groq is the only approved external call, and only for the hybrid LLM.</p>
+      <small>No Cloud transport, SIP, paid STT/TTS or hosted URL in this slice.</small></div>
+  </section>
+
+  <section class="slide" data-duration="7500">
+    <div class="eyebrow">The caller experience</div>
+    <div class="shots">
+      <div class="shot tall"><img src="screenshots/browser-demo.png" alt="Local browser demo page"></div>
+      <div class="side">
+        <div class="kpi"><strong>2 tenants</strong><span>Harborlight Home Services and Summit Heating &amp; Air, resolved from a signed tenant claim.</span></div>
+        <div class="kpi"><strong>7 intents</strong><span>Book, reschedule, cancel, status, emergency, pricing/FAQ and human.</span></div>
+        <div class="kpi"><strong>8 typed tools</strong><span>The model talks; deterministic code owns validation, confirmation and writes.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>The caller opens a local browser page, hears the AI/recording disclosure,
+      and talks over WebRTC to the agent.</p><small>Live local demo by appointment; this video is the public proof.</small></div>
+  </section>
+
+  <section class="slide" data-duration="8000">
+    <div class="eyebrow">Book</div>
+    <h2>Collect only what is needed. Offer only real slots.</h2>
+    <div class="shots">
+      <div class="shot tall"><img src="screenshots/video-book-top.png" alt="Booked call detail top"></div>
+      <div class="side">
+        <div class="kpi"><strong>Booked</strong><span>Summit Heating &amp; Air, AC repair, Priya Shah.</span></div>
+        <div class="kpi"><strong>bk_summit_0003</strong><span>One committed booking; text confirmation queued.</span></div>
+        <div class="kpi"><strong>0 failures</strong><span>No slot mismatch, no double write, no unconfirmed write.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>Service, name, address, ZIP and callback number are collected; availability comes
+      from the synthetic calendar, not the model.</p><small>ZIP and phone are requested digit by digit on clean audio.</small></div>
+  </section>
+
+  <section class="slide" data-duration="8000">
+    <div class="eyebrow">Read-back → explicit yes → one write</div>
+    <div class="shots">
+      <div class="shot tall"><img src="screenshots/video-book-readback.png" alt="Booked call transcript and tool timeline"></div>
+      <div class="side">
+        <div class="kpi"><strong>Read-back</strong><span>Service, date/time, technician, address and contact phone.</span></div>
+        <div class="kpi"><strong>Confirmation token</strong><span>120 s, single use, bound to tenant + call + intent + target + payload.</span></div>
+        <div class="kpi"><strong>Idempotency</strong><span>Replay returns the same booking; a different payload is a conflict.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>The caller hears the exact booking and says yes. The policy issues the token; the
+      model cannot mint it or write without it.</p><small>Slot check and write are one transaction. No soft holds.</small></div>
+  </section>
+
+  <section class="slide" data-duration="7000">
+    <div class="eyebrow">One booking, replay-safe</div>
+    <div class="columns">
+      <div class="panel">
+        <h3>What the tool layer guarantees</h3>
+        <ul>
+          <li>One booking row for the offered slot.</li>
+          <li>Confirmation queued once.</li>
+          <li>Repeated “yes” returns the same booking.</li>
+          <li>Expired offer refreshes and re-reads.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>What the audit shows</h3>
+        <ul>
+          <li>Transcript and tool timeline.</li>
+          <li>Booking ID and confirmation reference.</li>
+          <li>Outcome and latency per turn.</li>
+          <li>QA flags for the operator.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="caption"><p>The dashboard is generated from the same call events the eval scores: no
+      re-derivation from transcripts.</p><small>Synthetic data only · 30-day retention · recording opt-out respected.</small></div>
+  </section>
+
+  <section class="slide" data-duration="8500">
+    <div class="eyebrow">Emergency and handoff</div>
+    <div class="shots">
+      <div class="shot tall"><img src="screenshots/video-emergency-transcript.png" alt="Emergency call transcript"></div>
+      <div class="side">
+        <div class="kpi"><strong>911 first</strong><span>Deterministic triage before the model, with the tenant safety script.</span></div>
+        <div class="kpi"><strong>Structured ticket</strong><span>em_harborlight_0001 · gas_or_co · vulnerable-occupant check.</span></div>
+        <div class="kpi"><strong>Honest transfer</strong><span>Connected, queued callback or no answer — never a claimed transfer before a human answers.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>Emergency classification is code, not a 2B model guess. The ticket and handoff
+      packet stay bound to the tenant and call.</p><small>After hours, a non-emergency becomes a next-business-day callback.</small></div>
+  </section>
+
+  <section class="slide" data-duration="7500">
+    <div class="eyebrow">Monitoring</div>
+    <div class="shots">
+      <div class="shot tall"><img src="screenshots/video-dashboard.png" alt="Local monitoring dashboard"></div>
+      <div class="side">
+        <div class="kpi"><strong>Per-call</strong><span>Outcome, transcript, tool timeline, latency waterfall and QA flags.</span></div>
+        <div class="kpi"><strong>Aggregates</strong><span>Containment, transfer, booking, slot error, p50/p95 and tool errors.</span></div>
+        <div class="kpi"><strong>Alerts</strong><span>Dashboard banner, local alerts.jsonl and an optional free webhook.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>The operator sees what happened without reading raw logs. The weekly review turns
+      a bad call into a scenario candidate for the next eval run.</p><small>Local-only dashboard, loopback bind, no public exposure.</small></div>
+  </section>
+
+  <section class="slide" data-duration="8500">
+    <div class="eyebrow">Honest limits</div>
+    <h2 class="warn">This is a demo tier, not a production SLA.</h2>
+    <div class="columns">
+      <div class="panel">
+        <h3>Measured and stated</h3>
+        <ul>
+          <li>10-turn WebRTC p95 first audio <strong>5.3 s</strong>.</li>
+          <li>Barge-in yield <strong>~0.88 s</strong>.</li>
+          <li>No sub-3 s, sub-2 s or sub-1 s claim.</li>
+          <li>One 10-turn sample per profile; production APIs must be re-measured.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Known product gaps</h3>
+        <ul>
+          <li>No proactive silence prompt before 3 s.</li>
+          <li>Degraded ZIP recognition is fragile.</li>
+          <li>No long-utterance turn-taking guard.</li>
+          <li>Local-only; no SIP, real calendar/CRM, payments or HIPAA/PCI claim.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="caption"><p>The demo avoids the gaps: clean audio, short turns, ZIP digits one at a time and
+      no long silence.</p><small>Every measured claim carries its caveat in the README and case study.</small></div>
+  </section>
+
+  <section class="slide" data-duration="6500">
+    <div class="eyebrow">What the client gets</div>
+    <h2>Not another wrapper — the delivery kit underneath.</h2>
+    <div class="columns">
+      <div class="panel"><h3>Scope &amp; build</h3><p>Tenant config schema, call-flow map, tool contracts,
+        LiveKit pipeline, local adapters, two tenant configs.</p></div>
+      <div class="panel"><h3>Evaluate</h3><p>40 text + 10 audio scenarios, naive baseline, hard gates,
+        JSON/Markdown report and a failure gallery.</p></div>
+      <div class="panel"><h3>Deploy</h3><p>Local Compose stack, self-hosted LiveKit, healthchecks,
+        reset/logs/rollback and a one-page runbook.</p></div>
+      <div class="panel"><h3>Monitor &amp; hand over</h3><p>Dashboard, alerts, weekly review, validating
+        YAML admin editor, 5-minute training and a 30-day support boundary.</p></div>
+    </div>
+    <div class="caption"><p>Repo, docs and the full eval report are public. A live local demo runs by
+      appointment on the builder's laptop.</p><small>Synthetic data only · no real customer data · no paid/hosted claim.</small></div>
+  </section>
+
+  <section class="slide" data-duration="6500">
+    <div class="eyebrow">Start here</div>
+    <h2>Read the README. Run it locally. Check the gate yourself.</h2>
+    <ul>
+      <li><code>make demo</code> — fully local stack, LFM3 on the host GPU.</li>
+      <li><code>make eval-local</code> — safety-fallback report.</li>
+      <li><code>make eval-orca</code> — hybrid text gate on the OrcaRouter free fallback.</li>
+      <li><code>docs/case-study.md</code> · <code>docs/learning-map.md</code> · <code>docs/evaluation.md</code></li>
+    </ul>
+    <div class="caption"><p>The public proof is the recorded demo plus a reproducible local quickstart.
+      There is no always-on hosted URL.</p><small>No production SLA. No sub-3 s claim. Known gaps are documented.</small></div>
+  </section>
+</div>
+<script>
+  const slides = [...document.querySelectorAll(".slide")];
+  const progress = document.getElementById("progress");
+  const durations = slides.map((s) => Number(s.dataset.duration) || 7000);
+  const total = durations.reduce((a, b) => a + b, 0);
+  window.__totalMs = total;
+  let index = 0;
+  let start = performance.now();
+  let elapsed = 0;
+  function show(next) {
+    slides[index].classList.remove("active");
+    index = Math.min(next, slides.length - 1);
+    slides[index].classList.add("active");
+    elapsed = 0;
+    start = performance.now();
+    if (index === slides.length - 1) window.__finished = true;
+  }
+  function tick(now) {
+    elapsed = now - start;
+    if (elapsed >= durations[index] && index < slides.length - 1) show(index + 1);
+    const done = durations.slice(0, index).reduce((a, b) => a + b, 0) + Math.min(elapsed, durations[index]);
+    progress.style.width = `${Math.min(100, (done / total) * 100)}%`;
+    requestAnimationFrame(tick);
+  }
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowRight" || event.key === " ") show(index + 1);
+    if (event.key === "ArrowLeft") show(index - 1);
+  });
+  document.addEventListener("click", () => show(index + 1));
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>

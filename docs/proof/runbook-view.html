@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Forge Voice runbook</title>
+<style>
+body { margin:0; background:#f8fafc; color:#0f172a; font-family: Inter, system-ui, sans-serif; }
+main { max-width: 980px; margin: 0 auto; padding: 34px 40px 60px; }
+h1 { font-size: 34px; margin: 0 0 18px; }
+h2 { font-size: 22px; margin: 28px 0 10px; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; }
+p, li { font-size: 16px; line-height: 1.5; }
+code { background:#e2e8f0; padding:1px 5px; border-radius:5px; font-family:ui-monospace,monospace; }
+pre { background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:10px; overflow:auto; }
+pre code { background:none; color:inherit; }
+table { border-collapse: collapse; width:100%; margin: 12px 0; font-size:15px; }
+th, td { border:1px solid #cbd5e1; padding:8px 10px; text-align:left; vertical-align:top; }
+th { background:#e2e8f0; }
+blockquote { border-left:4px solid #3b82f6; margin:12px 0; padding:8px 14px; background:#eff6ff; }
+</style></head><body><main><h1>Local runbook — one page</h1>
+<p><strong>What this is:</strong> the local-only deploy and recovery steps for the Harborlight + Summit
+voice demo, ticket #8. The browser, token page, dashboard and admin are one FastAPI app;
+LiveKit is self-hosted; LFM3-Audio-2B stays on the host GPU. <strong>No Cloud transport, hosted
+URL, SIP, TURN or paid provider</strong> is used.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li>Linux laptop with the 4 GB GPU and LFM3-Audio-2B (<code>lfm3 audio</code>).</li>
+<li>Docker Engine + Docker Compose v2.20 or newer for the Compose path. The Compose path uses
+  <strong>Linux host networking</strong> so the browser and the agent share LiveKit's loopback media;
+  it is not supported on Docker Desktop/macOS/Windows in this slice.</li>
+<li><code>curl</code> and <strong>Python 3.12+</strong> for the preflight and <code>make health</code> helpers (<code>python3</code> works
+  if it is 3.12+; set <code>FORGE_VOICE_PYTHON</code> otherwise). These are required even when Docker
+  is the only runtime. The host-binary fallback additionally uses <code>make install</code>.</li>
+<li>Set <code>FORGE_VOICE_UID=$(id -u)</code> and <code>FORGE_VOICE_GID=$(id -g)</code> if they are not 1000, so
+  the non-root containers keep <code>./data</code>, <code>./recordings</code> and <code>./tenants</code> user-owned.</li>
+<li>Free ports: <code>7880</code>/<code>7881</code> LiveKit TCP, <code>7882</code> LiveKit UDP, <code>8000</code> web, <code>8081</code> agent health, <code>8082</code> LFM3.</li>
+<li>A local LiveKit dev key/secret in <code>.env.local</code>; an optional free Groq key for hybrid.</li>
+</ul>
+<h2>1. First run</h2>
+<pre><code class="language-bash">cp .env.example .env.local       # gitignored; never commit it
+scripts/prepare_local_env.sh .   # fills a random local LIVEKIT_API_SECRET if blank
+# Optional hybrid only: GROQ_API_KEY=... in .env.local or the environment
+lfm3 audio                       # host GPU; wait for http://127.0.0.1:8082/health
+make demo                        # Compose when Docker is available, host binaries otherwise
+</code></pre>
+<p><code>make demo</code> chooses the Docker Compose stack when Docker + Compose + the daemon are
+reachable; otherwise it prints <code>MODE: host-binary</code> and uses the original host demo. It
+never implies Compose ran when it did not. The paths are explicit when you need them:</p>
+<pre><code class="language-bash">make demo-local       # host-binary livekit-server; no Docker
+make demo-compose     # one-stack Compose path; fails if Docker/LFM3/curl/Python/a port is missing
+make demo-hybrid      # same stack, LFM3 audio + Groq qwen/qwen3.8-27b as the only external LLM
+make demo-hybrid-local
+make demo-hybrid-compose
+</code></pre>
+<p>The Compose path waits for LiveKit, web <code>/health</code>, agent readiness and LFM3 <code>/health</code>.
+It fails closed with a clear message if LFM3 is down, a port is taken or a healthcheck
+never passes. <code>make demo</code> never claims the Compose stack ran when Docker is absent.</p>
+<h2>2. URLs</h2>
+<table>
+<thead>
+<tr>
+<th>What</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Browser demo / token page</td>
+<td><a href="http://localhost:8000">http://localhost:8000</a></td>
+</tr>
+<tr>
+<td>Dashboard</td>
+<td><a href="http://localhost:8000/dashboard">http://localhost:8000/dashboard</a></td>
+</tr>
+<tr>
+<td>Weekly review</td>
+<td><a href="http://localhost:8000/review">http://localhost:8000/review</a></td>
+</tr>
+<tr>
+<td>Admin config editor</td>
+<td><a href="http://localhost:8000/admin">http://localhost:8000/admin</a></td>
+</tr>
+<tr>
+<td>Machine-readable metrics</td>
+<td><a href="http://localhost:8000/metrics.json">http://localhost:8000/metrics.json</a></td>
+</tr>
+<tr>
+<td>Health</td>
+<td><a href="http://localhost:8000/health">http://localhost:8000/health</a></td>
+</tr>
+<tr>
+<td>LiveKit (self-hosted)</td>
+<td><code>ws://localhost:7880</code></td>
+</tr>
+<tr>
+<td>LFM3 on the host GPU</td>
+<td><a href="http://127.0.0.1:8082/health">http://127.0.0.1:8082/health</a></td>
+</tr>
+</tbody>
+</table>
+<p>All binds are loopback. Compose uses host networking but every process binds <code>127.0.0.1</code>;
+the browser page and dashboard are not exposed to the LAN or the internet.</p>
+<h2>3. Profiles</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>STT/TTS</th>
+<th>LLM</th>
+<th>External calls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>make demo</code> / <code>make demo-compose</code></td>
+<td>local LFM3</td>
+<td>local LFM3</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>make demo-hybrid</code> / <code>make demo-hybrid-compose</code></td>
+<td>local LFM3</td>
+<td>Groq <code>qwen/qwen3.8-27b</code></td>
+<td>Groq only</td>
+</tr>
+</tbody>
+</table>
+<p>The fully local profile is the offline fallback. The hybrid is the headline demo when a
+free Groq key is available. Hybrid fails closed without <code>GROQ_API_KEY</code>; no paid fallback
+is added.</p>
+<h2>4. Daily commands</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>make logs</code></td>
+<td>Follow LiveKit, web and agent logs.</td>
+</tr>
+<tr>
+<td><code>make health</code></td>
+<td>Probe LFM3, LiveKit, web and agent readiness; nonzero on failure.</td>
+</tr>
+<tr>
+<td><code>make down</code></td>
+<td>Stop Compose. <code>./data</code>, <code>./recordings</code> and <code>.env.local</code> stay.</td>
+</tr>
+<tr>
+<td><code>make reset</code></td>
+<td>Stop, delete synthetic calls/bookings/traces/recordings and reseed the 30-day dashboard set. <code>./data/backup</code> stays.</td>
+</tr>
+<tr>
+<td><code>make demo</code></td>
+<td>Start again.</td>
+</tr>
+<tr>
+<td><code>make release TAG=v1</code></td>
+<td>Stop writers, tag web/agent images and snapshot <code>./data</code> into <code>./data/backup</code>.</td>
+</tr>
+<tr>
+<td><code>make rollback</code></td>
+<td>Start the previous tags; restore <code>./data/backup</code> when the schema changed.</td>
+</tr>
+<tr>
+<td><code>make retention</code></td>
+<td>Prune raw <code>data/calls/*.jsonl</code> and <code>recordings/</code> older than 30 days.</td>
+</tr>
+</tbody>
+</table>
+<p>Retention is <strong>30 days</strong> for dashboard records, raw call traces and recordings. The web app
+prunes raw traces/recordings on start (the dashboard store prunes its own cache); <code>make
+retention</code> runs the same job explicitly. <code>make reset</code> is the explicit clean slate and
+reseeds the deterministic set.</p>
+<h2>5. Rollback</h2>
+<ol>
+<li>Before an upgrade: <code>make release TAG=v1</code> (or keep the previous image tags). Release
+   stops the services first so SQLite/WAL files are copied consistently.</li>
+<li>If the schema changed, set <code>FORGE_VOICE_SCHEMA_VERSION</code> to the new value for that release,
+   e.g. <code>FORGE_VOICE_SCHEMA_VERSION=2 make release TAG=v2</code>. The release writes
+   <code>.release/current</code>, <code>.release/previous</code>, both schema markers and <code>./data/backup</code>.</li>
+<li><code>make rollback</code> reads the previous tag, stops the stack, restores <code>./data/backup</code> if
+   the recorded schema differs, then runs the previous images with <code>up --wait --no-build</code>.</li>
+<li>Run <code>make health</code> and one clean booking before declaring the rollback good.</li>
+</ol>
+<p>Rollback is local and one command; there is no hosted deployment to revert. If no backup
+exists and the schema changed, the command fails closed rather than mixing schemas.</p>
+<h2>6. Common failures</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Check</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LFM3-Audio-2B is not healthy</code></td>
+<td><code>lfm3 status</code>; <code>curl 127.0.0.1:8082/health</code></td>
+<td><code>lfm3 audio</code>; wait for the model; check GPU memory</td>
+</tr>
+<tr>
+<td><code>Port 7880/7881/7882/8000/8081 is already in use</code></td>
+<td><code>ss -ltnup</code></td>
+<td><code>make down</code>, or stop the process using the port</td>
+</tr>
+<tr>
+<td>Docker path fails immediately</td>
+<td><code>docker info</code>; <code>docker compose version</code>; <code>python3 --version</code>; <code>curl --version</code></td>
+<td>Start/install Docker, Python 3.12+ and curl; or use <code>make demo-local</code></td>
+</tr>
+<tr>
+<td>Root-owned data after Compose</td>
+<td><code>ls -ln data recordings tenants</code></td>
+<td>Set <code>FORGE_VOICE_UID=$(id -u)</code> and <code>FORGE_VOICE_GID=$(id -g)</code> in <code>.env.local</code>, rebuild</td>
+</tr>
+<tr>
+<td>Browser cannot join</td>
+<td><code>make health</code>; <code>make logs</code></td>
+<td>Restart the stack; check <code>LIVEKIT_URL</code> and key/secret</td>
+</tr>
+<tr>
+<td>Agent joins but no audio</td>
+<td>Agent log; LFM3 log; mic permission</td>
+<td>Allow the mic; confirm <code>host.docker.internal:8082</code>; restart agent</td>
+</tr>
+<tr>
+<td>Token expired</td>
+<td>Browser console / web log</td>
+<td>Reload the page; tokens are 120 s by design</td>
+</tr>
+<tr>
+<td>Groq <code>429</code> / rate limit</td>
+<td>Agent log</td>
+<td>Use <code>make demo</code> (fully local); do not add a paid fallback</td>
+</tr>
+<tr>
+<td>Dashboard empty</td>
+<td><code>./data</code>; one live call</td>
+<td>Run a call; <code>make reset</code> reseeds</td>
+</tr>
+<tr>
+<td>Admin edit rejected</td>
+<td><code>/admin</code> error text</td>
+<td>Fix the YAML field; invalid edits never write or reload</td>
+</tr>
+<tr>
+<td>Recording missing</td>
+<td><code>./recordings</code>; consent flag</td>
+<td>Enable recording; respect opt-out; <code>text_only</code> is valid</td>
+</tr>
+<tr>
+<td><code>unknown_tenant</code></td>
+<td><code>/token</code> response</td>
+<td>Use a configured tenant; unknown tenants fail closed</td>
+</tr>
+</tbody>
+</table>
+<h2>7. Free-tier and honest limits</h2>
+<ul>
+<li>Demo cost is <strong>$0</strong> on free tiers + the local GPU. Production estimate is
+  <strong>$0.03–0.06/min</strong>, not measured here. No paid fallback exists.</li>
+<li>Groq free-tier limits apply only to hybrid. When exhausted, use the fully local profile.</li>
+<li>Measured 10-turn p95 first audio is <strong>5.3 s</strong>; barge-in is <strong>~0.88 s</strong>. No sub-3 s or
+  sub-2 s claim. Latency is report-only.</li>
+<li>LFM3 is a 2B model on a 4 GB GPU; no proactive silence prompt, fragile degraded ZIP and
+  no long-utterance guard are known limits. Use short, clean turns and digit-by-digit ZIPs.</li>
+<li>No phone/SIP, real calendar/CRM/SMS, payments, HIPAA/PCI, 24/7 on-call, multilingual
+  booking or visual workflow builder. New tenants, services and integrations are change
+  requests (see <a href="handover.md">handover.md</a>).</li>
+</ul>
+<p>Training: <a href="training.md">training.md</a>. Handover and the 30-day support boundary:
+<a href="handover.md">handover.md</a>.</p></main></body></html>

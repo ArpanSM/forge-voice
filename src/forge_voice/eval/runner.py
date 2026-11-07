@@ -20,7 +20,12 @@ from forge_voice.eval.loader import (
     load_selection,
 )
 from forge_voice.eval.models import CostModel, EvalReport, GateResult, ScenarioResult
-from forge_voice.eval.provider_check import check_groq
+from forge_voice.eval.provider_check import (
+    ORCAROUTER_BASE_URL,
+    ORCAROUTER_MODEL,
+    check_groq,
+    check_orcarouter,
+)
 from forge_voice.eval.provider_text import (
     TextProviderError,
     TextProviderQuotaError,
@@ -257,46 +262,66 @@ def run_eval(config: RunConfig) -> int:
         and config.split in {"release", "heldout", "audio", "audio-local"}
     )
     hybrid_required = hybrid_release and config.provider_check != "off"
-    api_key = os.environ.get("GROQ_API_KEY", "").strip()
+    requested_provider = os.environ.get("EVAL_LLM_PROVIDER", "").strip().lower()
+    llm_provider = (requested_provider or "groq") if config.profile == "hybrid" else "lfm3"
+    key_env = {
+        "groq": "GROQ_API_KEY",
+        "orcarouter": "ORCAROUTER_API_KEY",
+    }.get(llm_provider)
+    api_key = os.environ.get(key_env, "").strip() if key_env else "local"
+    model = {
+        "groq": GROQ_MODEL,
+        "orcarouter": os.environ.get("ORCAROUTER_MODEL", ORCAROUTER_MODEL),
+        "lfm3": os.environ.get("LFM3_AUDIO_MODEL", "lfm3-audio-2b"),
+    }[llm_provider]
     provider: dict[str, Any] = {
         "text_engine": "deterministic_rule_interpreter",
         "audio_transport": config.transport,
+        "llm_provider": llm_provider,
+        "model": model,
         "groq_model": GROQ_MODEL,
+        "orcarouter_model": os.environ.get("ORCAROUTER_MODEL", ORCAROUTER_MODEL),
+        "orcarouter_base_url": os.environ.get("ORCAROUTER_BASE_URL", ORCAROUTER_BASE_URL),
         "hybrid_key_present": bool(api_key),
         "check": None,
     }
-    if hybrid_required and not api_key:
+    if hybrid_required and key_env and not api_key:
         payload = _failure_payload(
             run_id=run_id,
             started=started,
             config=config,
             selection=selection,
             git_sha=git_sha,
-            verdict="not_run_missing_groq_key",
+            verdict=(
+                "not_run_missing_groq_key"
+                if llm_provider == "groq"
+                else "not_run_missing_provider_key"
+            ),
             error=(
-                "the hybrid release gate requires GROQ_API_KEY; the fully local report is "
+                f"the hybrid release gate requires {key_env}; the fully local report is "
                 "available with make eval-local"
             ),
             provider=provider,
         )
         _write_report(directory, payload)
-        print(payload["caveats"][-1] if payload["caveats"] else "missing GROQ_API_KEY")
+        print(payload["caveats"][-1] if payload["caveats"] else f"missing {key_env}")
         return 2
 
     if hybrid_release and config.provider_check == "off":
         provider["check"] = {
             "ok": False,
             "status": "not_run",
-            "model": GROQ_MODEL,
+            "model": model,
             "error": (
                 "the hybrid release gate requires a live provider check; "
                 "--provider-check off was used"
             ),
         }
     elif hybrid_required:
-        provider["check"] = check_groq(api_key, long_prompt=hybrid_release)
+        check = check_orcarouter if llm_provider == "orcarouter" else check_groq
+        provider["check"] = check(api_key, long_prompt=hybrid_release)
     else:
-        provider["check"] = {"ok": True, "status": "not_required", "model": GROQ_MODEL}
+        provider["check"] = {"ok": True, "status": "not_required", "model": model}
 
     use_provider_text = (
         config.pipeline in {"fixed", "baseline"}
@@ -360,6 +385,8 @@ def run_eval(config: RunConfig) -> int:
         stack = LiveKitStack(
             config.root,
             profile=config.profile,
+            web_port=int(os.environ.get("EVAL_WEB_PORT", "8000")),
+            livekit_port=int(os.environ.get("EVAL_LIVEKIT_PORT", "7880")),
             log_dir=directory / "stack",
             timeout=max(120.0, config.max_seconds or 0.0),
         )

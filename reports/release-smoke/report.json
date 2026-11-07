@@ -81,15 +81,15 @@
     "latency": {
       "n": 8,
       "p50_tool_path_ms": 17.5,
-      "p50_wall_ms": 11.5,
+      "p50_wall_ms": 11.0,
       "p95_tool_path_ms": 29.95,
       "p95_wall_ms": 14.3,
       "wall_p50_bootstrap_ci": [
-        10.5,
-        13.0
+        10.0,
+        12.5
       ],
       "wall_p95_bootstrap_ci": [
-        12.3,
+        11.95,
         15.0
       ]
     },
@@ -128,8 +128,7 @@
     "Latency is demo evidence, not a production SLA. The measured profile uses free/local models on a 4 GB laptop; production APIs must be re-measured before quoting a number. Text-mode latency is the deterministic tool-path time, not caller-perceived first audio; audio session replay is not an acoustic WebRTC measurement. Do not claim sub-3 s or sub-2 s from this report.",
     "Text mode uses the deterministic #4 rule interpreter for this non-release subset; the provider is exercised only by the release profiles.",
     "The baseline is a one-prompt direct-write model path with no tools, state, policy, confirmation or idempotency. It is expected to fail and never gates.",
-    "Synthetic data only. No production SLA, HIPAA/PCI claim or real customer data.",
-    "Report metadata refreshed to the current code commit; metrics are from the recorded run. Full transcripts are local-only and not committed."
+    "Synthetic data only. No production SLA, HIPAA/PCI claim or real customer data."
   ],
   "comparison": null,
   "cost_model": {
@@ -148,14 +147,14 @@
   },
   "counts": {
     "audio": 0,
-    "elapsed_seconds": 0.492,
+    "elapsed_seconds": 0.477,
     "held_out": 0,
     "runs": 8,
     "scenarios": 8,
     "text": 8,
     "transcripts": "reports/release-smoke/transcripts"
   },
-  "finished_at": "2026-11-07T09:35:05.956574Z",
+  "finished_at": "2026-11-07T12:45:10.376630Z",
   "gates": {
     "audit_completeness": {
       "denominator": 8,
@@ -279,7 +278,7 @@
       "value": "0 failure(s)"
     }
   },
-  "git_sha": "81e71cf",
+  "git_sha": "dd1594a",
   "heldout_manifest_sha": "sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd",
   "manifest_sha": "sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2",
   "mode": "text",
@@ -294,6 +293,10 @@
     },
     "groq_model": "qwen/qwen3.8-27b",
     "hybrid_key_present": false,
+    "llm_provider": "groq",
+    "model": "qwen/qwen3.8-27b",
+    "orcarouter_base_url": "https://api.orcarouter.ai/v1",
+    "orcarouter_model": "deepseek/deepseek-v4.1-flash-free",
     "text_engine": "deterministic_rule_interpreter"
   },
   "repeats": {
@@ -638,7 +641,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 31,
-        "wall_ms": 13
+        "wall_ms": 12
       },
       "mode": "text",
       "pass": true,
@@ -747,7 +750,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 28,
-        "wall_ms": 11
+        "wall_ms": 10
       },
       "mode": "text",
       "pass": true,
@@ -922,7 +925,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 6,
-        "wall_ms": 11
+        "wall_ms": 10
       },
       "mode": "text",
       "pass": true,
@@ -1072,6 +1075,6 @@
   ],
   "schema_version": 1,
   "split": "smoke",
-  "started_at": "2026-11-07T09:35:05.464662Z",
+  "started_at": "2026-11-07T12:45:09.899382Z",
   "verdict": "pass"
 }

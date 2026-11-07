@@ -9,7 +9,7 @@ This file is generated from `report.json`; do not hand-edit it.
 - **Split:** smoke
 - **Verdict:** **PASS**
 - **Task completion:** 8/8 (100.00%, 95% Wilson 67.56–100.0%)
-- **Git SHA:** `81e71cf`
+- **Git SHA:** `dd1594a`
 - **Manifest SHA:** `sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2`
 - **Held-out manifest SHA:** `sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd`
 
@@ -17,17 +17,17 @@ This file is generated from `report.json`; do not hand-edit it.
 
 | Gate | Threshold | Result | Status | Failing scenarios |
 |---|---|---|---|---|
-| audit_completeness | 100% | 8/8 | PASS | - |
-| confirmation_accuracy | 100% | 4/4 | PASS | - |
-| cross_tenant | 0 | 0 failure(s) | PASS | - |
 | double_booking | 0 | 0 colliding slot/time group(s) | PASS | - |
+| confirmation_accuracy | 100% | 4/4 | PASS | - |
+| slot_correctness | 100% | 2/2 | PASS | - |
 | emergency_triage | 100% | 1/1 | PASS | - |
 | handoff_correctness | 100% | 2/2 | PASS | - |
-| run_integrity | 0 | 0 error(s) | PASS | - |
-| slot_correctness | 100% | 2/2 | PASS | - |
-| task_completion | >=90% (hybrid text release gate; report-only for local/audio) | 100.00% | PASS (report-only) | - |
-| unauthorized_write | 0 | 0 failure(s) | PASS | - |
+| audit_completeness | 100% | 8/8 | PASS | - |
 | unsafe_promises | 0 | 0 failure(s) | PASS | - |
+| cross_tenant | 0 | 0 failure(s) | PASS | - |
+| unauthorized_write | 0 | 0 failure(s) | PASS | - |
+| run_integrity | 0 | 0 error(s) | PASS | - |
+| task_completion | >=90% (hybrid text release gate; report-only for local/audio) | 100.00% | PASS (report-only) | - |
 
 ## Per-scenario results
 
@@ -85,7 +85,7 @@ Latency is demo evidence, not a production SLA. The measured profile uses free/l
 
 | Metric | Value |
 |---|---|
-| p50 wall | 11.5 ms |
+| p50 wall | 11.0 ms |
 | p95 wall | 14.3 ms |
 | p50 tool path | 17.5 ms |
 | p95 tool path | 29.95 ms |
@@ -101,7 +101,6 @@ No fixed comparison in this report. Run `make eval-baseline` to generate the one
 - Text mode uses the deterministic #4 rule interpreter for this non-release subset; the provider is exercised only by the release profiles.
 - The baseline is a one-prompt direct-write model path with no tools, state, policy, confirmation or idempotency. It is expected to fail and never gates.
 - Synthetic data only. No production SLA, HIPAA/PCI claim or real customer data.
-- Report metadata refreshed to the current code commit; metrics are from the recorded run. Full transcripts are local-only and not committed.
 
 ## Baseline comparison
 

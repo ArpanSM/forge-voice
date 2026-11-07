@@ -18,8 +18,7 @@
   },
   "caveats": [
     "The run did not start or did not complete; this report is written so the failure is visible rather than silent.",
-    "{\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01jppc8f0xexvt56hmkh0dj7k6` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199866, Requested 616. Please try again in 3m28.224s. Need more tokens? Upgrade to Dev Tier today at https://cons",
-    "Report metadata refreshed to the current code commit; metrics are from the recorded run. Full transcripts are local-only and not committed."
+    "the hybrid release gate requires GROQ_API_KEY; the fully local report is available with make eval-local"
   ],
   "cost_model": {
     "as_of": "2026-11-07",
@@ -40,9 +39,9 @@
     "runs": 0,
     "scenarios": 0
   },
-  "finished_at": "2026-11-07T09:24:45.203761+00:00",
+  "finished_at": "2026-11-07T12:45:08.108088+00:00",
   "gates": {},
-  "git_sha": "81e71cf",
+  "git_sha": "dd1594a",
   "heldout_manifest_sha": "sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd",
   "manifest_sha": "sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2",
   "mode": "audio",
@@ -50,16 +49,13 @@
   "profile": "hybrid",
   "provider": {
     "audio_transport": "livekit",
-    "check": {
-      "attempts": 1,
-      "error": "{\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01jppc8f0xexvt56hmkh0dj7k6` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199866, Requested 616. Please try again in 3m28.224s. Need more tokens? Upgrade to Dev Tier today at https://cons",
-      "model": "qwen/qwen3.8-27b",
-      "ok": false,
-      "retry_after_seconds": 209.0,
-      "status": "insufficient_quota"
-    },
+    "check": null,
     "groq_model": "qwen/qwen3.8-27b",
-    "hybrid_key_present": true,
+    "hybrid_key_present": false,
+    "llm_provider": "groq",
+    "model": "qwen/qwen3.8-27b",
+    "orcarouter_base_url": "https://api.orcarouter.ai/v1",
+    "orcarouter_model": "deepseek/deepseek-v4.1-flash-free",
     "text_engine": "deterministic_rule_interpreter"
   },
   "repeats": {},
@@ -67,6 +63,6 @@
   "scenarios": [],
   "schema_version": 1,
   "split": "audio",
-  "started_at": "2026-11-07T09:24:45.001012+00:00",
-  "verdict": "not_run_provider_quota"
+  "started_at": "2026-11-07T12:45:08.105447+00:00",
+  "verdict": "not_run_missing_groq_key"
 }

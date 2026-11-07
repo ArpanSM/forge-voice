@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Forge Voice — 5-minute dashboard, admin and runbook walkthrough</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0b1020; color: #eef2ff;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #stage { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+  .slide { position: absolute; inset: 0; display: none; padding: 40px 58px 112px;
+    background: radial-gradient(1200px 600px at 85% 0%, #172554 0%, #0b1020 60%); }
+  .slide.active { display: block; animation: fade .3s ease; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .eyebrow { font-size: 14px; letter-spacing: .16em; text-transform: uppercase;
+    color: #93c5fd; font-weight: 700; margin-bottom: 12px; }
+  h1 { font-size: 44px; line-height: 1.06; margin: 0 0 16px; letter-spacing: -.02em; }
+  h2 { font-size: 30px; line-height: 1.12; margin: 0 0 12px; }
+  p.lead { font-size: 21px; line-height: 1.35; color: #c7d2fe; max-width: 1060px; margin: 0; }
+  .shots { display: grid; grid-template-columns: 1.5fr 1fr; gap: 22px; align-items: start; height: 520px; }
+  .shot { border: 1px solid #3b4a78; border-radius: 14px; overflow: hidden;
+    background: #111a35; box-shadow: 0 20px 60px #0008; height: 520px; }
+  .shot img { display: block; width: 100%; height: 100%; object-fit: contain;
+    object-position: top; background: #f8fafc; }
+  .shot.contain img { object-fit: contain; background: #f8fafc; }
+  .side { display: grid; gap: 13px; align-content: start; }
+  .kpi { border: 1px solid #3b4a78; border-radius: 12px; padding: 13px 16px; background: #101936; }
+  .kpi strong { display: block; font-size: 24px; color: #bfdbfe; }
+  .kpi span { font-size: 14px; color: #a5b4fc; line-height: 1.35; display: block; }
+  .caption { position: absolute; left: 0; right: 0; bottom: 0; min-height: 92px;
+    padding: 18px 58px 20px; background: linear-gradient(180deg, #0b102000, #0b1020 30%);
+    border-top: 1px solid #26345c; }
+  .caption p { margin: 0; font-size: 22px; line-height: 1.35; color: #f8fafc; }
+  .caption small { display: block; margin-top: 6px; color: #93a4d4; font-size: 13px; }
+  #progress { position: absolute; left: 0; top: 0; height: 5px; background: #60a5fa; width: 0; z-index: 10; }
+  .disclaimer { position: absolute; right: 20px; top: 14px; z-index: 11; font-size: 11px;
+    letter-spacing: .05em; color: #94a3b8; text-transform: uppercase; }
+  ul { margin: 8px 0 0; padding-left: 24px; font-size: 20px; line-height: 1.45; color: #dbeafe; }
+  li { margin: 6px 0; }
+  .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .panel { border: 1px solid #3b4a78; border-radius: 14px; padding: 16px 20px; background: #101936; }
+  .panel h3 { margin: 0 0 8px; font-size: 19px; color: #bfdbfe; }
+  .panel p, .panel li { font-size: 15px; line-height: 1.42; color: #cbd5e1; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em;
+    background: #1e293b; padding: 1px 5px; border-radius: 5px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+  th, td { border-bottom: 1px solid #334155; padding: 6px 8px; text-align: left; }
+  th { color: #93c5fd; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .ok { color: #4ade80; font-weight: 700; }
+  .bad { color: #f87171; font-weight: 700; }
+  .warn { color: #fbbf24; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="progress"></div>
+  <div class="disclaimer">Screen walkthrough · real local dashboard · not a hosted service</div>
+
+  <section class="slide active" data-duration="10000">
+    <div class="eyebrow">Forge Voice · 5-minute walkthrough</div>
+    <h1>Dashboard, admin and runbook<br>for a local-first voice agent.</h1>
+    <p class="lead">A tour of the real #7 monitoring surface and #8 handover kit. All data is synthetic.
+      The live voice call is demonstrated separately; this recording is a local screen walkthrough,
+      not a hosted product.</p>
+  </section>
+
+  <section class="slide" data-duration="12000">
+    <div class="eyebrow">What you will see</div>
+    <h2>One local app, one call event stream.</h2>
+    <div class="columns">
+      <div class="panel"><h3>Monitoring</h3><p>Dashboard cards, alerts, call table, per-call transcript,
+        tool timeline, latency waterfall and QA flags.</p></div>
+      <div class="panel"><h3>Handover</h3><p>Validating YAML admin editor, weekly review loop, one-page
+        runbook, training outline and written support boundary.</p></div>
+    </div>
+    <div class="caption"><p>The same events feed the dashboard, the eval scorer and the handover export.</p>
+      <small>FastAPI + HTMX + SQLite/JSONL · loopback only · 30-day synthetic retention.</small></div>
+  </section>
+
+  <section class="slide" data-duration="18000">
+    <div class="eyebrow">Topology</div>
+    <h2>The local stack, with no hosted claim.</h2>
+    <div class="columns">
+      <div class="panel"><h3>Runtime</h3><p><code>make demo</code> starts the self-hosted LiveKit server,
+        the agent worker and the web/dashboard/admin app. LFM3-Audio-2B stays on the host GPU.</p></div>
+      <div class="panel"><h3>Boundary</h3><p>No Cloud transport, TURN, SIP or public URL. Groq is the only
+        approved external call, and only for the hybrid LLM profile.</p></div>
+    </div>
+    <div class="caption"><p>The public proof is a recorded local demo plus the reproducible quickstart.</p>
+      <small>Unavailable paths are documented as deferred, not implied by this recording.</small></div>
+  </section>
+
+  <section class="slide" data-duration="15000">
+    <div class="eyebrow">Caller page</div>
+    <h2>Disclosure, tenant choice, start call.</h2>
+    <div class="shots">
+      <div class="shot contain"><img src="screenshots/browser-demo.png" alt="Browser demo page"></div>
+      <div class="side">
+        <div class="kpi"><strong>Signed claim</strong><span>120 s tenant claim in the LiveKit metadata; room or query params are not trusted.</span></div>
+        <div class="kpi"><strong>Fail closed</strong><span>Unknown tenant or tampered claim stops the job before any policy state exists.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>The browser is the manual demo path. The scripted WebRTC caller and audio eval
+      use the same token endpoint.</p><small>No real phone number or SIP path in this slice.</small></div>
+  </section>
+
+  <section class="slide" data-duration="22000">
+    <div class="eyebrow">Dashboard</div>
+    <h2>What happened, without reading raw logs.</h2>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/video-dashboard.png" alt="Dashboard"></div>
+      <div class="side">
+        <div class="kpi"><strong>34 calls</strong><span>Seeded synthetic 30-day set.</span></div>
+        <div class="kpi"><strong>Cards</strong><span>Containment, transfer, booking, slot error, p95, tool error, emergency triage.</span></div>
+        <div class="kpi"><strong>Alerts</strong><span>Banner, local JSONL, optional free webhook.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>Filters cover tenant, date and outcome. The call table links to the per-call
+      timeline and transcript.</p><small>The demo set deliberately includes failures so the alert path is visible.</small></div>
+  </section>
+
+  <section class="slide" data-duration="22000">
+    <div class="eyebrow">Per-call detail · booking</div>
+    <h2>Outcome, booking ID, transcript and tool path.</h2>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/video-book-top.png" alt="Booked call top"></div>
+      <div class="side">
+        <div class="kpi"><strong>Booked</strong><span>Summit AC repair, Priya Shah.</span></div>
+        <div class="kpi"><strong>bk_summit_0003</strong><span>One committed write.</span></div>
+        <div class="kpi"><strong>QA flags</strong><span>Empty on this clean call.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>The card fields are the same fields the scorer checks: outcome, booking ID,
+      address/ZIP, slot audit and confirmation.</p><small>Recording reference is <code>text_only</code> when
+      the caller opted out.</small></div>
+  </section>
+
+  <section class="slide" data-duration="22000">
+    <div class="eyebrow">Per-call detail · read-back</div>
+    <h2>Say it, get an explicit yes, then write once.</h2>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/video-book-readback.png" alt="Booked call transcript and tools"></div>
+      <div class="side">
+        <div class="kpi"><strong>Read-back</strong><span>Service, date/time, technician, address, phone.</span></div>
+        <div class="kpi"><strong>Token</strong><span>Policy-issued, one use, 120 s, bound payload.</span></div>
+        <div class="kpi"><strong>Audit</strong><span>Tool result plus idempotency key.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>The model cannot mint a confirmation token or supply an idempotency key. A
+      retry returns the same booking; a different payload is a conflict.</p><small>No double booking in
+      the eval hard gates.</small></div>
+  </section>
+
+  <section class="slide" data-duration="22000">
+    <div class="eyebrow">Per-call detail · emergency</div>
+    <h2>Deterministic triage before the model.</h2>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/video-emergency-top.png" alt="Emergency call top"></div>
+      <div class="side">
+        <div class="kpi"><strong>gas_or_co</strong><span>Safety script with 911-first instruction.</span></div>
+        <div class="kpi"><strong>em_harborlight_0001</strong><span>Structured ticket.</span></div>
+        <div class="kpi"><strong>connected</strong><span>Transfer status is what the tool returned.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>The transcript shows the exact safety script and the handoff packet in the tool
+      timeline.</p><small>Life-safety rules are code, not a 2B model decision.</small></div>
+  </section>
+
+  <section class="slide" data-duration="18000">
+    <div class="eyebrow">Per-call detail · honest handoff</div>
+    <h2>No answer is a callback, not a false “connected”.</h2>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/video-emergency-transcript.png" alt="Emergency transcript"></div>
+      <div class="side">
+        <div class="kpi"><strong>Packet</strong><span>Caller, phone, address, intent, service, reason, summary, ticket.</span></div>
+        <div class="kpi"><strong>No answer</strong><span>QA flag <code>handoff_no_answer</code>.</span></div>
+        <div class="kpi"><strong>Callback</strong><span>Emergency SLA from the tenant config; non-emergency next business day.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>An incomplete packet downgrades a live transfer to a callback instead of claiming
+      a human answered.</p><small>This is also why the local audio emergency gate is honest about ASR gaps.</small></div>
+  </section>
+
+  <section class="slide" data-duration="18000">
+    <div class="eyebrow">Monitoring aggregates</div>
+    <h2>Alerts are evidence, not decoration.</h2>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/dashboard.png" alt="Dashboard full page"></div>
+      <div class="side">
+        <div class="kpi"><strong>Slot error</strong><span>Wrong service/address/slot in committed bookings.</span></div>
+        <div class="kpi"><strong>Tool error</strong><span>Errors / total tool calls.</span></div>
+        <div class="kpi"><strong>Emergency</strong><span>Correct ticket + 911 script + connected/queued handoff.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>The banner links the operator to the failing calls. The thresholds mirror the eval
+      gates; the dashboard is evidence, not a second definition.</p><small>No paid paging or hosted monitoring.</small></div>
+  </section>
+
+  <section class="slide" data-duration="18000">
+    <div class="eyebrow">Weekly review</div>
+    <h2>Turn a bad call into a test scenario.</h2>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/video-review.png" alt="Weekly review page"></div>
+      <div class="side">
+        <div class="kpi"><strong>Ten-call sample</strong><span>Mark reviewed; draft a scenario candidate.</span></div>
+        <div class="kpi"><strong>Run the smoke</strong><span><code>make eval-smoke</code> after a correction.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>The review loop is deliberately local and manual. Candidates are drafts, not
+      silently promoted ground truth.</p><small>Held-out scenarios stay sealed and are not used for tuning.</small></div>
+  </section>
+
+  <section class="slide" data-duration="22000">
+    <div class="eyebrow">Admin editor</div>
+    <h2>Config changes without code changes.</h2>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/video-admin.png" alt="Admin tenant editor"></div>
+      <div class="side">
+        <div class="kpi"><strong>Same schema</strong><span>The agent loads the YAML the page validates.</span></div>
+        <div class="kpi"><strong>Atomic write</strong><span>Invalid edits are rejected; the live config is untouched.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>Identity, persona, hours, services, prices, service area, transfer targets, adapter
+      endpoints and knowledge base are editable.</p><small>No visual workflow builder or code generation.</small></div>
+  </section>
+
+  <section class="slide" data-duration="18000">
+    <div class="eyebrow">Admin editor · YAML</div>
+    <h2>Advanced fields stay editable, with validation.</h2>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/video-admin-yaml.png" alt="Admin YAML editor"></div>
+      <div class="side">
+        <div class="kpi"><strong>Two tenants</strong><span>Harborlight and Summit prove the multi-tenant path.</span></div>
+        <div class="kpi"><strong>Fail closed</strong><span>Unknown tenant, bad schema or oversized body is rejected.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>The admin is local-only and loopback-bound. No cross-site POST, no public exposure,
+      no real customer data.</p><small>Save, reload and the next call uses the new config.</small></div>
+  </section>
+
+  <section class="slide" data-duration="20000">
+    <div class="eyebrow">Runbook</div>
+    <h2>One page for the on-call operator.</h2>
+    <div class="shots">
+      <div class="shot contain"><img src="screenshots/video-runbook-top.png" alt="Runbook top"></div>
+      <div class="side">
+        <div class="kpi"><strong>Start</strong><span><code>lfm3 audio</code> → <code>make demo</code></span></div>
+        <div class="kpi"><strong>Recover</strong><span><code>make logs</code> · <code>make health</code> · <code>make reset</code> · <code>make rollback</code></span></div>
+        <div class="kpi"><strong>Stop</strong><span><code>make down</code>; data stays in <code>./data</code>.</span></div>
+      </div>
+    </div>
+    <div class="caption"><p>The runbook covers prerequisites, URLs, profiles, daily commands, failure branches
+      and the free-tier limits.</p><small>Compose path and host-binary fallback are both documented.</small></div>
+  </section>
+
+  <section class="slide" data-duration="22000">
+    <div class="eyebrow">Evaluation and gate status</div>
+    <h2>Measured, not asserted.</h2>
+    <table>
+      <tr><th>Check</th><th>Result</th><th>Caveat</th></tr>
+      <tr><td>Hybrid text gate (40 text + 10 critical repeats)</td><td class="bad">not_run_provider_quota</td><td>Groq free daily budget was exhausted; the OrcaRouter free 50 RPD fallback was then exhausted. Same scenarios and hard gates; no green claim.</td></tr>
+      <tr><td>Local text safety report (40 text)</td><td class="ok">pass</td><td>Task completion and latency are report-only.</td></tr>
+      <tr><td>Local audio safety report (6 audio)</td><td class="bad">emergency handoff fails</td><td>Real LFM3 ASR misheard the ZIP; packet incomplete; policy queued an honest callback.</td></tr>
+      <tr><td>Latency</td><td>p95 5.3 s · barge-in ~0.88 s</td><td>One 10-turn sample per profile; no production SLA; no sub-3 s claim.</td></tr>
+    </table>
+    <div class="caption"><p>The report keeps the failure gallery and caveats. A failed gate is not hidden behind
+      a green dashboard.</p><small>See <code>reports/</code> and <code>docs/evaluation.md</code>.</small></div>
+  </section>
+
+  <section class="slide" data-duration="20000">
+    <div class="eyebrow">Known limits</div>
+    <h2 class="warn">Local-only. Demo tier. No production SLA.</h2>
+    <div class="columns">
+      <div class="panel"><h3>Model and audio</h3><ul><li>No proactive silence prompt.</li>
+        <li>Degraded ZIP recognition is fragile.</li><li>No long-utterance turn-taking guard.</li>
+        <li>Local LFM3 is a 2B fallback, not hosted quality.</li></ul></div>
+      <div class="panel"><h3>Product boundary</h3><ul><li>No SIP, phone number or carrier integration.</li>
+        <li>No real calendar/CRM/SMS or payments.</li><li>No HIPAA/PCI claim, 24/7 on-call or multilingual booking.</li>
+        <li>No hosted URL; a live demo is by appointment.</li></ul></div>
+    </div>
+    <div class="caption"><p>The demo avoids the known gaps: clean audio, short turns, ZIP digits one at a time,
+      no long silence.</p><small>Known gaps are documented backlog, not hidden production promises.</small></div>
+  </section>
+
+  <section class="slide" data-duration="16000">
+    <div class="eyebrow">Handover</div>
+    <h2>What the client owns after the build.</h2>
+    <div class="columns">
+      <div class="panel"><h3>Included</h3><p>Repo, tenant configs, eval report, dashboard, admin editor, runbook,
+        training outline, checklist and 30 days of bug/deployment support.</p></div>
+      <div class="panel"><h3>Not included</h3><p>New integrations, new tenants, workflow changes, ongoing support,
+        production SLA, carrier support, HIPAA/PCI work or 24/7 on-call.</p></div>
+    </div>
+    <div class="caption"><p>Credentials and accounts transfer at handover; demo secrets are rotated.</p>
+      <small>Best-effort support; free-tier outages and local GPU availability are excluded.</small></div>
+  </section>
+
+  <section class="slide" data-duration="10000">
+    <div class="eyebrow">Start here</div>
+    <h1>Run it locally.<br>Read the gate.<br>Ask for the live demo.</h1>
+    <p class="lead"><code>make demo</code> · <code>make eval-local</code> · <code>make eval-orca</code><br>
+      README · case study · learning map · eval report · runbook</p>
+  </section>
+</div>
+<script>
+  const slides = [...document.querySelectorAll(".slide")];
+  const progress = document.getElementById("progress");
+  const durations = slides.map((s) => Number(s.dataset.duration) || 15000);
+  const total = durations.reduce((a, b) => a + b, 0);
+  window.__totalMs = total;
+  let index = 0, start = performance.now(), elapsed = 0;
+  function show(next) {
+    slides[index].classList.remove("active");
+    index = Math.min(next, slides.length - 1);
+    slides[index].classList.add("active");
+    elapsed = 0; start = performance.now();
+    if (index === slides.length - 1) window.__finished = true;
+  }
+  function tick(now) {
+    elapsed = now - start;
+    if (elapsed >= durations[index] && index < slides.length - 1) show(index + 1);
+    const done = durations.slice(0, index).reduce((a, b) => a + b, 0) + Math.min(elapsed, durations[index]);
+    progress.style.width = `${Math.min(100, (done / total) * 100)}%`;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>

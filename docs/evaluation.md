@@ -1,14 +1,16 @@
 # Evaluation harness (ticket #6)
 
-The harness implements the [#26](../../forge-roadmap/research/voice-evaluation-2026-11.md)
-decision. `scenarios/manifest.yaml` is the source of truth for the 40 text + 10 audio
-scenarios; `scenarios/audio_scripts.yaml` is the caller script for the audio fixtures.
+The harness implements the locked #26 evaluation decision. `scenarios/manifest.yaml` is the
+source of truth for the 40 text + 10 audio scenarios; `scenarios/audio_scripts.yaml` is the
+caller script for the audio fixtures. This page is the public copy of the metric, isolation and
+rate-limit contract.
 
 ## Commands
 
 | Command | Runs | Gate |
 |---|---|---|
 | `make eval` | 40 text hybrid, plus 10 critical scenarios × 3 repeats | Release: every hard gate + task completion ≥90% |
+| `make eval-orca` | Same hybrid text gate on OrcaRouter free | Same gates; a quota failure writes `not_run_provider_quota` |
 | `make eval-local` | 40 text fully local | Safety hard gates; task, latency and cost are report-only |
 | `make eval-audio` | 10 audio hybrid on the self-hosted LiveKit server | Emergency transfer + barge-in |
 | `make eval-audio-local` | 6 audio local on the self-hosted LiveKit server | Emergency transfer + barge-in |
@@ -21,7 +23,24 @@ without `GROQ_API_KEY` on the hybrid profile. The local commands are the safety 
 need no external call. The audio commands use the pinned self-hosted `livekit-server` from
 `make bootstrap`, not LiveKit Cloud. `EVAL_AUDIO_TRANSPORT=session make eval-audio-local` uses
 the offline `AudioCallSession` fixture replay when the host GPU cannot sustain the live stack;
-the report records which transport ran.
+the report records which transport ran. If another worktree already owns the default LiveKit
+ports, set `EVAL_LIVEKIT_PORT=7980 EVAL_WEB_PORT=8001`; the stack moves signal, RTC TCP and RTC
+UDP together.
+
+### Provider override
+
+`make eval-orca` sets `EVAL_LLM_PROVIDER=orcarouter` and uses
+`deepseek/deepseek-v4.1-flash-free` at `https://api.orcarouter.ai/v1` with
+`ORCAROUTER_API_KEY`. It is the fallback when the Groq free daily token budget is exhausted;
+the scenario set, hard gates and scorer are unchanged. The documented free limit is
+**10 RPM / 50 RPD** (workspace-wide), so the run paces batches at 6.5 s and 2 cases per request.
+
+Free reasoning models spend tokens on hidden reasoning before the JSON. The harness uses a
+640-token live check and 2,400-token batches. A tiny budget can return an empty content field
+even when the model is healthy; that is a harness/config issue, not a reason to relax a gate.
+When the provider returns a daily-limit 429, the runner writes `not_run_provider_quota` and
+does not claim the hybrid gate. The local text run remains the safety report, not a substitute
+for the hybrid release gate.
 
 Exit codes: `0` pass, `1` a gated failure, `2` a harness/startup failure. A report is written
 for a started run and for the missing-key failure, so a release failure is visible.
@@ -93,9 +112,11 @@ section, critical-repeat stability, cost assumptions and the latency caveat.
 
 ## Honest limits
 
-- Text mode uses the deterministic #4 rule interpreter. The hybrid text release run checks the
-  Groq key/model once, but it does not make 40 per-turn LLM calls; the text quality claim is a
-  policy/tool claim, not a model benchmark.
+- Release text runs use the provider-backed interpreter (Groq, OrcaRouter free, or local LFM3)
+  for caller-fact extraction; the deterministic #4 policy still owns intent, confirmation,
+  writes, emergency triage and handoff. Smoke uses the deterministic rule interpreter. The text
+  quality claim is a policy/tool claim with a model extraction layer, not a model benchmark.
+  The local report's task completion is report-only; the hybrid text gate is the release gate.
 - Audio `--transport livekit` runs the real self-hosted stack and LFM3 STT/TTS. The lower-level
   `--transport session` replay exercises the same `AudioCallSession` without acoustic ASR or
   WebRTC first-audio latency.

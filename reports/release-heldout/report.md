@@ -7,9 +7,9 @@ This file is generated from `report.json`; do not hand-edit it.
 - **Run:** `release-heldout`
 - **Profile / mode / pipeline:** hybrid / all / fixed
 - **Split:** heldout
-- **Verdict:** **NOT_RUN_PROVIDER_QUOTA**
+- **Verdict:** **NOT_RUN_MISSING_GROQ_KEY**
 - **Task completion:** 0/0 (0.00%, 95% Wilson 0.0–0.0%)
-- **Git SHA:** `81e71cf`
+- **Git SHA:** `dd1594a`
 - **Manifest SHA:** `sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2`
 - **Held-out manifest SHA:** `sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd`
 
@@ -79,8 +79,7 @@ No fixed comparison in this report. Run `make eval-baseline` to generate the one
 ## Caveats and limits
 
 - The run did not start or did not complete; this report is written so the failure is visible rather than silent.
-- {"error":{"message":"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01jppc8f0xexvt56hmkh0dj7k6` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199791, Requested 616. Please try again in 2m55.823999999s. Need more tokens? Upgrade to Dev Tier today at https:
-- Report metadata refreshed to the current code commit; metrics are from the recorded run. Full transcripts are local-only and not committed.
+- the hybrid release gate requires GROQ_API_KEY; the fully local report is available with make eval-local
 
 ## Baseline comparison
 

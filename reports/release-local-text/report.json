@@ -81,16 +81,16 @@
     "latency": {
       "n": 40,
       "p50_tool_path_ms": 25.0,
-      "p50_wall_ms": 6603.5,
+      "p50_wall_ms": 3192.5,
       "p95_tool_path_ms": 28.0,
-      "p95_wall_ms": 7071.7,
+      "p95_wall_ms": 3490.85,
       "wall_p50_bootstrap_ci": [
-        6519.0,
-        6702.0
+        3097.0,
+        3288.0
       ],
       "wall_p95_bootstrap_ci": [
-        6849.25,
-        7415.0
+        3465.35,
+        3508.0
       ]
     },
     "pipeline": "fixed",
@@ -129,8 +129,7 @@
     "Text mode uses the provider-backed interpreter for this profile; the same #4 policy, eight tools, confirmation and idempotency path executes the call. The provider is an extraction model, not an unconstrained booking agent.",
     "The baseline is a one-prompt direct-write model path with no tools, state, policy, confirmation or idempotency. It is expected to fail and never gates.",
     "Synthetic data only. No production SLA, HIPAA/PCI claim or real customer data.",
-    "Held-out runs received only caller inputs. The expected labels stayed in the scorer and the sealed manifest hash is recorded in this report.",
-    "Report metadata refreshed to the current code commit; metrics are from the recorded run. Full transcripts are local-only and not committed."
+    "Held-out runs received only caller inputs. The expected labels stayed in the scorer and the sealed manifest hash is recorded in this report."
   ],
   "comparison": null,
   "cost_model": {
@@ -149,14 +148,14 @@
   },
   "counts": {
     "audio": 0,
-    "elapsed_seconds": 262.518,
+    "elapsed_seconds": 128.538,
     "held_out": 8,
     "runs": 40,
     "scenarios": 40,
     "text": 40,
     "transcripts": "reports/release-local-text/transcripts"
   },
-  "finished_at": "2026-11-07T09:29:53.143253Z",
+  "finished_at": "2026-11-07T12:47:15.543492Z",
   "gates": {
     "audit_completeness": {
       "denominator": 40,
@@ -294,7 +293,7 @@
       "value": "0 failure(s)"
     }
   },
-  "git_sha": "81e71cf",
+  "git_sha": "dd1594a",
   "heldout_manifest_sha": "sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd",
   "manifest_sha": "sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2",
   "mode": "text",
@@ -309,7 +308,11 @@
       "status": "local_lfm3"
     },
     "groq_model": "qwen/qwen3.8-27b",
-    "hybrid_key_present": false,
+    "hybrid_key_present": true,
+    "llm_provider": "lfm3",
+    "model": "lfm3-audio-2b",
+    "orcarouter_base_url": "https://api.orcarouter.ai/v1",
+    "orcarouter_model": "deepseek/deepseek-v4.1-flash-free",
     "text_engine": "provider:lfm3-audio-2b",
     "text_profile": "local"
   },
@@ -361,7 +364,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 10,
-        "wall_ms": 5563
+        "wall_ms": 2671
       },
       "mode": "text",
       "pass": true,
@@ -469,7 +472,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6181
+        "wall_ms": 3072
       },
       "mode": "text",
       "pass": false,
@@ -562,7 +565,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6134
+        "wall_ms": 2871
       },
       "mode": "text",
       "pass": false,
@@ -654,7 +657,7 @@
       "held_out": true,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6150
+        "wall_ms": 3016
       },
       "mode": "text",
       "pass": false,
@@ -746,7 +749,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 27,
-        "wall_ms": 5889
+        "wall_ms": 2867
       },
       "mode": "text",
       "pass": false,
@@ -839,7 +842,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 27,
-        "wall_ms": 6531
+        "wall_ms": 3481
       },
       "mode": "text",
       "pass": true,
@@ -934,7 +937,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 27,
-        "wall_ms": 6151
+        "wall_ms": 3064
       },
       "mode": "text",
       "pass": false,
@@ -1033,7 +1036,7 @@
       "held_out": true,
       "latency": {
         "tool_path_ms": 27,
-        "wall_ms": 6073
+        "wall_ms": 2989
       },
       "mode": "text",
       "pass": false,
@@ -1130,7 +1133,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 27,
-        "wall_ms": 6672
+        "wall_ms": 3221
       },
       "mode": "text",
       "pass": false,
@@ -1227,7 +1230,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 27,
-        "wall_ms": 6643
+        "wall_ms": 3126
       },
       "mode": "text",
       "pass": false,
@@ -1320,7 +1323,7 @@
       "held_out": true,
       "latency": {
         "tool_path_ms": 5,
-        "wall_ms": 6201
+        "wall_ms": 3007
       },
       "mode": "text",
       "pass": true,
@@ -1412,7 +1415,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6651
+        "wall_ms": 3097
       },
       "mode": "text",
       "pass": true,
@@ -1499,7 +1502,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6568
+        "wall_ms": 3114
       },
       "mode": "text",
       "pass": true,
@@ -1583,7 +1586,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6027
+        "wall_ms": 2998
       },
       "mode": "text",
       "pass": true,
@@ -1671,7 +1674,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 28,
-        "wall_ms": 6836
+        "wall_ms": 3480
       },
       "mode": "text",
       "pass": true,
@@ -1769,7 +1772,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 28,
-        "wall_ms": 6473
+        "wall_ms": 3508
       },
       "mode": "text",
       "pass": true,
@@ -1867,7 +1870,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 28,
-        "wall_ms": 6291
+        "wall_ms": 3277
       },
       "mode": "text",
       "pass": true,
@@ -1965,7 +1968,7 @@
       "held_out": true,
       "latency": {
         "tool_path_ms": 28,
-        "wall_ms": 6545
+        "wall_ms": 3490
       },
       "mode": "text",
       "pass": true,
@@ -2058,7 +2061,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 3,
-        "wall_ms": 6748
+        "wall_ms": 3423
       },
       "mode": "text",
       "pass": true,
@@ -2148,7 +2151,7 @@
       "held_out": true,
       "latency": {
         "tool_path_ms": 3,
-        "wall_ms": 6044
+        "wall_ms": 2980
       },
       "mode": "text",
       "pass": true,
@@ -2240,7 +2243,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 0,
-        "wall_ms": 6845
+        "wall_ms": 3343
       },
       "mode": "text",
       "pass": true,
@@ -2318,7 +2321,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6411
+        "wall_ms": 2919
       },
       "mode": "text",
       "pass": false,
@@ -2406,7 +2409,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 0,
-        "wall_ms": 6727
+        "wall_ms": 3159
       },
       "mode": "text",
       "pass": true,
@@ -2479,7 +2482,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6551
+        "wall_ms": 3022
       },
       "mode": "text",
       "pass": true,
@@ -2560,7 +2563,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6844
+        "wall_ms": 3271
       },
       "mode": "text",
       "pass": true,
@@ -2645,7 +2648,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6519
+        "wall_ms": 3068
       },
       "mode": "text",
       "pass": true,
@@ -2732,7 +2735,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 10,
-        "wall_ms": 7062
+        "wall_ms": 3465
       },
       "mode": "text",
       "pass": false,
@@ -2838,7 +2841,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6702
+        "wall_ms": 3438
       },
       "mode": "text",
       "pass": false,
@@ -2928,7 +2931,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6930
+        "wall_ms": 3472
       },
       "mode": "text",
       "pass": false,
@@ -3015,7 +3018,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 6,
-        "wall_ms": 6639
+        "wall_ms": 3223
       },
       "mode": "text",
       "pass": true,
@@ -3112,7 +3115,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 14,
-        "wall_ms": 6643
+        "wall_ms": 3138
       },
       "mode": "text",
       "pass": true,
@@ -3223,7 +3226,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6791
+        "wall_ms": 3299
       },
       "mode": "text",
       "pass": true,
@@ -3310,7 +3313,7 @@
       "held_out": true,
       "latency": {
         "tool_path_ms": 31,
-        "wall_ms": 6803
+        "wall_ms": 3246
       },
       "mode": "text",
       "pass": true,
@@ -3416,7 +3419,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6106
+        "wall_ms": 3164
       },
       "mode": "text",
       "pass": false,
@@ -3502,7 +3505,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 10,
-        "wall_ms": 6549
+        "wall_ms": 3380
       },
       "mode": "text",
       "pass": true,
@@ -3607,7 +3610,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6899
+        "wall_ms": 3273
       },
       "mode": "text",
       "pass": true,
@@ -3696,7 +3699,7 @@
       "held_out": true,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 6703
+        "wall_ms": 3424
       },
       "mode": "text",
       "pass": true,
@@ -3783,7 +3786,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 7022
+        "wall_ms": 3507
       },
       "mode": "text",
       "pass": true,
@@ -3872,7 +3875,7 @@
       "held_out": true,
       "latency": {
         "tool_path_ms": 28,
-        "wall_ms": 7256
+        "wall_ms": 3419
       },
       "mode": "text",
       "pass": true,
@@ -3967,7 +3970,7 @@
       "held_out": false,
       "latency": {
         "tool_path_ms": 25,
-        "wall_ms": 7415
+        "wall_ms": 2853
       },
       "mode": "text",
       "pass": true,
@@ -4017,6 +4020,6 @@
   ],
   "schema_version": 1,
   "split": "release",
-  "started_at": "2026-11-07T09:25:30.625412Z",
+  "started_at": "2026-11-07T12:45:07.005548Z",
   "verdict": "pass"
 }
