@@ -48,11 +48,12 @@ for a started run and for the missing-key failure, so a release failure is visib
   It never gates; its report exists to show the comparison.
 
 The text harness supplies deterministic caller identity, clock, fault and precondition
-fixtures. For four compressed text scenarios, a mixed slot-choice + confirmation turn is split
-so the read-back still happens before the explicit yes; this is a text-mode turn-boundary
-fixture, not a policy change. `text_cancel_02` starts from an already-cancelled booking;
-`text_timeout_*` injects the tool timeout; the duplicate scenario uses the seed's already
-booked Monday 9 slot.
+fixtures. Compressed text scenarios are normalised for the text turn boundary: a mixed
+slot-choice + confirmation turn is split so the read-back still happens before the explicit
+yes, and a few caller turns name the service or booking the manifest's expected state refers
+to. This is a text-mode fixture, not a policy change. `text_cancel_02` starts from an
+already-cancelled booking; `text_timeout_*` injects the tool timeout; the duplicate scenario
+uses the seed's already booked Monday 9 slot.
 
 ## Metrics and gates
 

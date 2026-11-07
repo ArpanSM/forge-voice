@@ -179,11 +179,16 @@ def _caveats(config: RunConfig, *, had_heldout: bool, provider: dict[str, Any]) 
             "Held-out runs received only caller inputs. The expected labels stayed in the "
             "scorer and the sealed manifest hash is recorded in this report."
         )
-    if config.transport == "session":
+    if config.mode in {"audio", "all"} and config.transport == "session":
         caveats.append(
             "Audio runs replay the committed caller scripts through the #5 AudioCallSession. "
             "This exercises the same policy, tools and confirmation path but does not measure "
             "acoustic ASR or WebRTC first-audio latency."
+        )
+    if config.mode in {"audio", "all"} and config.transport == "livekit":
+        caveats.append(
+            "Audio runs use the self-hosted LiveKit stack and LFM3 STT/TTS. The measured "
+            "wall time is the local demo path, not a production phone-line SLA."
         )
     if provider.get("check") and not provider["check"].get("ok"):
         caveats.append(

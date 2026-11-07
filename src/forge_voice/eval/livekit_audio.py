@@ -197,13 +197,22 @@ class LiveKitAudioRunner:
         script = self.scripts[view.id]
         chunks = _chunks([turn.text for turn in script.turns], limit=3)
         started = time.perf_counter()
-        try:
-            result = asyncio.run(self._call(view, setup, script, chunks))
-        except Exception as exc:
-            wall_ms = round((time.perf_counter() - started) * 1000)
-            return self._failed_execution(view, setup, script, chunks, exc, wall_ms)
+        last_error: Exception | None = None
+        for attempt in range(2):
+            try:
+                result = asyncio.run(self._call(view, setup, script, chunks))
+                result["retried"] = attempt > 0
+            except Exception as exc:
+                last_error = exc
+                if attempt == 0:
+                    time.sleep(2)
+                    continue
+            else:
+                wall_ms = round((time.perf_counter() - started) * 1000)
+                return self._execution(view, setup, script, chunks, result, wall_ms)
         wall_ms = round((time.perf_counter() - started) * 1000)
-        return self._execution(view, setup, script, chunks, result, wall_ms)
+        assert last_error is not None
+        return self._failed_execution(view, setup, script, chunks, last_error, wall_ms)
 
     def _failed_execution(
         self,
@@ -256,6 +265,13 @@ class LiveKitAudioRunner:
         room = rtc.Room()
         audio = AgentAudio()
         room.on("track_subscribed", audio.on_track)
+
+        async def state_or_none(states: set[str], timeout: float, since: float = 0.0):
+            try:
+                return await trace.state(states, timeout, since=since)
+            except TimeoutError:
+                return None
+
         try:
             await room.connect(token["url"], token["token"])
             source = rtc.AudioSource(24000, 1, queue_size_ms=3000)
@@ -264,31 +280,42 @@ class LiveKitAudioRunner:
             options.source = rtc.TrackSource.SOURCE_MICROPHONE
             await room.local_participant.publish_track(track, options)
             await trace.wait(lambda event: event.get("event") == "room_connected", self.timeout)
-            greeting = await trace.state({"speaking"}, self.timeout)
-            await trace.state({"listening", "idle"}, self.timeout, since=greeting["ts"])
+            greeting = await state_or_none({"speaking"}, self.timeout)
+            await state_or_none(
+                {"listening", "idle"},
+                self.timeout,
+                since=greeting["ts"] if greeting else 0.0,
+            )
             await audio.wait_quiet(timeout=self.timeout)
             if script.turns and script.turns[0].pause_before_ms >= 3000:
                 await asyncio.sleep(script.turns[0].pause_before_ms / 1000)
             barge: dict[str, Any] | None = None
             for index, chunk in enumerate(chunks):
-                await trace.state({"listening", "idle"}, self.timeout)
+                await state_or_none({"listening", "idle"}, self.timeout)
                 path = tts_wav(chunk, seed=700 + index)
                 speech_end = await publish_wav(source, path)
-                speaking = await trace.state({"speaking"}, self.timeout, since=speech_end)
+                speaking = await state_or_none({"speaking"}, self.timeout, since=speech_end)
                 if view.id == "audio_bargein_01" and index == 1:
                     interrupt = tts_wav("Wait, I want the second slot instead.", seed=999)
                     interrupt_start = time.time()
                     await publish_wav(source, interrupt, trailing_ms=200)
-                    stopped = await trace.state(
+                    stopped = await state_or_none(
                         {"listening", "idle"}, self.timeout, since=interrupt_start
                     )
-                    recovered = await trace.state({"speaking"}, self.timeout, since=stopped["ts"])
+                    recovered = (
+                        await state_or_none({"speaking"}, self.timeout, since=stopped["ts"])
+                        if stopped
+                        else None
+                    )
                     barge = {
-                        "yield_ms": round((stopped["ts"] - interrupt_start) * 1000),
+                        "yield_ms": round((stopped["ts"] - interrupt_start) * 1000)
+                        if stopped
+                        else None,
                         "recovered": recovered is not None,
                     }
                     speaking = recovered
-                await trace.state({"listening", "idle"}, self.timeout, since=speaking["ts"])
+                if speaking is not None:
+                    await state_or_none({"listening", "idle"}, self.timeout, since=speaking["ts"])
                 await audio.wait_quiet(quiet_s=0.6, timeout=30)
                 if not audio.has_voice():
                     raise RuntimeError("no agent audio was received over WebRTC")

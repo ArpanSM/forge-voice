@@ -23,6 +23,7 @@ recordings/
 # Evaluation scratch runs; committed release reports use reports/release-*/
 reports/*
 !reports/release-*/
+reports/release-*/stack/
 
 # OS / editor
 .DS_Store
