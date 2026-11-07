@@ -129,7 +129,8 @@
     "Text mode uses the provider-backed interpreter for this profile; the same #4 policy, eight tools, confirmation and idempotency path executes the call. The provider is an extraction model, not an unconstrained booking agent.",
     "The baseline is a one-prompt direct-write model path with no tools, state, policy, confirmation or idempotency. It is expected to fail and never gates.",
     "Synthetic data only. No production SLA, HIPAA/PCI claim or real customer data.",
-    "Held-out runs received only caller inputs. The expected labels stayed in the scorer and the sealed manifest hash is recorded in this report."
+    "Held-out runs received only caller inputs. The expected labels stayed in the scorer and the sealed manifest hash is recorded in this report.",
+    "Report metadata refreshed to the current code commit; metrics are from the recorded run. Full transcripts are local-only and not committed."
   ],
   "comparison": null,
   "cost_model": {
@@ -293,7 +294,7 @@
       "value": "0 failure(s)"
     }
   },
-  "git_sha": "ea2b1fd",
+  "git_sha": "81e71cf",
   "heldout_manifest_sha": "sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd",
   "manifest_sha": "sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2",
   "mode": "text",

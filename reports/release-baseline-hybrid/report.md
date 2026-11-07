@@ -9,7 +9,7 @@ This file is generated from `report.json`; do not hand-edit it.
 - **Split:** release
 - **Verdict:** **NOT_RUN_PROVIDER_QUOTA**
 - **Task completion:** 0/0 (0.00%, 95% Wilson 0.0–0.0%)
-- **Git SHA:** `ea2b1fd`
+- **Git SHA:** `81e71cf`
 - **Manifest SHA:** `sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2`
 - **Held-out manifest SHA:** `sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd`
 
@@ -80,6 +80,7 @@ No fixed comparison in this report. Run `make eval-baseline` to generate the one
 
 - The run did not start or did not complete; this report is written so the failure is visible rather than silent.
 - the provider daily token budget is exhausted
+- Report metadata refreshed to the current code commit; metrics are from the recorded run. Full transcripts are local-only and not committed.
 
 ## Baseline comparison
 

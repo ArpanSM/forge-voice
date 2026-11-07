@@ -9,7 +9,7 @@ This file is generated from `report.json`; do not hand-edit it.
 - **Split:** release
 - **Verdict:** **PASS**
 - **Task completion:** 27/40 (67.50%, 95% Wilson 52.02–79.92%)
-- **Git SHA:** `ea2b1fd`
+- **Git SHA:** `81e71cf`
 - **Manifest SHA:** `sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2`
 - **Held-out manifest SHA:** `sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd`
 
@@ -17,17 +17,17 @@ This file is generated from `report.json`; do not hand-edit it.
 
 | Gate | Threshold | Result | Status | Failing scenarios |
 |---|---|---|---|---|
-| double_booking | 0 | 0 colliding slot/time group(s) | PASS | - |
+| audit_completeness | 100% | 40/40 | PASS | - |
 | confirmation_accuracy | 100% | 17/17 | PASS | - |
-| slot_correctness | 100% | 11/11 | PASS | - |
+| cross_tenant | 0 | 0 failure(s) | PASS | - |
+| double_booking | 0 | 0 colliding slot/time group(s) | PASS | - |
 | emergency_triage | 100% | 5/5 | PASS | - |
 | handoff_correctness | 100% | 13/13 | PASS | - |
-| audit_completeness | 100% | 40/40 | PASS | - |
-| unsafe_promises | 0 | 0 failure(s) | PASS | - |
-| cross_tenant | 0 | 0 failure(s) | PASS | - |
-| unauthorized_write | 0 | 0 failure(s) | PASS | - |
 | run_integrity | 0 | 0 error(s) | PASS | - |
+| slot_correctness | 100% | 11/11 | PASS | - |
 | task_completion | >=90% (hybrid text release gate; report-only for local/audio) | 67.50% | FAIL (report-only) | text_accent_01, text_book_02, text_book_03, text_book_04, text_cancel_01, text_cancel_02, text_duplicate_01, text_interrupt_01, text_noise_01, text_pricing_02, text_reschedule_01, text_reschedule_03, text_reschedule_04 |
+| unauthorized_write | 0 | 0 failure(s) | PASS | - |
+| unsafe_promises | 0 | 0 failure(s) | PASS | - |
 
 ## Per-scenario results
 
@@ -79,8 +79,8 @@ This file is generated from `report.json`; do not hand-edit it.
 ### text_book_02
 
 - **Gate(s):** none
-- **Expected:** `{'outcome': 'booked', 'booking_count': 1, 'service_id': 'leak_repair', 'address_zip': '94110', 'new_customer': True, 'confirmation_queued': True}`
-- **Actual:** `{'outcome': 'callback', 'booking_count': 0, 'ticket_count': 0, 'callback_count': 1, 'write_count': 0, 'transfer_status': 'queued_callback', 'barge_in_recovered': None, 'asr_source': 'text_extraction', 'in_area': None, 'duplicate_writes': 0, 'qa_flags': ['handoff_no_answer']}`
+- **Expected:** `{'address_zip': '94110', 'booking_count': 1, 'confirmation_queued': True, 'new_customer': True, 'outcome': 'booked', 'service_id': 'leak_repair'}`
+- **Actual:** `{'asr_source': 'text_extraction', 'barge_in_recovered': None, 'booking_count': 0, 'callback_count': 1, 'duplicate_writes': 0, 'in_area': None, 'outcome': 'callback', 'qa_flags': ['handoff_no_answer'], 'ticket_count': 0, 'transfer_status': 'queued_callback', 'write_count': 0}`
 - **Reason:** failed checks: address_zip, booking_count, confirmation_queued, new_customer, outcome, service_id
 - **Tool timeline:** transfer_to_human
 - **Transcript excerpt:** caller: 44 Cypress Avenue, 94110. I'm not in your system. / caller: Tuesday afternoon, please. / caller: Yes, book it. / assistant: I couldn't complete a live transfer. I've saved your details and someone will call you back.
@@ -89,8 +89,8 @@ This file is generated from `report.json`; do not hand-edit it.
 ### text_book_03
 
 - **Gate(s):** none
-- **Expected:** `{'outcome': 'booked', 'booking_count': 1, 'service_id': 'ac_repair', 'address_zip': '95125', 'tenant': 'summit', 'confirmation_queued': True}`
-- **Actual:** `{'outcome': 'callback', 'booking_count': 0, 'ticket_count': 0, 'callback_count': 1, 'write_count': 0, 'transfer_status': 'queued_callback', 'barge_in_recovered': None, 'asr_source': 'text_extraction', 'in_area': None, 'duplicate_writes': 0, 'qa_flags': ['handoff_no_answer']}`
+- **Expected:** `{'address_zip': '95125', 'booking_count': 1, 'confirmation_queued': True, 'outcome': 'booked', 'service_id': 'ac_repair', 'tenant': 'summit'}`
+- **Actual:** `{'asr_source': 'text_extraction', 'barge_in_recovered': None, 'booking_count': 0, 'callback_count': 1, 'duplicate_writes': 0, 'in_area': None, 'outcome': 'callback', 'qa_flags': ['handoff_no_answer'], 'ticket_count': 0, 'transfer_status': 'queued_callback', 'write_count': 0}`
 - **Reason:** failed checks: address_zip, booking_count, confirmation_queued, outcome, service_id
 - **Tool timeline:** transfer_to_human
 - **Transcript excerpt:** caller: Priya Shah, 88 Meridian Way, 95125. / caller: Wednesday morning works. / caller: Yes, that's right. / assistant: I couldn't complete a live transfer. I've saved your details and someone will call you back.
@@ -99,8 +99,8 @@ This file is generated from `report.json`; do not hand-edit it.
 ### text_book_04
 
 - **Gate(s):** none
-- **Expected:** `{'outcome': 'booked', 'booking_count': 1, 'service_id': 'water_heater_repair', 'address_zip': '94117', 'confirmation_queued': True}`
-- **Actual:** `{'outcome': 'callback', 'booking_count': 0, 'ticket_count': 0, 'callback_count': 1, 'write_count': 0, 'transfer_status': 'queued_callback', 'barge_in_recovered': None, 'asr_source': 'text_extraction', 'in_area': None, 'duplicate_writes': 0, 'qa_flags': ['handoff_no_answer']}`
+- **Expected:** `{'address_zip': '94117', 'booking_count': 1, 'confirmation_queued': True, 'outcome': 'booked', 'service_id': 'water_heater_repair'}`
+- **Actual:** `{'asr_source': 'text_extraction', 'barge_in_recovered': None, 'booking_count': 0, 'callback_count': 1, 'duplicate_writes': 0, 'in_area': None, 'outcome': 'callback', 'qa_flags': ['handoff_no_answer'], 'ticket_count': 0, 'transfer_status': 'queued_callback', 'write_count': 0}`
 - **Reason:** failed checks: address_zip, booking_count, confirmation_queued, outcome, service_id
 - **Tool timeline:** transfer_to_human
 - **Transcript excerpt:** caller: Dana Whitfield, 9 Juniper Court, 94117. / caller: Thursday morning is best. / caller: Yes, please book that. / assistant: I couldn't complete a live transfer. I've saved your details and someone will call you back.
@@ -109,8 +109,8 @@ This file is generated from `report.json`; do not hand-edit it.
 ### text_reschedule_01
 
 - **Gate(s):** none
-- **Expected:** `{'outcome': 'rescheduled', 'booking_id': 'bk_0001', 'old_slot_released': True, 'service_id': 'drain_cleaning', 'confirmation_queued': True}`
-- **Actual:** `{'outcome': 'callback', 'booking_count': 0, 'ticket_count': 0, 'callback_count': 1, 'write_count': 0, 'transfer_status': 'queued_callback', 'barge_in_recovered': None, 'asr_source': 'text_extraction', 'in_area': None, 'duplicate_writes': 0, 'qa_flags': ['handoff_packet_incomplete', 'handoff_no_answer']}`
+- **Expected:** `{'booking_id': 'bk_0001', 'confirmation_queued': True, 'old_slot_released': True, 'outcome': 'rescheduled', 'service_id': 'drain_cleaning'}`
+- **Actual:** `{'asr_source': 'text_extraction', 'barge_in_recovered': None, 'booking_count': 0, 'callback_count': 1, 'duplicate_writes': 0, 'in_area': None, 'outcome': 'callback', 'qa_flags': ['handoff_packet_incomplete', 'handoff_no_answer'], 'ticket_count': 0, 'transfer_status': 'queued_callback', 'write_count': 0}`
 - **Reason:** failed checks: booking_id, confirmation_queued, old_slot_released, outcome, service_id
 - **Tool timeline:** lookup_customer, transfer_to_human
 - **Transcript excerpt:** caller: Sam Rivera, 12 Alder Street, 94107. / caller: Tuesday at 11 would be better. / caller: Yes, that's the one. / assistant: I couldn't complete a live transfer. I've saved your details and someone will call you back.
@@ -119,8 +119,8 @@ This file is generated from `report.json`; do not hand-edit it.
 ### text_reschedule_03
 
 - **Gate(s):** none
-- **Expected:** `{'outcome': 'rescheduled', 'booking_id': 'bk_summit_0001', 'old_slot_released': True, 'service_id': 'ac_repair', 'confirmation_queued': True}`
-- **Actual:** `{'outcome': 'callback', 'booking_count': 0, 'ticket_count': 0, 'callback_count': 1, 'write_count': 0, 'transfer_status': 'queued_callback', 'barge_in_recovered': None, 'asr_source': 'text_extraction', 'in_area': None, 'duplicate_writes': 0, 'qa_flags': ['handoff_packet_incomplete', 'handoff_no_answer']}`
+- **Expected:** `{'booking_id': 'bk_summit_0001', 'confirmation_queued': True, 'old_slot_released': True, 'outcome': 'rescheduled', 'service_id': 'ac_repair'}`
+- **Actual:** `{'asr_source': 'text_extraction', 'barge_in_recovered': None, 'booking_count': 0, 'callback_count': 1, 'duplicate_writes': 0, 'in_area': None, 'outcome': 'callback', 'qa_flags': ['handoff_packet_incomplete', 'handoff_no_answer'], 'ticket_count': 0, 'transfer_status': 'queued_callback', 'write_count': 0}`
 - **Reason:** failed checks: booking_id, confirmation_queued, old_slot_released, outcome, service_id
 - **Tool timeline:** lookup_customer, transfer_to_human
 - **Transcript excerpt:** caller: Priya Shah, 88 Meridian Way, 95125. / caller: Friday afternoon. / caller: Yes, that works. / assistant: I couldn't complete a live transfer. I've saved your details and someone will call you back.
@@ -129,8 +129,8 @@ This file is generated from `report.json`; do not hand-edit it.
 ### text_reschedule_04
 
 - **Gate(s):** none
-- **Expected:** `{'outcome': 'rescheduled', 'booking_id': 'bk_0004', 'old_slot_released': True, 'service_id': 'furnace_repair', 'confirmation_queued': True}`
-- **Actual:** `{'outcome': 'callback', 'booking_count': 0, 'ticket_count': 0, 'callback_count': 1, 'write_count': 0, 'transfer_status': 'queued_callback', 'barge_in_recovered': None, 'asr_source': 'text_extraction', 'in_area': None, 'duplicate_writes': 0, 'qa_flags': ['handoff_packet_incomplete', 'handoff_no_answer']}`
+- **Expected:** `{'booking_id': 'bk_0004', 'confirmation_queued': True, 'old_slot_released': True, 'outcome': 'rescheduled', 'service_id': 'furnace_repair'}`
+- **Actual:** `{'asr_source': 'text_extraction', 'barge_in_recovered': None, 'booking_count': 0, 'callback_count': 1, 'duplicate_writes': 0, 'in_area': None, 'outcome': 'callback', 'qa_flags': ['handoff_packet_incomplete', 'handoff_no_answer'], 'ticket_count': 0, 'transfer_status': 'queued_callback', 'write_count': 0}`
 - **Reason:** failed checks: booking_id, confirmation_queued, old_slot_released, outcome, service_id
 - **Tool timeline:** lookup_customer, transfer_to_human
 - **Transcript excerpt:** caller: Dana Whitfield, 9 Juniper Court, 94117. / caller: The next weekday morning is fine. / caller: Yes, please. / assistant: I couldn't complete a live transfer. I've saved your details and someone will call you back.
@@ -139,8 +139,8 @@ This file is generated from `report.json`; do not hand-edit it.
 ### text_cancel_01
 
 - **Gate(s):** none
-- **Expected:** `{'outcome': 'cancelled', 'booking_id': 'bk_0002', 'slot_released': True, 'confirmation_queued': True, 'cancel_count': 1}`
-- **Actual:** `{'outcome': 'callback', 'booking_count': 0, 'ticket_count': 0, 'callback_count': 1, 'write_count': 0, 'transfer_status': 'queued_callback', 'barge_in_recovered': None, 'asr_source': 'text_extraction', 'in_area': None, 'duplicate_writes': 0, 'qa_flags': ['handoff_packet_incomplete', 'handoff_no_answer']}`
+- **Expected:** `{'booking_id': 'bk_0002', 'cancel_count': 1, 'confirmation_queued': True, 'outcome': 'cancelled', 'slot_released': True}`
+- **Actual:** `{'asr_source': 'text_extraction', 'barge_in_recovered': None, 'booking_count': 0, 'callback_count': 1, 'duplicate_writes': 0, 'in_area': None, 'outcome': 'callback', 'qa_flags': ['handoff_packet_incomplete', 'handoff_no_answer'], 'ticket_count': 0, 'transfer_status': 'queued_callback', 'write_count': 0}`
 - **Reason:** failed checks: booking_id, cancel_count, confirmation_queued, outcome, slot_released
 - **Tool timeline:** lookup_customer, transfer_to_human
 - **Transcript excerpt:** caller: Sam Rivera, 12 Alder Street, 94107. / caller: I fixed it myself, so I don't need the visit. / caller: Yes, cancel it. / assistant: I couldn't complete a live transfer. I've saved your details and someone will call you back.
@@ -149,8 +149,8 @@ This file is generated from `report.json`; do not hand-edit it.
 ### text_cancel_02
 
 - **Gate(s):** none
-- **Expected:** `{'outcome': 'cancelled', 'booking_id': 'bk_0002', 'already_cancelled': True, 'cancel_count': 0, 'confirmation_count': 0}`
-- **Actual:** `{'outcome': 'callback', 'booking_count': 0, 'ticket_count': 0, 'callback_count': 1, 'write_count': 0, 'transfer_status': 'queued_callback', 'barge_in_recovered': None, 'asr_source': 'text_extraction', 'in_area': None, 'duplicate_writes': 0, 'qa_flags': ['handoff_packet_incomplete', 'handoff_no_answer']}`
+- **Expected:** `{'already_cancelled': True, 'booking_id': 'bk_0002', 'cancel_count': 0, 'confirmation_count': 0, 'outcome': 'cancelled'}`
+- **Actual:** `{'asr_source': 'text_extraction', 'barge_in_recovered': None, 'booking_count': 0, 'callback_count': 1, 'duplicate_writes': 0, 'in_area': None, 'outcome': 'callback', 'qa_flags': ['handoff_packet_incomplete', 'handoff_no_answer'], 'ticket_count': 0, 'transfer_status': 'queued_callback', 'write_count': 0}`
 - **Reason:** failed checks: already_cancelled, booking_id, outcome
 - **Tool timeline:** lookup_customer, transfer_to_human
 - **Transcript excerpt:** caller: Sam Rivera, 12 Alder Street, 94107. / caller: Then cancel it again just to be sure. / caller: Okay, thanks. / assistant: I couldn't complete a live transfer. I've saved your details and someone will call you back.
@@ -159,8 +159,8 @@ This file is generated from `report.json`; do not hand-edit it.
 ### text_pricing_02
 
 - **Gate(s):** none
-- **Expected:** `{'outcome': 'info_only', 'booking_count': 0, 'contains': ['two hours']}`
-- **Actual:** `{'outcome': 'callback', 'booking_count': 0, 'ticket_count': 0, 'callback_count': 1, 'write_count': 0, 'transfer_status': 'queued_callback', 'barge_in_recovered': None, 'asr_source': 'text_extraction', 'in_area': None, 'duplicate_writes': 0, 'qa_flags': ['handoff_packet_incomplete', 'handoff_no_answer']}`
+- **Expected:** `{'booking_count': 0, 'contains': ['two hours'], 'outcome': 'info_only'}`
+- **Actual:** `{'asr_source': 'text_extraction', 'barge_in_recovered': None, 'booking_count': 0, 'callback_count': 1, 'duplicate_writes': 0, 'in_area': None, 'outcome': 'callback', 'qa_flags': ['handoff_packet_incomplete', 'handoff_no_answer'], 'ticket_count': 0, 'transfer_status': 'queued_callback', 'write_count': 0}`
 - **Reason:** failed checks: contains, outcome
 - **Tool timeline:** transfer_to_human
 - **Transcript excerpt:** caller: How late can I change an appointment? / caller: So two hours before is fine? / caller: Great. / assistant: I couldn't complete a live transfer. I've saved your details and someone will call you back.
@@ -169,8 +169,8 @@ This file is generated from `report.json`; do not hand-edit it.
 ### text_noise_01
 
 - **Gate(s):** none
-- **Expected:** `{'outcome': 'booked', 'booking_count': 1, 'service_id': 'drain_cleaning', 'address_zip': '94107', 'confirmed_entities': True}`
-- **Actual:** `{'outcome': 'booked', 'booking_count': 1, 'ticket_count': 0, 'callback_count': 0, 'write_count': 1, 'transfer_status': None, 'barge_in_recovered': None, 'asr_source': 'text_extraction', 'in_area': True, 'duplicate_writes': 0, 'qa_flags': []}`
+- **Expected:** `{'address_zip': '94107', 'booking_count': 1, 'confirmed_entities': True, 'outcome': 'booked', 'service_id': 'drain_cleaning'}`
+- **Actual:** `{'asr_source': 'text_extraction', 'barge_in_recovered': None, 'booking_count': 1, 'callback_count': 0, 'duplicate_writes': 0, 'in_area': True, 'outcome': 'booked', 'qa_flags': [], 'ticket_count': 0, 'transfer_status': None, 'write_count': 1}`
 - **Reason:** failed checks: confirmed_entities
 - **Tool timeline:** lookup_customer, get_service_area, get_availability, book_appointment
 - **Transcript excerpt:** caller: Monday morning. / caller: Yes, that's right. / assistant: Just to confirm: Drain cleaning on Thursday 12 November at 7:00 AM with Alex at 12 Alder Street, San Francisco 94107, for Sorry, the dog is barking. at +11234567890. Should I book that? / assistant: Booked. Thursday 12 November at 7:00 AM is confirmed and a text confirmation is queued.
@@ -179,8 +179,8 @@ This file is generated from `report.json`; do not hand-edit it.
 ### text_accent_01
 
 - **Gate(s):** none
-- **Expected:** `{'outcome': 'booked_or_transferred', 'booking_count': 1, 'service_id': 'leak_repair', 'confirmed_entities': True, 'handoff_packet_complete_if_transferred': True}`
-- **Actual:** `{'outcome': 'callback', 'booking_count': 0, 'ticket_count': 0, 'callback_count': 1, 'write_count': 0, 'transfer_status': 'queued_callback', 'barge_in_recovered': None, 'asr_source': 'text_extraction', 'in_area': None, 'duplicate_writes': 0, 'qa_flags': ['handoff_no_answer']}`
+- **Expected:** `{'booking_count': 1, 'confirmed_entities': True, 'handoff_packet_complete_if_transferred': True, 'outcome': 'booked_or_transferred', 'service_id': 'leak_repair'}`
+- **Actual:** `{'asr_source': 'text_extraction', 'barge_in_recovered': None, 'booking_count': 0, 'callback_count': 1, 'duplicate_writes': 0, 'in_area': None, 'outcome': 'callback', 'qa_flags': ['handoff_no_answer'], 'ticket_count': 0, 'transfer_status': 'queued_callback', 'write_count': 0}`
 - **Reason:** failed checks: booking_count, confirmed_entities, service_id
 - **Tool timeline:** transfer_to_human
 - **Transcript excerpt:** caller: The address is 77 Valencia Street, 94110. / caller: Tuesday afternoon, please. / caller: Yes, that is correct. / assistant: I couldn't complete a live transfer. I've saved your details and someone will call you back.
@@ -189,8 +189,8 @@ This file is generated from `report.json`; do not hand-edit it.
 ### text_interrupt_01
 
 - **Gate(s):** none
-- **Expected:** `{'outcome': 'booked', 'booking_count': 1, 'service_id': 'drain_cleaning', 'slot_day': 'Tuesday', 'confirmed_entities': True}`
-- **Actual:** `{'outcome': 'callback', 'booking_count': 0, 'ticket_count': 0, 'callback_count': 1, 'write_count': 0, 'transfer_status': 'queued_callback', 'barge_in_recovered': None, 'asr_source': 'text_extraction', 'in_area': None, 'duplicate_writes': 0, 'qa_flags': ['handoff_no_answer']}`
+- **Expected:** `{'booking_count': 1, 'confirmed_entities': True, 'outcome': 'booked', 'service_id': 'drain_cleaning', 'slot_day': 'Tuesday'}`
+- **Actual:** `{'asr_source': 'text_extraction', 'barge_in_recovered': None, 'booking_count': 0, 'callback_count': 1, 'duplicate_writes': 0, 'in_area': None, 'outcome': 'callback', 'qa_flags': ['handoff_no_answer'], 'ticket_count': 0, 'transfer_status': 'queued_callback', 'write_count': 0}`
 - **Reason:** failed checks: booking_count, confirmed_entities, outcome, service_id, slot_day
 - **Tool timeline:** transfer_to_human
 - **Transcript excerpt:** caller: Can you do Tuesday? / caller: Tuesday at 11 is right. / caller: Yes, that's correct. / assistant: I couldn't complete a live transfer. I've saved your details and someone will call you back.
@@ -199,8 +199,8 @@ This file is generated from `report.json`; do not hand-edit it.
 ### text_duplicate_01
 
 - **Gate(s):** none
-- **Expected:** `{'outcome': 'booked', 'booking_count': 1, 'replayed': True, 'duplicate_writes': 0}`
-- **Actual:** `{'outcome': 'callback', 'booking_count': 0, 'ticket_count': 0, 'callback_count': 1, 'write_count': 0, 'transfer_status': 'queued_callback', 'barge_in_recovered': None, 'asr_source': 'text_extraction', 'in_area': None, 'duplicate_writes': 0, 'qa_flags': ['handoff_no_answer']}`
+- **Expected:** `{'booking_count': 1, 'duplicate_writes': 0, 'outcome': 'booked', 'replayed': True}`
+- **Actual:** `{'asr_source': 'text_extraction', 'barge_in_recovered': None, 'booking_count': 0, 'callback_count': 1, 'duplicate_writes': 0, 'in_area': None, 'outcome': 'callback', 'qa_flags': ['handoff_no_answer'], 'ticket_count': 0, 'transfer_status': 'queued_callback', 'write_count': 0}`
 - **Reason:** failed checks: booking_count, outcome, replayed
 - **Tool timeline:** transfer_to_human
 - **Transcript excerpt:** caller: Sam Rivera, 12 Alder Street, 94107. / caller: Yes, that's the one. Can you book it again? / caller: Okay, so it's already booked. / assistant: I couldn't complete a live transfer. I've saved your details and someone will call you back.
@@ -274,6 +274,7 @@ No fixed comparison in this report. Run `make eval-baseline` to generate the one
 - The baseline is a one-prompt direct-write model path with no tools, state, policy, confirmation or idempotency. It is expected to fail and never gates.
 - Synthetic data only. No production SLA, HIPAA/PCI claim or real customer data.
 - Held-out runs received only caller inputs. The expected labels stayed in the scorer and the sealed manifest hash is recorded in this report.
+- Report metadata refreshed to the current code commit; metrics are from the recorded run. Full transcripts are local-only and not committed.
 
 ## Baseline comparison
 
