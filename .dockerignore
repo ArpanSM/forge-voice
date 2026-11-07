@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+.tools
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+data
+recordings
+reports
+tests
+docs
+node_modules

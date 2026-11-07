@@ -1,7 +1,9 @@
 # Local voice demo runbook (ticket #5)
 
-This is the exact local setup for the browser demo. It uses the open-source
-`livekit-server` binary, not LiveKit Cloud, Docker or SIP.
+This is the host-binary setup detail from ticket #5. Ticket #8 adds the primary local
+Docker Compose path and the full operations runbook; use [runbook.md](runbook.md) for
+`make demo`, `make demo-compose`, reset/logs/rollback and handover. This page remains the
+reference for the no-Docker `make demo-local` fallback. It never uses LiveKit Cloud or SIP.
 
 ## 1. Prerequisites
 
@@ -182,7 +184,7 @@ degradation. Unit tests use a fake TTS for the same deterministic assembly.
 
 ## 10. What this ticket does not add
 
-No SIP, Cloud transport, hosted URL, TURN, Docker Compose, dashboard or paid
-STT/TTS/LLM. Compose deployment, monitoring and handover are tickets #7/#8. The known
-limits (no proactive silence prompt, fragile degraded ZIP, no long-utterance guard,
-latency report-only) remain open.
+No SIP, Cloud transport, hosted URL, TURN or paid STT/TTS/LLM. Ticket #8 adds the local
+Docker Compose path, admin editor, runbook and handover (see [runbook.md](runbook.md)).
+The known limits (no proactive silence prompt, fragile degraded ZIP, no long-utterance
+guard, latency report-only) remain open.

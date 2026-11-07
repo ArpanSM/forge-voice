@@ -1,8 +1,9 @@
 # Forge Voice
 
 **Status:** scaffold and deterministic corpus (#3), booking policy/tools/text runner (#4), the
-local LiveKit transport, browser demo and LFM3 audio path (#5), and the evaluation harness,
-baseline, hard gates and generated report (#6) complete. Dashboard and deploy tickets follow.
+local LiveKit transport, browser demo and LFM3 audio path (#5), evaluation harness and report
+(#6), monitoring dashboard and weekly review (#7), and the local Compose deployment, validating
+admin editor, runbook and handover kit (#8) are complete.
 
 A public, local-first voice booking agent delivery kit for two fictional home-services
 tenants: **Harborlight Home Services** (plumbing, HVAC, electrical) and **Summit Heating &
@@ -26,21 +27,31 @@ tenant fails closed.
 
 ## Quickstart (fully local)
 
-Requires Linux, Python 3.12, a livekit-server binary downloaded by `make bootstrap`, and
-LFM3-Audio-2B on the host GPU.
+Requires Linux, LFM3-Audio-2B on the host GPU, and either Docker Compose v2.20+ (preferred)
+or Python 3.12 for the host-binary fallback.
 
 ```bash
-make install        # Python deps, dev tools and demo extras
-make bootstrap      # pinned, checksum-verified livekit-server in .tools/
+make install        # Python deps, dev tools and demo extras (host fallback/tests)
+cp .env.example .env.local   # gitignored; fill the local LiveKit key/secret
 lfm3 audio          # separate terminal: LFM3 on 127.0.0.1:8082
-make demo           # LiveKit + browser/token page + agent; Ctrl-C stops all three
+make demo           # Compose when Docker is available, host binaries otherwise
 ```
 
-Open <http://localhost:8000>, choose a business and press **Start call**.
+Open <http://localhost:8000>, choose a business and press **Start call**. The same app serves
+`/dashboard`, `/review` and `/admin`; all binds are loopback.
 
-`make demo` is fully local: no Cloud transport, paid model, SIP or external call. The first run
-creates a gitignored `.env.local` with a random local LiveKit dev secret; the demo key/secret
-never enters the repo.
+The deployment path is explicit when you need it:
+
+```bash
+make demo-local     # host-binary livekit-server in .tools/; no Docker
+make demo-compose   # one Compose stack: self-hosted LiveKit + agent + web; LFM3 stays on the host
+make demo-hybrid    # Compose/host with LFM3 audio + Groq qwen/qwen3.8-27b as the only external LLM
+```
+
+`make demo` is fully local: no Cloud transport, paid model, SIP or external call. The first
+run creates a gitignored `.env.local` with a random local LiveKit dev secret; the demo
+key/secret never enters the repo. Compose waits for LiveKit, web `/health`, agent readiness
+and LFM3 `/health`, and fails closed if LFM3 or a port is missing.
 
 ### Hybrid profile
 
@@ -71,7 +82,13 @@ make corpus-check   # fail if committed fixtures drift
 make audio-fixtures # regenerate the ten WAVs with LFM3 TTS (fixed seed, temperature 0)
 make audio-check    # verify committed WAVs and hashes offline
 make text-demo      # text-mode book/reschedule/emergency/handoff calls
-make demo-smoke     # start the stack and run a scripted WebRTC booking
+make demo-smoke     # start the host stack and run a scripted WebRTC booking
+make down           # stop the Compose stack; ./data and ./recordings stay
+make reset          # delete synthetic call/booking state and reseed
+make logs           # follow LiveKit, web and agent logs
+make rollback       # previous image tags; restore ./data/backup on a schema change
+make health         # probe LFM3, LiveKit, web and agent readiness
+make release        # tag local images and snapshot ./data (TAG=v1)
 make eval           # 40 text hybrid release gate + 10 critical repeats (needs GROQ_API_KEY)
 make eval-local     # 40 text local safety-fallback report
 make eval-audio     # 10 audio hybrid on the self-hosted LiveKit server
@@ -132,7 +149,11 @@ An optional Playwright/Chrome fake-microphone check of the real page is document
 `docs/local-voice-demo.md`. The scripted WebRTC caller remains the repeatable automated
 proof; the human browser check is manual.
 
-## Monitoring and handover
+## Monitoring, admin and handover
+
+`make demo` serves the browser page, read-only dashboard and validating admin editor from one
+FastAPI app. The admin page edits `tenants/<slug>.yaml` with the same schema the agent loads,
+writes atomically and reloads; invalid edits are rejected without touching the live config.
 
 `make dashboard` serves the local read-only FastAPI + HTMX dashboard at
 <http://127.0.0.1:8000/dashboard>; `make demo` exposes the same page inside the browser app.
@@ -146,8 +167,11 @@ without a live call. Alerts use the #26/#27 thresholds and append only new alert
 `data/monitoring/alerts.jsonl` at startup or through the explicit `POST /alerts/refresh`
 action; a GET never writes alerts. An optional Discord or Telegram webhook is configured only
 by `FORGE_VOICE_ALERT_WEBHOOK`. See [docs/monitoring.md](docs/monitoring.md) for the metric
-definitions, thresholds, retention and static export. No real data, public bind, cross-site
-POST or recording is used.
+definitions, thresholds, retention and static export. The admin is local-only and has no
+workflow graph or code generation. See [docs/runbook.md](docs/runbook.md),
+[docs/training.md](docs/training.md) and [docs/handover.md](docs/handover.md) for the local
+operations, 5-minute training outline, checklist and 30-day support boundary. No real data,
+public bind, cross-site POST or recording is used.
 
 ## Layout
 
@@ -164,8 +188,11 @@ src/forge_voice/
   scenarios/   # manifest schema and validating loader
   tenants/     # tenant schema and fail-closed loader
   tools/       # eight typed tools and common result envelope
-  web/         # FastAPI browser page, signed tenant token, vendored LiveKit client
+  web/         # FastAPI browser page, token, dashboard, admin editor, vendored LiveKit client
+  deploy/      # local health probes used by make health and the Compose preflight
 tenants/       # Harborlight and Summit YAML, synthetic only
+compose.yaml   # one local stack: LiveKit + agent + web; LFM3 stays on the host GPU
+docker/        # web and agent image build
 scenarios/     # 40 text + 10 audio scenarios, caller scripts and WAV fixtures
 fixtures/      # generated corpus (tenants, seeds, scenarios, audio, hashes)
 docs/          # ADRs, local demo guide and agent workflow
@@ -182,8 +209,8 @@ tests/         # offline pytest suite
 - Audio fixtures generated once with LFM3 and committed with SHA-256 hashes.
 
 No SIP, Cloud transport, hosted URL, real calendar/CRM/SMS, payments, HIPAA/PCI claim or
-production SLA. See [docs/local-voice-demo.md](docs/local-voice-demo.md) for setup and
-troubleshooting.
+production SLA. See [docs/runbook.md](docs/runbook.md) for the Compose/host operations and
+[docs/local-voice-demo.md](docs/local-voice-demo.md) for the host-binary detail.
 
 ## Known limits
 

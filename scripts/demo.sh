@@ -20,10 +20,15 @@ fi
 
 "$ROOT/scripts/prepare_local_env.sh" "$ROOT"
 
+PRESERVED_GROQ_KEY="${GROQ_API_KEY:-}"
 set -a
 # shellcheck disable=SC1091
 source "$ROOT/.env.local"
 set +a
+# A copied .env.example may carry an empty GROQ_API_KEY; keep an explicit shell key.
+if [[ -n "$PRESERVED_GROQ_KEY" ]]; then
+  export GROQ_API_KEY="$PRESERVED_GROQ_KEY"
+fi
 export FORGE_VOICE_PROFILE="$PROFILE"
 export LIVEKIT_URL="${LIVEKIT_URL:-ws://localhost:7880}"
 export LIVEKIT_API_KEY="${LIVEKIT_API_KEY:-devkey}"

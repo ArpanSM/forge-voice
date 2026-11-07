@@ -43,7 +43,8 @@ deployment and handover assets around one booking workflow and eight typed tools
 - Evaluation set and gates: roadmap #26, `research/voice-evaluation-2026-11.md`.
 - Evaluation harness and report: ticket #6, `docs/evaluation.md`, `reports/`.
 - Latency and cost: roadmap #23, `research/voice-latency-cost-2026-11.md`.
-- Deployment, monitoring and handover: roadmap #27, `research/voice-deployment-monitoring-2026-11.md`.
+- Deployment, monitoring and handover: roadmap #27, `research/voice-deployment-monitoring-2026-11.md`;
+  local deployment and handover: ticket #8, `docs/runbook.md`, `compose.yaml`.
 - Spec: `ArpanSM/forge-voice` #2.
 - Local ADRs start at [docs/adr/](docs/adr/).
 

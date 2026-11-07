@@ -2,9 +2,12 @@ PYTHON ?= python3.12
 export PYTHONPATH := src
 
 .PHONY: help install bootstrap corpus corpus-check test lint format text-demo audio-fixtures \
-	audio-check demo demo-hybrid demo-smoke demo-hybrid-smoke \
+	audio-check demo demo-local demo-compose demo-hybrid demo-hybrid-local demo-hybrid-compose \
+	demo-smoke demo-hybrid-smoke down reset logs rollback health release \
 	eval eval-local eval-audio eval-audio-local eval-heldout eval-smoke eval-baseline \
 	dashboard dashboard-seed dashboard-export review-smoke
+
+DOCKER_AVAILABLE := $(shell ./scripts/docker_available.sh >/dev/null 2>&1 && echo 1 || echo 0)
 
 help:
 	@printf '%s\n' \
@@ -17,8 +20,17 @@ help:
 	  'make text-demo     Run representative text-mode book/reschedule/emergency/handoff calls' \
 	  'make audio-fixtures Regenerate the ten WAV fixtures with LFM3 TTS' \
 	  'make audio-check   Verify committed WAV fixtures and hashes offline' \
-	  'make demo          Fully local stack: LiveKit + browser + LFM3 (no external calls)' \
+	  'make demo          Local stack: Docker Compose when available, host binaries otherwise' \
+	  'make demo-local    Force the host-binary LiveKit demo (no Docker needed)' \
+	  'make demo-compose  Force the local Docker Compose stack; fails clearly without Docker' \
 	  'make demo-hybrid   Same stack with Groq qwen/qwen3.8-27b as the only external LLM' \
+	  'make demo-hybrid-local / demo-hybrid-compose  Force one deployment path' \
+	  'make down          Stop the Compose stack; ./data and ./recordings stay' \
+	  'make reset         Delete synthetic call/booking state and reseed it' \
+	  'make logs          Follow LiveKit, web and agent logs' \
+	  'make rollback      Start the previous image tags; restore ./data/backup on schema change' \
+	  'make health        Probe LFM3, LiveKit, web and agent readiness' \
+	  'make release       Tag local images and snapshot ./data for rollback (TAG=v1)' \
 	  'make demo-smoke    Start the local stack and run a scripted WebRTC booking call' \
 	  'make demo-hybrid-smoke  Hybrid stack + scripted booking (needs GROQ_API_KEY)' \
 	  'make eval          Full 40 text hybrid release gate + 10 critical repeats' \
@@ -67,17 +79,66 @@ audio-fixtures:
 audio-check:
 	$(PYTHON) -m forge_voice.audio --check
 
-demo: bootstrap
+demo:
+ifeq ($(DOCKER_AVAILABLE),1)
+	@echo "Docker Compose detected. Starting the Compose stack."
+	@echo "Explicit paths: make demo-compose (Docker) or make demo-local (host binaries)."
+	@$(MAKE) --no-print-directory demo-compose
+else
+	@echo "Docker Compose is unavailable; using the host-binary demo."
+	@echo "For the explicit Docker path use make demo-compose after installing Docker."
+	@$(MAKE) --no-print-directory demo-local
+endif
+
+demo-local: bootstrap
 	FORGE_VOICE_PROFILE=local ./scripts/demo.sh
 
-demo-hybrid: bootstrap
+demo-compose:
+	FORGE_VOICE_PROFILE=local ./scripts/compose_demo.sh local
+
+demo-hybrid:
+ifeq ($(DOCKER_AVAILABLE),1)
+	@echo "Docker Compose detected. Starting the hybrid Compose stack (Groq LLM only)."
+	@$(MAKE) --no-print-directory demo-hybrid-compose
+else
+	@echo "Docker Compose is unavailable; using the host-binary hybrid demo."
+	@$(MAKE) --no-print-directory demo-hybrid-local
+endif
+
+demo-hybrid-local: bootstrap
 	FORGE_VOICE_PROFILE=hybrid ./scripts/demo.sh
+
+demo-hybrid-compose:
+	FORGE_VOICE_PROFILE=hybrid ./scripts/compose_demo.sh hybrid
 
 demo-hybrid-smoke: bootstrap
 	FORGE_VOICE_PROFILE=hybrid ./scripts/demo.sh --smoke
 
 demo-smoke: bootstrap
 	FORGE_VOICE_PROFILE=local ./scripts/demo.sh --smoke
+
+down:
+	./scripts/compose_ops.sh down
+
+reset:
+	./scripts/compose_ops.sh reset
+
+logs:
+	./scripts/compose_ops.sh logs
+
+rollback:
+	./scripts/compose_ops.sh rollback
+
+health:
+	@if [ -f data/demo/agent.log ]; then \
+	  PYTHONPATH=src $(PYTHON) scripts/healthcheck.py --agent-log data/demo/agent.log; \
+	else \
+	  PYTHONPATH=src $(PYTHON) scripts/healthcheck.py --agent-url http://127.0.0.1:8081/; \
+	fi
+
+release:
+	@test -n "$(TAG)" || { echo "usage: make release TAG=v1" >&2; exit 2; }
+	./scripts/release.sh "$(TAG)"
 
 EVAL_PYTHON ?= $(PYTHON) -m forge_voice.eval
 EVAL_AUDIO_TRANSPORT ?= livekit

@@ -26,6 +26,7 @@ imported read-only into that cache at startup and on the explicit refresh action
 | `/metrics.json` | Machine-readable aggregate export with definitions, filters, per-tenant metrics and alerts. |
 | `/review` | Weekly 10-call sample, mark-reviewed and create-scenario-candidate actions. |
 | `POST /alerts/refresh` | Explicit alert evaluation; only new alerts are written/sent. |
+| `/admin` | Validating tenant YAML editor; local-only, no workflow graph or code changes. |
 | `/health` | Existing local liveness endpoint. |
 
 The first dashboard start runs the real #4 text call runner once for each dev scenario, then
@@ -111,6 +112,15 @@ step. The monthly review remains `make eval` + `make eval-heldout` per the #26 r
 the seeded cards, table and one sample call detail. It exports only records marked
 `synthetic`; live trace transcripts, tool arguments, recordings and credentials are excluded.
 It has no HTMX, CDN or scripts, so it can be attached to a handover without a running service.
+
+## Admin editor
+
+`/admin` edits `tenants/<slug>.yaml` with the same Pydantic schema the agent loads. A valid
+edit is written atomically and reloads the tenant registry; invalid YAML, an unknown field or
+a changed `tenant_id` is rejected without writing or reloading. Identity, hours, services and
+prices, service area, transfer targets, adapter endpoints, knowledge base and emergency rules
+are all editable; advanced fields stay in YAML. New tenants, services and integrations are
+change requests, not admin actions.
 
 ## Retention and privacy
 

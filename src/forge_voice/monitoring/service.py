@@ -264,6 +264,10 @@ class MonitoringService:
             for tenant_id, tenant in sorted(self._tenant_configs().items())
         }
 
+    def reload_tenants(self) -> None:
+        """The admin editor writes YAML; the dashboard must see the same reload."""
+        self._tenants = None
+
     def _tenant_configs(self) -> dict[str, TenantConfig]:
         if self._tenants is None:
             tenants_dir = self.root / "tenants"

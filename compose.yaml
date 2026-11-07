@@ -1,0 +1,128 @@
+# One local stack: self-hosted LiveKit + agent + web (browser, token, dashboard, admin).
+# LFM3-Audio-2B stays on the host GPU and is reached at host.docker.internal:8082.
+# Start with `make demo` / `make demo-hybrid`; those targets source .env.local first.
+# No Cloud transport, hosted URL, SIP, TURN or paid provider is configured.
+
+name: forge-voice
+
+services:
+  livekit:
+    image: livekit/livekit-server:v1.13.11
+    command:
+      - --dev
+      - --bind
+      - 0.0.0.0
+      - --node-ip
+      - 127.0.0.1
+      - --udp-port
+      - "7882"
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:-devkey}: ${LIVEKIT_API_SECRET:?LIVEKIT_API_SECRET is missing; run make demo or set it in .env.local}"
+    ports:
+      - "127.0.0.1:7880:7880"
+      - "127.0.0.1:7881:7881"
+      - "127.0.0.1:7882:7882/udp"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:7880/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  # Tiny sidecar because LFM3 is a host service: its /health gates the agent.
+  lfm3-check:
+    image: curlimages/curl:8.11.1
+    entrypoint: ["sleep", "infinity"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -fsS --max-time 2 http://host.docker.internal:8082/health >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+      start_period: 5s
+    restart: unless-stopped
+
+  web:
+    image: forge-voice-web:${FORGE_VOICE_IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: web
+    env_file:
+      - .env.local
+    environment:
+      FORGE_VOICE_PROFILE: ${FORGE_VOICE_PROFILE:-local}
+      FORGE_VOICE_WEB_HOST: 127.0.0.1
+      FORGE_VOICE_WEB_PORT: "8000"
+      FORGE_VOICE_DATA_DIR: /app/data
+      FORGE_VOICE_DASHBOARD_SEED: "1"
+      LIVEKIT_URL: ws://localhost:7880
+    command:
+      - python
+      - -m
+      - uvicorn
+      - forge_voice.web.app:create_app_from_env
+      - --factory
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --log-level
+      - info
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./recordings:/app/recordings
+      - ./tenants:/app/tenants
+    depends_on:
+      livekit:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2).read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+
+  agent:
+    image: forge-voice-agent:${FORGE_VOICE_IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: agent
+    env_file:
+      - .env.local
+    environment:
+      FORGE_VOICE_PROFILE: ${FORGE_VOICE_PROFILE:-local}
+      LIVEKIT_URL: ws://livekit:7880
+      LFM3_AUDIO_BASE_URL: http://host.docker.internal:8082
+      FORGE_VOICE_DATA_DIR: /app/data
+    command: ["python", "-m", "forge_voice.runtime.livekit_agent", "start"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:8081:8081"
+    volumes:
+      - ./data:/app/data
+      - ./recordings:/app/recordings
+      - ./tenants:/app/tenants:ro
+    depends_on:
+      livekit:
+        condition: service_healthy
+      lfm3-check:
+        condition: service_healthy
+    healthcheck:
+      # The worker's own HTTP health endpoint returns 200 only after LiveKit registration.
+      test:
+        ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/', timeout=2).read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 60s
+    restart: unless-stopped
