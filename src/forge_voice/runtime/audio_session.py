@@ -72,6 +72,83 @@ TERMINAL_OUTCOMES = frozenset(
     }
 )
 
+_WORD_HOURS = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+}
+_WORD_MINUTES = {
+    "fifteen": 15,
+    "thirty": 30,
+    "forty five": 45,
+    "forty-five": 45,
+}
+_CONFIRMATION_NAME_RE = re.compile(
+    r"(?:my name is|call me|i'm|i am)\s+([a-z][\w'’-]*(?:\s+[a-z][\w'’-]*)?)"
+)
+_NAME_MARKER_RE = re.compile(r"\b(?:my name is|call me|i'm|i am)\b")
+_SCHEDULE_MARKERS = (
+    "tomorrow",
+    "today",
+    "next week",
+    "next weekday",
+    "tonight",
+    "morning",
+    "afternoon",
+    "evening",
+    "noon",
+    "midnight",
+    "later",
+    "earlier",
+    "soon",
+)
+
+
+def _word_hour(lowered: str) -> tuple[int, int, int, str | None] | None:
+    pattern = (
+        r"\bat\s+(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)"
+        r"(?:\s+(fifteen|thirty|forty[ -]five))?\b"
+    )
+    matches: list[tuple[int, int, int, str | None]] = []
+    for match in re.finditer(pattern, lowered):
+        matches.append(
+            (
+                match.start(),
+                _WORD_HOURS[match.group(1)],
+                _WORD_MINUTES.get(match.group(2) or "", 0),
+                None,
+            )
+        )
+    for match in re.finditer(
+        r"\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*(am|pm)\b",
+        lowered,
+    ):
+        matches.append((match.start(), _WORD_HOURS[match.group(1)], 0, match.group(2)))
+    if not matches:
+        return None
+    return max(matches, key=lambda item: item[0])
+
+
+def _name_marker_present(lowered: str) -> bool:
+    return _NAME_MARKER_RE.search(lowered) is not None
+
+
+def _schedule_like(lowered: str) -> bool:
+    if any(marker in lowered for marker in _SCHEDULE_MARKERS):
+        return True
+    if re.search(r"\bat\s+\w", lowered):
+        return True
+    return ":" in lowered
+
 
 class ToolReply(StrictModel):
     """One model-visible tool result with the exact shared #4 envelope."""
@@ -1239,6 +1316,15 @@ class AudioCallSession:
                     match.group(3),
                 )
             )
+        for match in re.finditer(r"\b(\d{1,2}):(\d{2})\b", lowered):
+            matches.append((match.start(), int(match.group(1)), int(match.group(2)), None))
+        for marker, hour in (("noon", 12), ("midnight", 0)):
+            marker_match = re.search(rf"\b{marker}\b", lowered)
+            if marker_match is not None:
+                matches.append((marker_match.start(), hour, 0, None))
+        word_hour = _word_hour(lowered)
+        if word_hour is not None:
+            matches.append(word_hour)
         if not matches:
             return None
         _, hour, minute, suffix = max(matches, key=lambda item: item[0])
@@ -1252,6 +1338,19 @@ class AudioCallSession:
             return None
         return hour, minute
 
+    def _relative_day_in(self, lowered: str) -> datetime | None:
+        local_today = self.clock.now.astimezone(ZoneInfo(self.tenant.timezone)).date()
+        if "tomorrow" in lowered:
+            return datetime.combine(local_today + timedelta(days=1), datetime.min.time())
+        if "today" in lowered:
+            return datetime.combine(local_today, datetime.min.time())
+        if "next weekday" in lowered:
+            candidate = local_today + timedelta(days=1)
+            while candidate.weekday() >= 5:
+                candidate += timedelta(days=1)
+            return datetime.combine(candidate, datetime.min.time())
+        return None
+
     def _confirmation_matches_pending(self, lowered: str) -> bool:
         pending = self.pending
         if pending is None:
@@ -1262,7 +1361,27 @@ class AudioCallSession:
             return False
         if any(word in lowered for word in ("first", "second", "third")):
             return False
+        if _name_marker_present(lowered):
+            name_match = _CONFIRMATION_NAME_RE.search(lowered)
+            if name_match is None:
+                return False
+            if name_match.group(1).strip().casefold() != pending.payload.customer_name.casefold():
+                return False
+        schedule_seen = False
+        if "next week" in lowered:
+            return False
+        day = self._day_in(lowered)
+        if day is not None:
+            schedule_seen = True
+            if day != start.weekday():
+                return False
+        relative = self._relative_day_in(lowered)
+        if relative is not None:
+            schedule_seen = True
+            if relative.date() != start.date():
+                return False
         if self._time_in(lowered) is not None:
+            schedule_seen = True
             hour, minute = self._time_in(lowered) or (0, 0)
             if hour != start.hour or minute != start.minute:
                 return False
@@ -1271,10 +1390,11 @@ class AudioCallSession:
             ("afternoon", (12, 17)),
             ("evening", (17, 22)),
         ):
-            if window in lowered and not first <= start.hour < last:
-                return False
-        day = self._day_in(lowered)
-        if day is not None and day != start.weekday():
+            if window in lowered:
+                schedule_seen = True
+                if not first <= start.hour < last:
+                    return False
+        if _schedule_like(lowered) and not schedule_seen:
             return False
         street = find_street_address(lowered)
         if street is not None and street_key(street) != street_key(pending.payload.address.line1):
@@ -1284,9 +1404,6 @@ class AudioCallSession:
             return False
         phone = find_phone(lowered)
         if phone is not None and phone != pending.payload.contact_phone:
-            return False
-        name_match = INTRO_NAME_RE.search(lowered)
-        if name_match is not None and name_match.group(1) != pending.payload.customer_name:
             return False
         service_id = self.resolve_service_id(lowered)
         if service_id is not None and service_id != pending.payload.service_id:
@@ -1310,6 +1427,7 @@ class AudioCallSession:
             explicit = (
                 day is not None
                 or self._time_in(lowered) is not None
+                or relative is not None
                 or street is not None
                 or zip_code is not None
             )

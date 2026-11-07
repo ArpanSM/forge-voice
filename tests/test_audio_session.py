@@ -867,3 +867,60 @@ def test_a_new_caller_phone_invalidates_a_stale_readback(session: AudioCallSessi
 
     assert session.pending is None
     assert session.state.outcome is None
+
+
+def test_confirmation_name_change_invalidates_the_readback(session: AudioCallSession) -> None:
+    slot = first_slot(session)
+    session.book_appointment(slot_id=slot["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    session.note_caller_utterance("Yes, my name is Bob.")
+
+    assert session.confirmation_step("Yes, my name is Bob.") is None
+    assert session.pending is None
+    assert session.store.count_bookings(session.tenant.tenant_id) == 4
+
+
+def test_confirmation_unparsed_name_fails_closed(session: AudioCallSession) -> None:
+    slot = first_slot(session)
+    session.book_appointment(slot_id=slot["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    session.note_caller_utterance("Yes, my name is .")
+
+    assert session.confirmation_step("Yes, my name is .") is None
+    assert session.pending is None
+    assert session.store.count_bookings(session.tenant.tenant_id) == 4
+
+
+def test_confirmation_matching_name_commits(session: AudioCallSession) -> None:
+    slot = first_slot(session)
+    session.book_appointment(slot_id=slot["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    session.note_caller_utterance("Yes, my name is Sam Rivera.")
+
+    message = session.confirmation_step("Yes, my name is Sam Rivera.")
+
+    assert message is not None
+    assert session.state.outcome == "booked"
+
+
+@pytest.mark.parametrize(
+    "phrase", ["Yes, tomorrow.", "Yes, next week.", "Yes, at two.", "Yes, 2pm."]
+)
+def test_confirmation_unmatched_schedule_phrases_invalidate(
+    session: AudioCallSession, phrase: str
+) -> None:
+    slot = first_slot(session)
+    session.book_appointment(slot_id=slot["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    session.note_caller_utterance(phrase)
+
+    assert session.confirmation_step(phrase) is None
+    assert session.pending is None
+    assert session.store.count_bookings(session.tenant.tenant_id) == 4
+
+
+def test_confirmation_accepts_a_matching_spoken_time(session: AudioCallSession) -> None:
+    slot = first_slot(session)
+    session.book_appointment(slot_id=slot["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    session.note_caller_utterance("Yes, at seven.")
+
+    message = session.confirmation_step("Yes, at seven.")
+
+    assert message is not None
+    assert session.state.outcome == "booked"
