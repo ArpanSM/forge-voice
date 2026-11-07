@@ -1,0 +1,27 @@
+# scenario: audio_silence_01
+# tenant: harborlight
+# persona: Caller goes silent after the greeting
+# goal: Pause, then recover and book or hand off after the caller speaks; no proactive silence prompt is claimed (known gap).
+# degradation: none
+
+[pause 3000 ms]
+Hello?
+[pause 500 ms]
+[pause 120 ms]
+Sorry, I need a drain cleaning.
+[pause 400 ms]
+[pause 120 ms]
+The ZIP is nine four one zero seven.
+[pause 120 ms]
+[pause 120 ms]
+My address is 12 Alder Street.
+[pause 120 ms]
+[pause 120 ms]
+My name is Sam Rivera.
+[pause 120 ms]
+[pause 120 ms]
+My phone is five five five, one two three, four five six seven.
+[pause 120 ms]
+[pause 120 ms]
+Monday at nine. Yes, book it.
+[pause 300 ms]

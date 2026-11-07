@@ -12,9 +12,12 @@ Guidance for implementation agents working in this repository.
 ## Commands
 
 ```bash
-make corpus   # regenerate deterministic fixtures and hashes
-make test     # offline unit tests, no network
-make lint     # ruff check + format check
+make corpus        # regenerate deterministic fixtures and hashes
+make test          # offline unit tests, no network
+make lint          # ruff check + format check
+make bootstrap     # download the pinned local livekit-server
+make demo          # fully local browser demo (needs LFM3 on 127.0.0.1:8082)
+make demo-hybrid   # same local stack with Groq as the only external LLM
 ```
 
 ## Guardrails

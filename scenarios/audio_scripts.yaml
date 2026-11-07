@@ -1,0 +1,130 @@
+# Caller scripts for the ten audio scenarios.
+# LFM3-Audio-2B speaks each turn; `make audio-fixtures` assembles and hashes the WAVs.
+# All names, addresses, numbers and businesses are synthetic.
+schema_version: 1
+scenarios:
+  audio_badline_01:
+    tenant: harborlight
+    degradation: badline
+    turns:
+      - text: "Hi, I need a drain cleaning."
+        pause_after_ms: 400
+      - text: "The ZIP is nine four one zero seven. I said nine four one zero seven."
+      - text: "My address is 12 Alder Street, San Francisco."
+      - text: "My name is Sam Rivera."
+      - text: "My phone is five five five, one two three, four five six seven."
+      - text: "Monday morning works. Yes, book it."
+        pause_after_ms: 300
+
+  audio_bargein_01:
+    tenant: harborlight
+    turns:
+      - text: "Hi, I need a drain cleaning."
+        pause_after_ms: 500
+      - text: "The ZIP is nine four one zero seven."
+      - text: "My address is 12 Alder Street, San Francisco."
+      - text: "My name is Sam Rivera."
+      - text: "My phone is five five five, one two three, four five six seven."
+      - text: "Wait, I want the second slot instead."
+        pause_before_ms: 300
+      - text: "Yes, book that."
+        pause_before_ms: 700
+
+  audio_emergency_01:
+    tenant: summit
+    turns:
+      - text: "Our AC is out and it is ninety-eight degrees upstairs. I have a newborn baby."
+        pause_after_ms: 500
+      - text: "Yes, 88 Meridian Way, San Jose, 95125."
+      - text: "My name is Dana Whitfield. My phone is four zero eight, five five five, zero one four two."
+      - text: "No one is hurt, but please hurry."
+        pause_after_ms: 300
+
+  audio_entities_01:
+    tenant: summit
+    turns:
+      - text: "Hi, I need an AC repair."
+        pause_after_ms: 400
+      - text: "The address is 88 Meridian Way, San Jose, 95125."
+      - text: "My name is Dana Whitfield."
+      - text: "My phone is four zero eight, five five five, zero one four two."
+      - text: "Tuesday at nine would be great. Yes, book it."
+        pause_after_ms: 300
+
+  audio_lowmic_01:
+    tenant: harborlight
+    degradation: lowmic
+    turns:
+      - text: "Hello, I need a leak repair."
+        pause_after_ms: 400
+      - text: "The ZIP is nine four one zero seven."
+      - text: "My address is 12 Alder Street."
+      - text: "My name is Sam Rivera."
+      - text: "My phone is five five five, one two three, four five six seven."
+      - text: "Monday at eleven. Yes, that is correct."
+        pause_after_ms: 300
+
+  audio_multilingual_01:
+    tenant: harborlight
+    turns:
+      - text: "Hi, I need a leak repair."
+        pause_after_ms: 400
+      - text: "My name is Jose Alvarez."
+      - text: "The address is 12 Alder Street, San Francisco, 94107."
+      - text: "My phone is five five five, one two three, four five six seven."
+      - text: "Monday morning works. Yes, book it."
+        pause_after_ms: 300
+
+  audio_noisy_01:
+    tenant: harborlight
+    degradation: noisy
+    turns:
+      - text: "Hi, I need a drain cleaning. It is noisy in here."
+        pause_after_ms: 400
+      - text: "The ZIP is nine four one zero seven."
+      - text: "My address is 12 Alder Street."
+      - text: "My name is Sam Rivera."
+      - text: "My phone is five five five, one two three, four five six seven."
+      - text: "Monday at nine. Yes, book it."
+        pause_after_ms: 300
+
+  audio_packetloss_01:
+    tenant: harborlight
+    degradation: packetloss
+    turns:
+      - text: "Hi, I need a drain cleaning."
+        pause_after_ms: 400
+      - text: "The ZIP is nine four one zero seven."
+      - text: "My address is 12 Alder Street."
+      - text: "My name is Sam Rivera."
+      - text: "My phone is five five five, one two three, four five six seven."
+      - text: "Monday morning. Yes, book it."
+        pause_after_ms: 300
+
+  audio_readback_01:
+    tenant: summit
+    turns:
+      - text: "Hi, I need an AC repair."
+        pause_after_ms: 400
+      - text: "The address is 88 Meridian Way, San Jose, 95125."
+      - text: "My name is Dana Whitfield."
+      - text: "My phone is four zero eight, five five five, zero one four two."
+      - text: "Monday at eleven works."
+        pause_after_ms: 500
+      - text: "Actually, make it Tuesday at nine. Yes, that is correct."
+        pause_after_ms: 300
+
+  audio_silence_01:
+    tenant: harborlight
+    turns:
+      - text: "Hello?"
+        pause_before_ms: 3000
+        pause_after_ms: 500
+      - text: "Sorry, I need a drain cleaning."
+        pause_after_ms: 400
+      - text: "The ZIP is nine four one zero seven."
+      - text: "My address is 12 Alder Street."
+      - text: "My name is Sam Rivera."
+      - text: "My phone is five five five, one two three, four five six seven."
+      - text: "Monday at nine. Yes, book it."
+        pause_after_ms: 300

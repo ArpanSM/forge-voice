@@ -22,6 +22,7 @@ class ErrorCode(StrEnum):
     tenant_mismatch = "tenant_mismatch"
     cutoff_passed = "cutoff_passed"
     already_cancelled = "already_cancelled"
+    already_completed = "already_completed"
     idempotency_conflict = "idempotency_conflict"
     dependency_unavailable = "dependency_unavailable"
     timeout = "timeout"

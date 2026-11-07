@@ -1031,7 +1031,7 @@ scenarios:
     critical_repeat: false
     local_subset: true
     persona: "Caller goes silent after the greeting"
-    goal: "Pause, prompt once or twice, then recover and book or hand off; no invented data."
+    goal: "Pause, then recover and book or hand off after the caller speaks; no proactive silence prompt is claimed (known gap)."
     audio:
       method: livekit_simulation
       fixture: fixtures/audio/silence_01.wav
@@ -1040,7 +1040,7 @@ scenarios:
       outcome: booked_or_callback
       booking_count: 1
       invented_entities: 0
-    pass_condition: "Agent handles silence without talking over the caller; recovers or hands off."
+    pass_condition: "Agent recovers when the caller resumes and invents no data; the proactive silence prompt is backlog, not a demo claim."
     hard_gates: [confirmation_accuracy, audit_completeness]
     max_turns: 8
 

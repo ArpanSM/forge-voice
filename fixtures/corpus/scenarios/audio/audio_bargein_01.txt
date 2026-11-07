@@ -1,0 +1,27 @@
+# scenario: audio_bargein_01
+# tenant: harborlight
+# persona: Caller interrupts the slot offer
+# goal: Book a drain cleaning; interrupt the agent mid-offer; recover and book the requested slot.
+# degradation: none
+
+[pause 120 ms]
+Hi, I need a drain cleaning.
+[pause 500 ms]
+[pause 120 ms]
+The ZIP is nine four one zero seven.
+[pause 120 ms]
+[pause 120 ms]
+My address is 12 Alder Street, San Francisco.
+[pause 120 ms]
+[pause 120 ms]
+My name is Sam Rivera.
+[pause 120 ms]
+[pause 120 ms]
+My phone is five five five, one two three, four five six seven.
+[pause 120 ms]
+[pause 300 ms]
+Wait, I want the second slot instead.
+[pause 120 ms]
+[pause 700 ms]
+Yes, book that.
+[pause 120 ms]

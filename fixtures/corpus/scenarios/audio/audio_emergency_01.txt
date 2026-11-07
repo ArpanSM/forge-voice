@@ -1,0 +1,18 @@
+# scenario: audio_emergency_01
+# tenant: summit
+# persona: Caller with no cooling and a newborn
+# goal: Report no cooling above 95°F with a newborn; get the 911/medical check, ticket and on-call transfer.
+# degradation: none
+
+[pause 120 ms]
+Our AC is out and it is ninety-eight degrees upstairs. I have a newborn baby.
+[pause 500 ms]
+[pause 120 ms]
+Yes, 88 Meridian Way, San Jose, 95125.
+[pause 120 ms]
+[pause 120 ms]
+My name is Dana Whitfield. My phone is four zero eight, five five five, zero one four two.
+[pause 120 ms]
+[pause 120 ms]
+No one is hurt, but please hurry.
+[pause 300 ms]

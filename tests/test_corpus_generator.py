@@ -28,6 +28,11 @@ def _source_root(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / "tenants", root / "tenants")
     (root / "scenarios").mkdir(parents=True)
     shutil.copyfile(ROOT / "scenarios" / "manifest.yaml", root / "scenarios" / "manifest.yaml")
+    shutil.copyfile(
+        ROOT / "scenarios" / "audio_scripts.yaml",
+        root / "scenarios" / "audio_scripts.yaml",
+    )
+    shutil.copytree(ROOT / "scenarios" / "fixtures", root / "scenarios" / "fixtures")
     return root
 
 
@@ -76,25 +81,35 @@ def test_generate_corpus_writes_40_text_caller_scripts(generated_root: Path) -> 
     assert len(callers) == 40
 
 
-def test_generate_corpus_writes_10_audio_metadata_placeholders(generated_root: Path) -> None:
-    placeholders = list(
-        (_output(generated_root) / "scenarios" / "audio").glob("audio_*.placeholder.yaml")
-    )
-    assert len(placeholders) == 10
+def test_generate_corpus_writes_10_audio_caller_scripts(generated_root: Path) -> None:
+    scripts = list((_output(generated_root) / "scenarios" / "audio").glob("audio_*.txt"))
+    assert len(scripts) == 10
 
 
-def test_generate_corpus_writes_audio_placeholder_at_manifest_fixture_path(
+def test_generate_corpus_copies_the_10_wav_fixtures_with_stable_hashes(
     generated_root: Path,
 ) -> None:
-    manifest = yaml.safe_load(
-        (generated_root / "scenarios" / "manifest.yaml").read_text(encoding="utf-8")
-    )
-    audio = [scenario for scenario in manifest["scenarios"] if scenario["mode"] == "audio"]
-    for scenario in audio:
-        marker = (
-            _output(generated_root) / "scenarios" / f"{scenario['audio']['fixture']}.placeholder"
+    fixtures = list((_output(generated_root) / "scenarios" / "fixtures" / "audio").glob("*.wav"))
+    assert len(fixtures) == 10
+    hashes = json.loads(
+        (_output(generated_root) / "scenarios" / "fixtures" / "audio" / "hashes.json").read_text(
+            encoding="utf-8"
         )
-        assert marker.is_file(), marker
+    )
+    by_path = {entry["fixture"]: entry["sha256"] for entry in hashes["fixtures"]}
+    assert len(by_path) == 10
+    for fixture in fixtures:
+        relative = f"fixtures/audio/{fixture.name}"
+        assert hashlib.sha256(fixture.read_bytes()).hexdigest() == by_path[relative]
+
+
+def test_generate_corpus_copies_audio_scripts_and_does_not_keep_placeholders(
+    generated_root: Path,
+) -> None:
+    output = _output(generated_root)
+    assert (output / "scenarios" / "audio" / "audio_bargein_01.txt").is_file()
+    assert not list((output / "scenarios" / "audio").glob("*.placeholder.yaml"))
+    assert not list((output / "scenarios" / "fixtures" / "audio").glob("*.placeholder"))
 
 
 def test_generate_corpus_writes_seed_files(generated_root: Path) -> None:
@@ -126,7 +141,7 @@ def test_generate_corpus_hash_manifest_reports_locked_counts(generated_root: Pat
         "audio_smoke": 2,
         "audio_local": 6,
     }
-    assert len(hashes["artifacts"]) == 65
+    assert len(hashes["artifacts"]) == 66
 
 
 def test_generate_corpus_summary_reports_manifest_hash(generated_root: Path) -> None:

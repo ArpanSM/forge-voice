@@ -1,44 +1,113 @@
 # Forge Voice
 
-**Status:** scaffold, deterministic corpus (#3), booking policy, eight tools and the text-mode
-call runner (#4) complete; transport, evaluation, dashboard and deploy tickets follow.
+**Status:** scaffold and deterministic corpus (#3), booking policy/tools/text runner (#4), and the
+local LiveKit transport, browser demo and LFM3 audio path (#5) complete. Evaluation, dashboard
+and deploy tickets follow.
 
 A public, local-first voice booking agent delivery kit for two fictional home-services
 tenants: **Harborlight Home Services** (plumbing, HVAC, electrical) and **Summit Heating &
 Air** (HVAC). The caller talks to a browser demo; deterministic code owns validation,
 confirmation, writes, emergency classification and handoff.
 
-## Quickstart
+## What runs
 
-Requires Python 3.12 and no network for tests.
-
-```bash
-make install   # optional; make test works without installing
-make corpus    # regenerate tenants, seeds, scenarios, caller scripts and hashes
-make test      # offline unit tests
-make lint      # ruff check and format check
-make text-demo # representative book, reschedule, emergency and handoff calls
+```text
+Browser (http://localhost:8000)
+  └── self-hosted livekit-server (ws://localhost:7880, no Cloud/TURN/SIP)
+        └── LiveKit Agents worker
+              ├── LFM3-Audio-2B STT/TTS on the host GPU (127.0.0.1:8082)
+              ├── LLM: LFM3 local (make demo) or Groq qwen/qwen3.8-27b (make demo-hybrid)
+              └── #4 ConversationPolicy + eight typed tools + idempotent BookingService
 ```
 
-`make corpus` is deterministic: run it twice and `fixtures/corpus/hashes.json` and the
-generated manifest must be byte-identical.
+The token endpoint mints a 120 s LiveKit token containing a **server-signed tenant claim**. The
+agent verifies that claim and never trusts a room name or browser query parameter. An unknown
+tenant fails closed.
+
+## Quickstart (fully local)
+
+Requires Linux, Python 3.12, a livekit-server binary downloaded by `make bootstrap`, and
+LFM3-Audio-2B on the host GPU.
+
+```bash
+make install        # Python deps, dev tools and demo extras
+make bootstrap      # pinned, checksum-verified livekit-server in .tools/
+lfm3 audio          # separate terminal: LFM3 on 127.0.0.1:8082
+make demo           # LiveKit + browser/token page + agent; Ctrl-C stops all three
+```
+
+Open <http://localhost:8000>, choose a business and press **Start call**.
+
+`make demo` is fully local: no Cloud transport, paid model, SIP or external call. The first run
+creates a gitignored `.env.local` with a random local LiveKit dev secret; the demo key/secret
+never enters the repo.
+
+### Hybrid profile
+
+```bash
+GROQ_API_KEY=... make demo-hybrid
+```
+
+Same local transport, audio and tools; the only external call is Groq `qwen/qwen3.8-27b` for
+the LLM. Without a key the command fails closed and `make demo` still works fully local.
+
+## Demo paths
+
+| Path | What it proves |
+|---|---|
+| Book | Greeting/disclosure, collect service/name/address/ZIP/phone, real availability, read-back, explicit yes, exactly one committed booking, queued confirmation. |
+| Emergency | Deterministic triage (no model guess), 911-first safety script, structured ticket, on-call handoff or queued callback. |
+| Human handoff | Complete packet or callback; never claims a transfer before a human answers. |
+| Barge-in | Caller speech stops the agent and a new response follows; `min_interruption_words=0` and a 0.3 s VAD threshold. |
+| Unknown tenant | `/token` fails closed; a tampered claim is rejected by the agent. |
+
+## Commands
+
+```bash
+make test           # offline unit tests, no network
+make lint           # ruff check + format check
+make corpus         # deterministic tenants, seeds, scenarios, audio copies and hashes
+make corpus-check   # fail if committed fixtures drift
+make audio-fixtures # regenerate the ten WAVs with LFM3 TTS (fixed seed, temperature 0)
+make audio-check    # verify committed WAVs and hashes offline
+make text-demo      # text-mode book/reschedule/emergency/handoff calls
+make demo-smoke     # start the stack and run a scripted WebRTC booking
+```
+
+`make demo-smoke` variants:
+
+```bash
+SMOKE_MODE=emergency SMOKE_TENANT=summit make demo-smoke
+SMOKE_MODE=barge-in make demo-smoke
+SMOKE_MODE=barge-in-booking make demo-smoke   # interrupt mid-booking, then commit
+```
+
+The hybrid equivalent is `GROQ_API_KEY=... make demo-hybrid-smoke`. It uses the same
+scripted booking call and surfaces a clear `hybrid free-tier rate limit; retry in Ns`
+message if Groq's 7,000 ITPM window is exhausted.
+
+An optional Playwright/Chrome fake-microphone check of the real page is documented in
+`docs/local-voice-demo.md`. The scripted WebRTC caller remains the repeatable automated
+proof; the human browser check is manual.
 
 ## Layout
 
 ```text
 src/forge_voice/
   adapters/    # SQLite calendar/CRM/bookings/tickets/callbacks/events + file outbox
+  audio/       # audio scripts, deterministic WAV fixtures and hash verification
   corpus/      # deterministic generator and CLI
   policy/      # pure ConversationPolicy, BookingService, tokens, emergency and handoff
   providers/   # ChatProvider seam, FakeProvider, LFM3/Groq adapters
-  runtime/     # deterministic text-mode CallRunner and make text-demo
+  runtime/     # LiveKit worker, audio session, LFM3 TTS, text CallRunner, session plan
   scenarios/   # manifest schema and validating loader
   tenants/     # tenant schema and fail-closed loader
-  tools/       # the eight typed tools and common result envelope
+  tools/       # eight typed tools and common result envelope
+  web/         # FastAPI browser page, signed tenant token, vendored LiveKit client
 tenants/       # Harborlight and Summit YAML, synthetic only
-scenarios/     # 40 text + 10 audio manifest and caller fixtures
-fixtures/      # generated corpus (tenants, seeds, scenarios, hashes)
-docs/          # ADRs and agent workflow (runbook arrives with ticket #8)
+scenarios/     # 40 text + 10 audio scenarios, caller scripts and WAV fixtures
+fixtures/      # generated corpus (tenants, seeds, scenarios, audio, hashes)
+docs/          # ADRs, local demo guide and agent workflow
 tests/         # offline pytest suite
 ```
 
@@ -46,13 +115,27 @@ tests/         # offline pytest suite
 
 - Two tenant configs, eight typed tools, seven intents.
 - Confirmation token, idempotency, no double booking, no blind retries.
-- Emergency triage, on-call handoff, after-hours callback.
-- Deterministic `CallRunner.run_call(scenario) -> CallResult` text seam, no model or network.
+- Deterministic emergency triage, 911-first script, ticket and handoff.
+- Browser demo over a **self-hosted** LiveKit server; local LFM3 STT/TTS.
 - 40 text + 10 audio scenarios with dev, held-out and smoke splits.
-- Local LiveKit, synthetic calendar/CRM/SMS and dashboard; LiveKit transport is ticket #5.
+- Audio fixtures generated once with LFM3 and committed with SHA-256 hashes.
 
 No SIP, Cloud transport, hosted URL, real calendar/CRM/SMS, payments, HIPAA/PCI claim or
-production SLA. Audio fixtures are placeholders until the transport ticket.
+production SLA. See [docs/local-voice-demo.md](docs/local-voice-demo.md) for setup and
+troubleshooting.
 
-**Clean-room:** synthetic data only. No employer code, names, metrics, screenshots or retail
-support workflows.
+## Known limits
+
+These are documented, not hidden, and are not fixed by #5:
+
+- No proactive silence prompt; the agent recovers when the caller speaks again.
+- Degraded ZIP recognition is fragile on noisy or bad lines; the demo uses clean audio and
+  speaks ZIP digits one at a time.
+- No long-utterance turn-taking guard; a very long caller turn can split at VAD boundaries.
+- Local LFM3 is a 2B model on a 4 GB GPU. The spike measured p95 first audio 5.3 s and
+  barge-in ~0.88 s; latency is report-only, not a sub-3 s claim.
+- The automated smoke uses synthetic LFM3 caller audio, not a human handset or acoustic echo
+  path. The optional browser check uses Chrome's fake microphone and is not a human test.
+  The hybrid profile requires a free Groq key.
+- `host.docker.internal:8082` is accepted by the session plan for the #8 container
+  deployment; the #5 `make demo` host process path uses `127.0.0.1` and does not exercise it.
