@@ -89,7 +89,8 @@ TTS. **No production SLA and no sub-3 s claim.**
 
 **Cost:** demo marginal cost **$0** on free tiers plus the local GPU. The production estimate is
 **$0.03–0.06/min**, dated and not measured here. The local self-hosted LiveKit server does not
-consume Cloud agent minutes; a free Groq key is needed only for `make demo-hybrid`.
+consume Cloud agent minutes; a free Groq key is needed for `make demo-hybrid` and the hybrid
+evaluation gate. The OrcaRouter fallback is eval-only and optional.
 
 ## What the client gets
 

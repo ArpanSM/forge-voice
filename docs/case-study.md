@@ -32,8 +32,8 @@ voice API does not prove those layers.
   slots, terminal outcomes, a 120 s one-use confirmation token, a server-derived idempotency
   key, an atomic no-double-booking write and an audit row.
 - **Emergency and handoff:** deterministic triage before the model, 911-first scripts, a
-  structured ticket, a complete handoff packet, and an honest connected / queued-callback /
-  no-answer status.
+  structured ticket, a complete handoff packet, and an honest simulated connected /
+  queued-callback / no-answer status.
 - **Evaluation:** 40 text + 10 audio scenarios, dev/held-out/smoke splits, a naive baseline,
   hard gates, Wilson intervals, JSON/Markdown reports, a failure gallery and sealed held-out
   labels.
