@@ -21,6 +21,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from pydantic import Field
 
 from forge_voice.models import StrictModel
+from forge_voice.monitoring.service import MonitoringService
 from forge_voice.tenants import TenantConfig, load_all_tenants
 from forge_voice.web.claims import DEFAULT_TTL_SECONDS, ClaimError, TenantClaimSigner
 from forge_voice.web.page import render_page
@@ -28,6 +29,7 @@ from forge_voice.web.page import render_page
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 _IDENTITY_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 DEFAULT_LIVEKIT_URL = "ws://localhost:7880"
+LOCAL_HOSTS = frozenset({"127.0.0.1", "localhost", "::1", "testserver"})
 
 
 class TokenRequest(StrictModel):
@@ -108,10 +110,23 @@ def create_app(
     claim_signer: TenantClaimSigner | None,
     livekit_url: str,
     now: Callable[[], datetime] | None = None,
+    monitoring: MonitoringService | None = None,
 ) -> FastAPI:
     app = FastAPI(title="forge-voice local browser")
     clock = now or (lambda: datetime.now(UTC))
     ordered = dict(sorted(tenants.items()))
+
+    @app.middleware("http")
+    async def local_only(request, call_next):
+        host = (request.url.hostname or "").lower()
+        if host not in LOCAL_HOSTS:
+            return JSONResponse(status_code=403, content={"error": "local_only"})
+        return await call_next(request)
+
+    if monitoring is not None:
+        from forge_voice.monitoring.routes import register_dashboard_routes
+
+        register_dashboard_routes(app, monitoring)
 
     @app.get("/health")
     async def health() -> dict[str, object]:
@@ -180,11 +195,18 @@ def create_app(
     return app
 
 
-def create_app_from_env(root: Path | str | None = None) -> FastAPI:
+def create_app_from_env(
+    root: Path | str | None = None,
+    *,
+    monitoring: MonitoringService | None = None,
+) -> FastAPI:
     repository = Path(root).resolve() if root else Path(__file__).resolve().parents[3]
     from forge_voice.config import load_local_env
 
     load_local_env(repository)
+    configured_host = os.environ.get("FORGE_VOICE_WEB_HOST", "127.0.0.1").strip()
+    if configured_host not in LOCAL_HOSTS:
+        raise SystemExit("forge-voice is local-only; bind to 127.0.0.1, localhost or ::1")
     tenants = load_all_tenants(repository / "tenants")
     url = os.environ.get("LIVEKIT_URL", DEFAULT_LIVEKIT_URL).strip()
     api_key = os.environ.get("LIVEKIT_API_KEY", "").strip()
@@ -198,20 +220,33 @@ def create_app_from_env(root: Path | str | None = None) -> FastAPI:
     minter = None
     if url and api_key and api_secret:
         minter = LiveKitTokenMinter(url=url, api_key=api_key, api_secret=api_secret)
+    if monitoring is None:
+        profile = os.environ.get("FORGE_VOICE_PROFILE", "local").strip().lower()
+        data_dir = Path(os.environ.get("FORGE_VOICE_DATA_DIR", repository / "data"))
+        monitoring = MonitoringService(
+            data_dir=data_dir,
+            root=repository,
+            profile="hybrid" if profile == "hybrid" else "local",
+            seed=os.environ.get("FORGE_VOICE_DASHBOARD_SEED", "1") != "0",
+        )
     return create_app(
         tenants=tenants,
         minter=minter,
         claim_signer=signer,
         livekit_url=url,
+        monitoring=monitoring,
     )
 
 
 def main() -> None:
     import uvicorn
 
+    host = os.environ.get("FORGE_VOICE_WEB_HOST", "127.0.0.1").strip()
+    if host not in {"127.0.0.1", "localhost", "::1"}:
+        raise SystemExit("forge-voice is local-only; bind to 127.0.0.1, localhost or ::1")
     uvicorn.run(
         create_app_from_env(),
-        host=os.environ.get("FORGE_VOICE_WEB_HOST", "127.0.0.1"),
+        host=host,
         port=int(os.environ.get("FORGE_VOICE_WEB_PORT", "8000")),
         log_level="info",
     )

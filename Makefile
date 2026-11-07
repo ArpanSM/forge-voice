@@ -3,7 +3,8 @@ export PYTHONPATH := src
 
 .PHONY: help install bootstrap corpus corpus-check test lint format text-demo audio-fixtures \
 	audio-check demo demo-hybrid demo-smoke demo-hybrid-smoke \
-	eval eval-local eval-audio eval-audio-local eval-heldout eval-smoke eval-baseline
+	eval eval-local eval-audio eval-audio-local eval-heldout eval-smoke eval-baseline \
+	dashboard dashboard-seed dashboard-export review-smoke
 
 help:
 	@printf '%s\n' \
@@ -27,6 +28,10 @@ help:
 	  'make eval-heldout  Sealed 8 text + 2 audio held-out release check' \
 	  'make eval-smoke    8 text dev subset, hard gates, under two minutes' \
 	  'make eval-baseline 40 text baseline vs fixed on both profiles; never gates' \
+	  'make dashboard     Start the local FastAPI + HTMX dashboard on 127.0.0.1:8000' \
+	  'make dashboard-seed  Seed the synthetic 30-day dashboard call set' \
+	  'make dashboard-export  Write the handover static HTML sample' \
+	  'make review-smoke  Weekly review helper; runs make eval-smoke after marking a call' \
 	  'make format        Apply ruff formatting'
 
 install:
@@ -100,3 +105,15 @@ eval-smoke:
 eval-baseline:
 	$(EVAL_PYTHON) --profile local --mode text --split release --pipeline baseline --provider-check auto --compare-fixed --run-id release-baseline-local
 	-$(EVAL_PYTHON) --profile hybrid --mode text --split release --pipeline baseline --provider-check auto --compare-fixed --run-id release-baseline-hybrid
+
+dashboard:
+	$(PYTHON) -m forge_voice.monitoring
+
+dashboard-seed:
+	$(PYTHON) -m forge_voice.monitoring.seed
+
+dashboard-export:
+	$(PYTHON) -m forge_voice.monitoring.export --data-dir data/dashboard-sample --output docs/samples/dashboard-sample.html --now 2026-11-07T12:00:00-08:00
+
+review-smoke:
+	$(PYTHON) -m forge_voice.monitoring.review $(if $(CALL_ID),--call-id "$(CALL_ID)",) --run-smoke

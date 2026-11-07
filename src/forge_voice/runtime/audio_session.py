@@ -152,7 +152,11 @@ class AudioCallSession:
         self.customer_name: str | None = None
         self.customer_phone: str | None = caller_phone
         self.address: Address | None = None
-        self._trace("call_started", tenant=tenant.tenant_id)
+        self._trace(
+            "call_started",
+            tenant=tenant.tenant_id,
+            caller_phone=caller_phone,
+        )
 
     @classmethod
     def from_repo(
@@ -621,6 +625,7 @@ class AudioCallSession:
             category=triage.category.id,
             severity=triage.severity,
             safety_script=triage.safety_script,
+            safety_text=triage.safety_text,
             vulnerable_occupant=triage.vulnerable_occupant,
         )
         return ToolReply(
@@ -884,6 +889,7 @@ class AudioCallSession:
                 replayed=data.get("replayed", False),
                 confirmation_queued=self.confirmation_queued,
                 service_id=booking.get("service_id"),
+                slot_id=pending.target,
                 start=booking.get("start"),
                 end=booking.get("end"),
                 address=booking.get("address"),
@@ -906,6 +912,7 @@ class AudioCallSession:
                 "rescheduled",
                 booking_id=self.booking_id,
                 service_id=booking.get("service_id"),
+                slot_id=pending.target,
                 start=booking["current"]["start"],
                 address=booking.get("address"),
             )
