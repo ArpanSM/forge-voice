@@ -3,9 +3,12 @@
 **What this is:** the final `#9` proof sweep for the local-first voice kit: exact commands,
 results, the #26 failure gallery and the honest caveats.
 **For:** the reviewer deciding whether to tag, demo or ask for more work.
-**Status:** assets complete; **demo local**, not a production release. The hybrid text, hybrid
-audio and sealed held-out gates are **not claimed**; the live local audio emergency gate is
-**failed**. The `v0.1.0-demo` tag is a demo snapshot for these assets, not a release claim.
+**Status:** assets complete; **demo local**, not a production release. The full sweep did **not**
+pass. The release gate is the Groq hybrid text run; it is **not claimed**
+(`not_run_missing_groq_key`). Hybrid audio and sealed held-out are also
+`not_run_missing_groq_key`. The optional Orca fallback is `not_run_provider_quota`. The live
+local audio emergency/handoff gate is **failed**. The `v0.1.0-demo` tag is a demo snapshot for
+these assets, not a release claim.
 
 ## Commands and results
 
@@ -14,20 +17,25 @@ audio and sealed held-out gates are **not claimed**; the live local audio emerge
 | `make test` | 0 | **495 passed** in 69.65 s | — |
 | `make lint` | 0 | ruff check + format check pass | — |
 | `ruff format --check src tests scripts` | 0 | 136 files already formatted | — |
-| `make eval` | 2 | **not_run_missing_groq_key** (no Groq key in the final environment) | [report](../reports/release-hybrid-text/report.md) |
-| `make eval-orca` | 2 | **not_run_provider_quota** — OrcaRouter free rate limit; retry 40,642 s | [report](../reports/release-hybrid-text-orca/report.md) |
+| `make eval` | 2 | **not_run_missing_groq_key** (release gate; no Groq key in the final environment) | [report](../reports/release-hybrid-text/report.md) |
+| `make eval-orca` | 2 | **not_run_provider_quota** — optional fallback experiment, not the release gate; OrcaRouter free rate limit | [report](../reports/release-hybrid-text-orca/report.md) |
 | `make eval-local` | 0 | **pass** safety gates; task completion **27/40 (67.5%)**, report-only; 128.5 s | [report](../reports/release-local-text/report.md) |
 | `make eval-audio` | 2 | **not_run_missing_groq_key** | [report](../reports/release-audio-hybrid/report.md) |
 | `make eval-audio-local` | 1 | **fail**: 2/6, 767.7 s; emergency handoff and slot-read-back task failures | [report](../reports/release-audio-local/report.md) |
 | `make eval-heldout` | 2 | **not_run_missing_groq_key** | [report](../reports/release-heldout/report.md) |
 | `make eval-smoke` | 0 | **pass** 8/8 | [report](../reports/release-smoke/report.md) |
-| `make eval-baseline` | 0 | baseline comparison, 0/40 fixed-equivalent; never gates | [local](../reports/release-baseline-local/report.md) · [hybrid](../reports/release-baseline-hybrid/report.md) |
+| `make eval-baseline` | 0 | **local 0/40**; hybrid **not_run_provider_quota 0/0**; never gates | [local](../reports/release-baseline-local/report.md) · [hybrid](../reports/release-baseline-hybrid/report.md) |
 
-**Why the hybrid gate is not green.** Groq's free daily token budget was exhausted before this
-sweep. The OrcaRouter free fallback was implemented and exercised, but the 50 RPD workspace
-limit was exhausted by the live attempts and probes. The runner writes
-`not_run_provider_quota`; it does not convert a quota failure into a pass. The scenario set,
-hard gates and scorer were not changed.
+**Evidence commit:** these report JSON/Markdown files were regenerated from code commit
+`REPORT_COMMIT_SHA`; the tag points at the later report-output commit. Do not describe a report
+as generated at the tag unless its `git_sha` matches the tag.
+
+**Why the hybrid gate is not green.** The final sweep had no Groq key, so the release-gate
+report is `not_run_missing_groq_key`. Earlier, Groq's free daily token budget had also been
+exhausted. The optional OrcaRouter fallback was implemented and exercised, but the 50 RPD
+workspace limit was exhausted; it is an experiment, not the release gate. The runner writes
+`not_run_missing_groq_key` or `not_run_provider_quota`; it does not convert either into a pass.
+The scenario set, hard gates and scorer were not changed.
 
 **Why the local audio gate is red.** The live self-hosted LiveKit + LFM3 run produced:
 `audio_emergency_transfer` **0/1** and `handoff_correctness` **0/1**. The safety triage itself
@@ -72,14 +80,19 @@ long-utterance backlog.
 - Known gaps: no proactive silence prompt; degraded ZIP recognition fragile; no long-utterance
   turn-taking guard. The demo uses clean audio, short turns, ZIP digits one at a time and no
   long silence.
-- The hybrid text, hybrid audio and sealed held-out gates are not claimed. The demo assets are
-  complete; the tag `v0.1.0-demo` is a demo snapshot, not a release claim.
+- The full sweep did not pass: local text safety gates pass, live local audio emergency/handoff
+  fails, and the Groq hybrid text/audio and sealed held-out reports are
+  `not_run_missing_groq_key`; the optional Orca fallback is `not_run_provider_quota`. The tag
+  `v0.1.0-demo` is a demo snapshot, not a release claim.
 
 ## Assets
 
-- [90-second captioned demo](proof/forge-voice-demo-90s.webm)
-- [5-minute dashboard/admin/runbook walkthrough](proof/forge-voice-walkthrough-5min.webm)
+- [90-second captioned **storyboard**](proof/forge-voice-demo-90s.webm) — real dashboard/call
+  records, **no call audio**.
+- [5-minute dashboard/admin/runbook walkthrough](proof/forge-voice-walkthrough-5min.webm) —
+  screen walkthrough, not a hosted service.
 - [Screenshots](proof/screenshots/)
+- [Real browser-call recording procedure](proof/RECORDING.md) — **manual follow-up; not done**.
 - [Case study](case-study.md) · [learning map](learning-map.md) ·
   [evaluation](evaluation.md) · [runbook](runbook.md) · [handover](handover.md)
 - [Public repo](https://github.com/ArpanSM/forge-voice)

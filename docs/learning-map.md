@@ -1,9 +1,11 @@
-# Learning map — from LiveKit turn-taking to a released gate
+# Learning map — from LiveKit turn-taking to an honest gate
 
 **What this is:** a reading path that connects each hard part of the voice agent to the code,
-the test that protects it and the eval gate that proves it.
+the test that protects it and the eval gate that measures it.
 **For:** engineers reviewing the repo, and anyone who wants to explain the system end to end.
-**Status:** matches `v0.1.0-demo`; the evaluation gate is reported honestly, not assumed.
+**Status:** matches `v0.1.0-demo`. The full sweep did **not** pass: local text safety gates pass;
+live local audio emergency/handoff fails; the Groq hybrid text/audio and sealed held-out reports
+are `not_run_missing_groq_key`; the optional Orca fallback is `not_run_provider_quota`.
 
 Start with [CONTEXT.md](../CONTEXT.md) for the vocabulary, then read this page with the code
 open. Every section follows the same shape: **idea → where it lives → what to run → what can
@@ -116,10 +118,12 @@ because the packet is incomplete. That is a real local-model ASR limitation, not
 The clean text path and the session replay pass; the live local path stays failed and is
 reported.
 
-## 5. Multi-tenancy without tenant-specific code
+## 5. Multi-tenancy without tenant-specific workflow code
 
 **Idea.** One engine, two configs. Tenant identity comes from a signed claim, and an unknown
-tenant fails closed. No tenant-specific code path exists.
+tenant fails closed. No tenant-specific **workflow** code path exists; tenant-dependent
+extraction/labels live behind the config/interpretation seam (`tenants/*.yaml`,
+`runtime/interpreter.py`, `eval/provider_text.py`).
 
 **Where it lives.**
 
@@ -160,10 +164,11 @@ runner never sees expected labels. The baseline is deliberately naive and never 
 - `src/forge_voice/eval/provider_check.py` and `provider_text.py` — live provider check and
   provider-backed text extraction for the release profile.
 
-**What to run.** `make eval-smoke` on every change, `make eval-orca` for the hybrid text gate
-when the Groq free daily budget is exhausted, `make eval-local` for the safety fallback,
-`make eval-audio-local` for the live local audio report, `make eval-heldout` for the sealed
-release check and `make eval-baseline` for the comparison.
+**What to run.** `make eval` is the Groq hybrid text release gate. `make eval-smoke` runs on
+every change, `make eval-local` is the safety fallback, `make eval-audio-local` is the live local
+audio report, and `make eval-heldout` is the sealed held-out check. `make eval-orca` is an
+**optional fallback experiment, not the release gate**. `make eval-baseline` is the comparison.
+The final sweep's hybrid reports are `not_run_missing_groq_key`; do not call them a pass.
 
 **What can go wrong.** Free-tier quotas are real. Groq's TPD can be exhausted; the OrcaRouter
 free fallback has 10 RPM/50 RPD and reasoning models need a larger token budget before JSON.
@@ -208,7 +213,8 @@ is 6.0 s, the hybrid budget 2.5 s, and the measured demo p95 is still 5.3 s.
 - `src/forge_voice/web/admin.py` — validating YAML editor; invalid edits are rejected.
 - `docs/runbook.md` — one page; `docs/training.md` — 5-minute outline;
   `docs/handover.md` — checklist and 30-day support boundary.
-- `docs/proof/` — captioned demo, walkthrough, screenshots and the recording commands.
+- `docs/proof/` — captioned storyboard, walkthrough, screenshots and the real-call recording
+  procedure (`RECORDING.md`). The current videos have no call audio.
 
 **What to run.** `make demo`, `make health`, `make reset`, `make logs`, `make rollback` and
 the admin save/invalid-save path. `make test` and `make lint` keep the delivery honest.

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Forge Voice — 90-second captioned demo</title>
+<title>Forge Voice — 90-second captioned storyboard</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -139,7 +139,7 @@
       <path class="edge" d="M835 240 L896 330"/>
     </svg>
     <div class="caption"><p>One local stack: browser, self-hosted LiveKit, FastAPI, LiveKit Agents and LFM3.
-      Groq is the only approved external call, and only for the hybrid LLM.</p>
+      Groq is the runtime hybrid LLM; the OrcaRouter path is an eval-only fallback experiment.</p>
       <small>No Cloud transport, SIP, paid STT/TTS or hosted URL in this slice.</small></div>
   </section>
 
@@ -290,11 +290,12 @@
     <ul>
       <li><code>make demo</code> — fully local stack, LFM3 on the host GPU.</li>
       <li><code>make eval-local</code> — safety-fallback report.</li>
-      <li><code>make eval-orca</code> — hybrid text gate on the OrcaRouter free fallback.</li>
+      <li><code>make eval-orca</code> — optional eval-only fallback experiment, not the release gate.</li>
       <li><code>docs/case-study.md</code> · <code>docs/learning-map.md</code> · <code>docs/evaluation.md</code></li>
     </ul>
-    <div class="caption"><p>The public proof is the recorded demo plus a reproducible local quickstart.
-      There is no always-on hosted URL.</p><small>No production SLA. No sub-3 s claim. Known gaps are documented.</small></div>
+    <div class="caption"><p>The public proof is this storyboard and walkthrough plus a reproducible
+      local quickstart. A live browser-call recording is a manual follow-up.</p><small>No production
+      SLA. No sub-3 s claim. Known gaps are documented.</small></div>
   </section>
 </div>
 <script>

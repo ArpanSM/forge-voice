@@ -21,7 +21,8 @@ voice API does not prove those layers.
 ## What was built
 
 - **Two tenants:** Harborlight Home Services (plumbing, HVAC, electrical) and Summit Heating &
-  Air (HVAC), each a schema-validated YAML config. No tenant-specific code.
+  Air (HVAC), each a schema-validated YAML config. There is no tenant-specific workflow code;
+  tenant-dependent extraction/labels live behind the config/interpretation seam.
 - **One LiveKit Agents pipeline:** self-hosted LiveKit in Docker Compose, browser caller,
   LFM3-Audio-2B on the host GPU for STT/TTS, and either local LFM3 or Groq Qwen for the LLM.
 - **Eight typed tools:** `lookup_customer`, `get_service_area`, `get_availability`,
@@ -39,8 +40,10 @@ voice API does not prove those layers.
 - **Monitoring and handover:** one local FastAPI app with `/dashboard`, `/calls/{id}`,
   `/metrics.json`, `/review` and a validating `/admin`; one-page runbook, 5-minute training
   outline, handover checklist and a 30-day support boundary.
-- **Proof assets:** 90-second captioned demo, 5-minute dashboard/admin/runbook walkthrough,
-  real screenshots, README, this case study and a learning map.
+- **Proof assets:** 90-second captioned storyboard using real dashboard/call records (no call
+  audio), 5-minute dashboard/admin/runbook walkthrough, real screenshots, README, this case
+  study and a learning map. A live captioned browser-call recording is a manual follow-up, not
+  part of this slice.
 
 The runtime and model matrix is deliberately small. The fully local `make demo` is the
 default; `make demo-hybrid` uses Groq for the LLM only. There is no Cloud transport, SIP,
@@ -53,13 +56,14 @@ Text, audio, hybrid and local are reported separately and never pooled.
 
 | Run | Result | What it means |
 |---|---|---|
+| `make eval` (40 text + 10 critical × 3, hybrid text) | **not_run_missing_groq_key** | The #2/#26 release gate. The final sweep had no Groq key; the hybrid text gate is not claimed. |
 | `make eval-local` (40 text, local) | 40 scenarios, task completion **27/40 (67.5%)**, every safety hard gate pass | Task completion and latency are report-only for the local safety fallback. Confirmation 17/17, slots 11/11, emergency 5/5, handoff 13/13, audit 40/40, 0 double bookings, 0 unconfirmed writes, 0 cross-tenant leaks. |
-| `make eval-orca` (40 text + 10 critical × 3, hybrid text) | **not_run_provider_quota** — OrcaRouter free daily limit | Same 40-scenario set and the same hard gates. Groq's free daily budget was exhausted first; OrcaRouter free (10 RPM / 50 RPD) was then exhausted by the live attempts and probes. The report says so; no green hybrid claim. |
+| `make eval-orca` (40 text + 10 critical × 3, hybrid text) | **not_run_provider_quota** — OrcaRouter free daily limit | **Optional fallback experiment, not the release gate.** OrcaRouter free (10 RPM / 50 RPD) was exhausted; no green hybrid claim. |
 | `make eval-smoke` (8 text dev) | **8/8 pass** | Fast commit/PR subset; not a release claim. |
-| `make eval-baseline` (40 text, both profiles) | **0/40 fixed-equivalent**, expected failure | One prompt and a direct write; it demonstrates why the policy and tools exist. It never gates. |
+| `make eval-baseline` (40 text) | **local 0/40**; hybrid **not_run_provider_quota 0/0** | One prompt and a direct write; the comparison never gates. |
 | `make eval-audio-local` (6 audio, live self-hosted LiveKit + LFM3) | **2/6**, emergency handoff gate fails | Real local-model ASR limitation: LFM3 heard ZIP `95125` as `9520 Faye`, so the handoff packet had no address and the policy queued an honest callback. See “What went wrong”. |
-| `make eval-audio` (10 audio hybrid) | not claimed while the Groq free TPD is exhausted | The report says `not_run_provider_quota`; no green audio claim. |
-| `make eval-heldout` (8 text + 2 audio sealed) | not claimed while the hybrid provider quota is unavailable | The sealed-set gate is not claimed without a genuine run. |
+| `make eval-audio` (10 audio hybrid) | **not_run_missing_groq_key** | Hybrid audio not claimed; no Groq key in the final sweep. |
+| `make eval-heldout` (8 text + 2 audio sealed) | **not_run_missing_groq_key** | Sealed held-out gate not claimed; no Groq key in the final sweep. |
 
 **Latency caveat, next to the claim.** The measured tier is one 10-turn WebRTC sample per
 profile on a 4 GB laptop: p50 first audio **2.87 s**, p95 **5.3 s**, barge-in yield **~0.88 s**
@@ -70,17 +74,17 @@ The demo marginal cost is **$0** on free tiers plus the local GPU; the productio
 
 ## What went wrong
 
-1. **Groq's free daily token budget was exhausted.** The live hybrid run failed closed with
-   `not_run_provider_quota`; the demo still works fully local. We did not edit the gate or
-   weaken the scenarios.
+1. **The final hybrid sweep had no Groq key.** The committed hybrid text, audio and held-out
+   reports are `not_run_missing_groq_key`; the release gate is not claimed. Earlier, Groq's free
+   daily token budget had also been exhausted. We did not edit the gate or weaken the scenarios.
 2. **The first OrcaRouter fallback looked broken when the harness was wrong.** A provider check
    with `max_tokens: 4` returned an empty content field because the free reasoning model spent
    those tokens on hidden reasoning. A 3-case batch capped at 780 tokens truncated the JSON.
    The harness now uses a 640-token check and 2-case batches with a 2,400-token budget. The fix
    made the provider route work, but the OrcaRouter free daily quota (50 RPD, shared) was
-   exhausted during the live attempts and probes, so the final report is
-   `not_run_provider_quota`. This is a harness fix, not a product pass; the same gates still
-   run.
+   exhausted during the live attempts and probes. The Orca path is an **optional fallback
+   experiment, not the release gate**, and its final report is `not_run_provider_quota`. This
+   is a harness fix, not a product pass; the same gates still run.
 3. **The live local audio emergency handoff really fails.** The transcript heard
    “88 Meridian Way, San Jose, 9520 Faye” for ZIP `95125`; the address was `null`, the packet
    was incomplete, and the policy correctly said it could not reach the on-call technician and
@@ -99,11 +103,12 @@ The demo marginal cost is **$0** on free tiers plus the local GPU; the productio
    mitigation, not a claim that the model is interchangeable.
 
 **Honest gate status.** The demo assets are complete and the local text safety report passes
-its hard gates. The hybrid text gate was moved to the OrcaRouter free fallback after the Groq
-free daily budget was exhausted; the fallback then hit its own 50 RPD free daily limit, so the
-final hybrid text report is `not_run_provider_quota`. The hybrid audio and sealed held-out gates
-are not claimed while the provider quota is unavailable. The live local audio emergency gate is
-genuinely failed. This is a **demo**, not a production release.
+its hard gates. The #2/#26 release gate is the Groq hybrid text run; the final sweep had no
+Groq key, so its report is `not_run_missing_groq_key` and the gate is not claimed. The optional
+OrcaRouter fallback is also not claimed (`not_run_provider_quota`). The hybrid audio and sealed
+held-out reports are `not_run_missing_groq_key`. The live local audio emergency/handoff gate is
+genuinely failed. The full sweep did **not** pass. This is a **demo**, not a production
+release.
 
 ## The offer
 
@@ -112,8 +117,8 @@ your team the runbook.**
 
 For a home-services operator, that means: a discovery and call-flow map; one or two tenant
 configs; the booking, change, emergency and handoff paths; a 40 text + 10 audio evaluation
-with a failure gallery; a local or hosted deployment path; a dashboard, alerts and weekly
-review; and a runbook plus a written support boundary. The four-week first slice is scoped at
+with a failure gallery; a local-only deployment path; a dashboard, alerts and weekly review;
+and a runbook plus a written support boundary. The four-week first slice is scoped at
 15–20 hours per week. The demo is $0 on free tiers and a local GPU; production STT/TTS/LLM
 costs are quoted separately and re-measured before any SLA.
 

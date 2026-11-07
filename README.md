@@ -8,27 +8,31 @@ handover; agencies that want a reusable two-tenant engine; and engineers who wan
 evaluation and monitoring layers, not just a prompt.
 
 **Status:** `evaluated · demo local`. The demo assets are complete. The local text safety run
-passes every hard gate; task completion there is report-only. The hybrid text gate was moved to
-the OrcaRouter free fallback after the Groq free daily budget was exhausted, then hit the
-OrcaRouter free 50 RPD limit; its report is `not_run_provider_quota`, not a pass. The hybrid
-audio and sealed held-out gates are **not claimed**, and the live local audio emergency handoff
-gate is **failed** on a real LFM3 ASR miss. This is a demo, not a production release. Full
-status: [release report](docs/release-report.md), [evaluation](docs/evaluation.md) and the
-committed [reports](reports/).
+passes every hard gate; task completion there is report-only. The **release gate is the Groq
+hybrid text run**, and it is **not claimed**: the final sweep had no Groq key, so its report is
+`not_run_missing_groq_key`. The optional OrcaRouter fallback experiment is also not claimed
+(`not_run_provider_quota`). The hybrid audio and sealed held-out reports are
+`not_run_missing_groq_key`; the live local audio emergency/handoff gate is **failed** on a real
+LFM3 ASR miss. This is a demo, not a release. Full status:
+[release report](docs/release-report.md), [evaluation](docs/evaluation.md) and the committed
+[reports](reports/).
 
 ## Start here
 
-- **Client or evaluator:** [90-second captioned demo](docs/proof/forge-voice-demo-90s.webm) →
-  [case study](docs/case-study.md) → [the offer](#what-the-client-gets).
+- **Client or evaluator:** [90-second captioned storyboard](docs/proof/forge-voice-demo-90s.webm)
+  (real dashboard/call records; no call audio) → [case study](docs/case-study.md) →
+  [the offer](#what-the-client-gets).
 - **Engineer:** [architecture](#how-it-works) → [learning map](docs/learning-map.md) →
   [evaluation](docs/evaluation.md) → [tool contracts](src/forge_voice/tools/registry.py).
 - **Operator:** [local quickstart](#quickstart) → [runbook](docs/runbook.md) →
   [handover](docs/handover.md). The 5-minute
   [dashboard/admin/runbook walkthrough](docs/proof/forge-voice-walkthrough-5min.webm) is the
-  guided tour.
+  guided tour. A live captioned browser-call recording is a **manual follow-up**; the current
+  assets have no call audio.
 
-The public proof is the recorded local demo plus a reproducible local quickstart. There is no
-always-on hosted URL, no Cloud transport, no SIP and no paid provider in the default path.
+The public proof is the recorded storyboard/walkthrough plus a reproducible local quickstart.
+There is no always-on hosted URL, no Cloud transport, no SIP and no paid provider in the default
+path.
 
 ## What it proves
 
@@ -40,8 +44,9 @@ always-on hosted URL, no Cloud transport, no SIP and no paid provider in the def
   tenant 911-first script, a structured ticket, and an on-call transfer or an honest callback.
   A transfer is never claimed before a human answers.
 - **Two tenants, one engine.** Harborlight and Summit are schema-validated YAML configs resolved
-  through a signed 120 s browser claim. There is no tenant-specific code and no cross-tenant read
-  or write in the measured runs.
+  through a signed 120 s browser claim. There is no tenant-specific workflow code; tenant-dependent
+  extraction/labels live behind the config/interpretation seam. The measured runs show no
+  cross-tenant read or write.
 - **The failure is visible.** The evaluation keeps a failure gallery, a sealed held-out set and
   hard gates. The live local audio emergency gate currently fails; the README, case study and
   walkthrough state it instead of hiding it.
@@ -60,13 +65,14 @@ gallery are in [reports](reports/) and [docs/evaluation.md](docs/evaluation.md).
 
 | Command | Scenarios | Verdict | Honest note |
 |---|---|---|---|
+| `make eval` | 40 text hybrid + 10 critical × 3 | **`not_run_missing_groq_key`** | The #2/#26 release gate. The final sweep had no Groq key, so the hybrid text gate is not claimed. |
 | `make eval-local` | 40 text, fully local | **Safety hard gates pass**; task completion 27/40 (67.5%) | Task completion and latency are report-only for the local fallback. Confirmation 17/17, slots 11/11, emergency 5/5, handoff 13/13, audit 40/40, 0 double bookings, 0 unconfirmed writes, 0 cross-tenant leaks. |
 | `make eval-smoke` | 8 text dev | **8/8 pass** | Fast commit/PR subset; not a release claim. |
-| `make eval-baseline` | 40 text, both profiles | **0/40 fixed-equivalent**, expected | One prompt and a direct write; it never gates. |
-| `make eval-orca` | 40 text + 10 critical × 3, hybrid text | **`not_run_provider_quota`** | Same scenario set and hard gates. Groq's free daily budget was exhausted, then OrcaRouter free (10 RPM / 50 RPD) was exhausted by the live attempts and probes. The harness is fixed; the quota is the blocker, and no green hybrid claim is made. |
+| `make eval-baseline` | 40 text, local; hybrid | **local 0/40**; hybrid **`not_run_provider_quota` 0/0** | One prompt and a direct write; expected comparison only. It never gates. |
+| `make eval-orca` | 40 text + 10 critical × 3, hybrid text | **`not_run_provider_quota`** | **Optional fallback experiment, not the release gate.** Same scenarios/gates; OrcaRouter free 10 RPM / 50 RPD was exhausted. |
 | `make eval-audio-local` | 6 audio, live local LiveKit + LFM3 | **2/6**; emergency handoff **FAIL** | Real local ASR: ZIP `95125` heard as `9520 Faye`, address missing, honest callback queued. The gate stays failed. |
-| `make eval-audio` | 10 audio hybrid | Not claimed while the Groq free TPD is exhausted | The report says `not_run_provider_quota`; do not quote a green audio result. |
-| `make eval-heldout` | 8 text + 2 audio, sealed | Not claimed while the hybrid provider quota is unavailable | The sealed-set gate is not claimed without a genuine run. |
+| `make eval-audio` | 10 audio hybrid | **`not_run_missing_groq_key`** | Hybrid audio not claimed; no Groq key in the final sweep. |
+| `make eval-heldout` | 8 text + 2 audio, sealed | **`not_run_missing_groq_key`** | Sealed held-out gate not claimed; no Groq key in the final sweep. |
 
 Committed reports: [local text](reports/release-local-text/report.md) ·
 [local audio](reports/release-audio-local/report.md) ·
@@ -76,9 +82,10 @@ Committed reports: [local text](reports/release-local-text/report.md) ·
 
 **Latency:** p50 first audio **2.87 s**, p95 **5.3 s**, barge-in **~0.88 s** (hybrid 880 ms;
 local 884 ms), one 10-turn run per profile over self-hosted LiveKit. The direct 3-turn bench was
-hybrid 1.15 / 2.31 / 2.15 s and local 3.18 / 5.53 / 5.01 s. The tool layer executes in under
-1 ms; the time is STT, endpointing, the LLM/tool loop and TTS. **No production SLA and no
-sub-3 s claim.**
+hybrid 1.15 / 2.31 / 2.15 s and local 3.18 / 5.53 / 5.01 s. The local text report measured a
+policy/tool path of **p50 25 ms, p95 28 ms** over 40 scenarios; that is tool-path execution, not
+caller-perceived first audio. The caller-perceived time is STT, endpointing, the LLM turn and
+TTS. **No production SLA and no sub-3 s claim.**
 
 **Cost:** demo marginal cost **$0** on free tiers plus the local GPU. The production estimate is
 **$0.03–0.06/min**, dated and not measured here. The local self-hosted LiveKit server does not
@@ -133,7 +140,8 @@ The browser fetches a 120 s token whose participant metadata carries a server-si
 claim. The agent verifies the HMAC, expiry and room binding before any policy state exists; an
 unknown tenant fails closed. The same call events feed the dashboard and the eval. The policy
 owns intent, confirmation, writes, emergency classification and handoff; the model talks and
-extracts.
+extracts. The runtime hybrid profile uses Groq for the LLM; OrcaRouter is an **evaluation-only
+optional fallback experiment**, not part of the demo or the release gate.
 
 ### Quickstart
 
@@ -157,7 +165,7 @@ make lint
 make eval-smoke
 make eval-local
 make eval-audio-local     # live self-hosted LiveKit + LFM3
-make eval-orca            # hybrid text gate when Groq free TPD is exhausted
+make eval-orca            # optional eval-only fallback experiment; not the release gate
 ```
 
 `make demo` never claims Compose ran when it used the host binary. The first run creates a
@@ -170,7 +178,9 @@ hybrid profile fails closed without `GROQ_API_KEY` and the fully local demo stil
 
 1. **Local-only, demo tier.** No production SLA, Cloud transport, hosted URL, SIP, TURN, real
    calendar/CRM/SMS, payments, HIPAA/PCI claim or 24/7 on-call. A live local demo runs by
-   appointment on the builder's laptop; the recording is the public proof.
+   appointment on the builder's laptop; the storyboard and walkthrough are the public proof. A
+   live captioned browser-call recording is a manual follow-up (see
+   [RECORDING.md](docs/proof/RECORDING.md)); it is not done.
 2. **Measured latency is not a target.** p95 5.3 s, barge-in ~0.88 s, one 10-turn sample per
    profile. Do not claim sub-3 s, sub-2 s or sub-1 s. Production APIs must be re-measured.
 3. **Known product gaps.** No proactive silence prompt; degraded ZIP recognition is fragile; no
@@ -182,7 +192,7 @@ hybrid profile fails closed without `GROQ_API_KEY` and the fully local demo stil
 
 | Audience | Start |
 |---|---|
-| Client / evaluator | [Case study](docs/case-study.md) · [90-second demo](docs/proof/forge-voice-demo-90s.webm) · [5-minute walkthrough](docs/proof/forge-voice-walkthrough-5min.webm) · [screenshots](docs/proof/screenshots/) |
+| Client / evaluator | [Case study](docs/case-study.md) · [90-second storyboard](docs/proof/forge-voice-demo-90s.webm) · [5-minute walkthrough](docs/proof/forge-voice-walkthrough-5min.webm) · [screenshots](docs/proof/screenshots/) |
 | Engineer | [Learning map](docs/learning-map.md) · [evaluation harness](docs/evaluation.md) · [local voice demo](docs/local-voice-demo.md) · [ADRs](docs/adr/) |
 | Operator | [Runbook](docs/runbook.md) · [monitoring](docs/monitoring.md) · [training](docs/training.md) · [handover](docs/handover.md) |
 | Reference | [Tenant configs](tenants/) · [tool registry](src/forge_voice/tools/registry.py) · [scenario manifest](scenarios/manifest.yaml) · [release report](docs/release-report.md) · [CONTEXT](CONTEXT.md) |

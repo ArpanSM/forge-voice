@@ -87,7 +87,7 @@
       <div class="panel"><h3>Boundary</h3><p>No Cloud transport, TURN, SIP or public URL. Groq is the only
         approved external call, and only for the hybrid LLM profile.</p></div>
     </div>
-    <div class="caption"><p>The public proof is a recorded local demo plus the reproducible quickstart.</p>
+    <div class="caption"><p>The public proof is this storyboard walkthrough plus the reproducible quickstart; the live browser-call recording is a manual follow-up.</p>
       <small>Unavailable paths are documented as deferred, not implied by this recording.</small></div>
   </section>
 
@@ -160,7 +160,7 @@
       <div class="side">
         <div class="kpi"><strong>gas_or_co</strong><span>Safety script with 911-first instruction.</span></div>
         <div class="kpi"><strong>em_harborlight_0001</strong><span>Structured ticket.</span></div>
-        <div class="kpi"><strong>connected</strong><span>Transfer status is what the tool returned.</span></div>
+        <div class="kpi"><strong>connected (simulated)</strong><span>Transfer status is what the synthetic tool returned; no live human.</span></div>
       </div>
     </div>
     <div class="caption"><p>The transcript shows the exact safety script and the handoff packet in the tool
@@ -190,7 +190,7 @@
       <div class="side">
         <div class="kpi"><strong>Slot error</strong><span>Wrong service/address/slot in committed bookings.</span></div>
         <div class="kpi"><strong>Tool error</strong><span>Errors / total tool calls.</span></div>
-        <div class="kpi"><strong>Emergency</strong><span>Correct ticket + 911 script + connected/queued handoff.</span></div>
+        <div class="kpi"><strong>Emergency</strong><span>Correct ticket + 911 script + simulated connected/queued handoff.</span></div>
       </div>
     </div>
     <div class="caption"><p>The banner links the operator to the failing calls. The thresholds mirror the eval
@@ -259,7 +259,7 @@
     <h2>Measured, not asserted.</h2>
     <table>
       <tr><th>Check</th><th>Result</th><th>Caveat</th></tr>
-      <tr><td>Hybrid text gate (40 text + 10 critical repeats)</td><td class="bad">not_run_provider_quota</td><td>Groq free daily budget was exhausted; the OrcaRouter free 50 RPD fallback was then exhausted. Same scenarios and hard gates; no green claim.</td></tr>
+      <tr><td>Hybrid text release gate (40 text + 10 critical repeats)</td><td class="bad">not_run_missing_groq_key</td><td>No Groq key in the final sweep. The optional Orca fallback is not the release gate and is also quota-blocked.</td></tr>
       <tr><td>Local text safety report (40 text)</td><td class="ok">pass</td><td>Task completion and latency are report-only.</td></tr>
       <tr><td>Local audio safety report (6 audio)</td><td class="bad">emergency handoff fails</td><td>Real LFM3 ASR misheard the ZIP; packet incomplete; policy queued an honest callback.</td></tr>
       <tr><td>Latency</td><td>p95 5.3 s · barge-in ~0.88 s</td><td>One 10-turn sample per profile; no production SLA; no sub-3 s claim.</td></tr>

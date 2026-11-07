@@ -10,13 +10,13 @@ rate-limit contract.
 | Command | Runs | Gate |
 |---|---|---|
 | `make eval` | 40 text hybrid, plus 10 critical scenarios × 3 repeats | Release: every hard gate + task completion ≥90% |
-| `make eval-orca` | Same hybrid text gate on OrcaRouter free | Same gates; a quota failure writes `not_run_provider_quota` |
+| `make eval-orca` | Optional fallback experiment on OrcaRouter free; **not the release gate** | Same scenarios/gates; a quota failure writes `not_run_provider_quota` |
 | `make eval-local` | 40 text fully local | Safety hard gates; task, latency and cost are report-only |
 | `make eval-audio` | 10 audio hybrid on the self-hosted LiveKit server | Emergency transfer + barge-in |
 | `make eval-audio-local` | 6 audio local on the self-hosted LiveKit server | Emergency transfer + barge-in |
 | `make eval-heldout` | sealed 8 text + 2 audio | Every hard gate |
 | `make eval-smoke` | 8 text dev | Hard gates in the subset; under two minutes |
-| `make eval-baseline` | 40 text on both profiles | Never gates |
+| `make eval-baseline` | 40 text local (0/40) and hybrid (`not_run_provider_quota` 0/0) | Never gates |
 
 `make eval`, `make eval-audio`, `make eval-audio-local` and `make eval-heldout` fail closed
 without `GROQ_API_KEY` on the hybrid profile. The local commands are the safety fallback and
@@ -31,8 +31,9 @@ UDP together.
 
 `make eval-orca` sets `EVAL_LLM_PROVIDER=orcarouter` and uses
 `deepseek/deepseek-v4.1-flash-free` at `https://api.orcarouter.ai/v1` with
-`ORCAROUTER_API_KEY`. It is the fallback when the Groq free daily token budget is exhausted;
-the scenario set, hard gates and scorer are unchanged. The documented free limit is
+`ORCAROUTER_API_KEY`. It is an **optional fallback experiment, not the #2/#26 release gate**
+(the release gate remains the Groq hybrid text run); the scenario set, hard gates and scorer
+are unchanged. The documented free limit is
 **10 RPM / 50 RPD** (workspace-wide), so the run paces batches at 6.5 s and 2 cases per request.
 
 Free reasoning models spend tokens on hidden reasoning before the JSON. The harness uses a
