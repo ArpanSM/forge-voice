@@ -99,8 +99,12 @@ def _booked_execution(**overrides) -> ScenarioExecution:
 
 
 def _scenario(scenario_id: str = "text_book_01"):
-    selection = load_selection(ROOT, split="release")
-    return next(item for item in selection.scenarios if item.id == scenario_id)
+    for split in ("release", "audio"):
+        selection = load_selection(ROOT, split=split)
+        found = next((item for item in selection.scenarios if item.id == scenario_id), None)
+        if found is not None:
+            return found
+    raise AssertionError(f"unknown scenario {scenario_id}")
 
 
 def _result(scenario, execution, *, pipeline="fixed", profile="hybrid"):
@@ -298,11 +302,9 @@ def test_task_completion_uses_numerator_denominator_and_wilson_interval() -> Non
     passing = _result(scenario, _booked_execution())
     failing = _result(
         scenario,
-        _booked_execution(scenario_id="text_book_01"),
+        _booked_execution(scenario_id="text_book_01", transcript=[]),
         pipeline="fixed",
     )
-    # Make the second result a genuine failure through a missing write.
-    failing.verdict.passed = False  # report model is mutable for aggregation tests
 
     aggregates = build_aggregates([passing, failing])
 
@@ -311,6 +313,97 @@ def test_task_completion_uses_numerator_denominator_and_wilson_interval() -> Non
     assert completion["denominator"] == 2
     assert completion["percent"] == 50.0
     assert completion["wilson_low"] < 50.0 < completion["wilson_high"]
+
+
+def test_in_area_is_scored_from_the_service_area_tool_result() -> None:
+    scenario = _scenario("text_outofarea_01")
+    execution = _booked_execution(
+        scenario_id="text_outofarea_01",
+        outcome="info_only",
+        booking_ids=[],
+        booking_count=0,
+        confirmation_queued=False,
+        confirmation_count=0,
+        write_count=0,
+        readbacks=0,
+        writes=[],
+        tool_calls=[
+            {
+                "name": "get_service_area",
+                "ok": True,
+                "result": {"data": {"in_area": False}},
+            }
+        ],
+        response_text="That ZIP is outside the service area.",
+    )
+    assert score_scenario(scenario, execution, pipeline="fixed").passed is True
+
+    inside = execution.model_copy(
+        update={
+            "tool_calls": [
+                {
+                    "name": "get_service_area",
+                    "ok": True,
+                    "result": {"data": {"in_area": True}},
+                }
+            ]
+        }
+    )
+    assert score_scenario(scenario, inside, pipeline="fixed").checks["in_area"] is False
+
+
+def test_duplicate_writes_are_scored_not_ignored() -> None:
+    scenario = _scenario("text_timeout_01")
+    first = _booking_write(booking_id="bk_one")
+    second = _booking_write(booking_id="bk_two")
+    execution = _booked_execution(
+        scenario_id="text_timeout_01",
+        outcome="callback",
+        booking_ids=["bk_one", "bk_two"],
+        booking_count=2,
+        confirmation_queued=True,
+        write_count=2,
+        writes=[first, second],
+    )
+
+    verdict = score_scenario(scenario, execution, pipeline="fixed")
+
+    assert verdict.checks["duplicate_writes"] is False
+
+
+def test_confirmed_entities_is_not_vacuous_when_no_entities_were_measured() -> None:
+    scenario = _scenario("text_noise_01")
+    execution = _booked_execution(
+        scenario_id="text_noise_01",
+        asr_entities={},
+        asr_expected_entities={},
+        asr_source="not_measured",
+    )
+
+    verdict = score_scenario(scenario, execution, pipeline="fixed")
+
+    assert verdict.checks["confirmed_entities"] is False
+
+
+def test_audio_hard_gates_are_gated_not_report_only() -> None:
+    scenario = _scenario("audio_bargein_01")
+    execution = _booked_execution(
+        scenario_id="audio_bargein_01",
+        mode="audio",
+        transcript=[],
+    )
+    result = _result(scenario, execution, profile="hybrid")
+    aggregates = build_aggregates([result])
+    gates = evaluate_gates(
+        [result],
+        aggregates,
+        mode="audio",
+        pipeline="fixed",
+        profile="hybrid",
+    )
+
+    assert gates["audit_completeness"].passed is False
+    assert gates["audit_completeness"].gated is True
 
 
 def test_markdown_report_has_every_required_section() -> None:

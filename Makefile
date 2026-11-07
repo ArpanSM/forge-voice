@@ -26,7 +26,7 @@ help:
 	  'make eval-audio-local  6 audio local on the self-hosted LiveKit server' \
 	  'make eval-heldout  Sealed 8 text + 2 audio held-out release check' \
 	  'make eval-smoke    8 text dev subset, hard gates, under two minutes' \
-	  'make eval-baseline 40 text baseline on both profiles; never gates' \
+	  'make eval-baseline 40 text baseline vs fixed on both profiles; never gates' \
 	  'make format        Apply ruff formatting'
 
 install:
@@ -96,5 +96,5 @@ eval-smoke:
 	$(EVAL_PYTHON) --profile hybrid --mode text --split smoke --pipeline fixed --provider-check off --max-seconds 120
 
 eval-baseline:
-	$(EVAL_PYTHON) --profile hybrid --mode text --split release --pipeline baseline --provider-check off
-	$(EVAL_PYTHON) --profile local --mode text --split release --pipeline baseline --provider-check off
+	$(EVAL_PYTHON) --profile hybrid --mode text --split release --pipeline baseline --provider-check auto --compare-fixed
+	$(EVAL_PYTHON) --profile local --mode text --split release --pipeline baseline --provider-check auto --compare-fixed

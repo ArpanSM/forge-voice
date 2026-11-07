@@ -98,16 +98,19 @@ splits, the ten critical repeats and the hard-gate labels.
 | `make eval-baseline` | 40 text on both profiles | Never gates |
 
 `make eval` fails closed without `GROQ_API_KEY`; the local run is the required safety
-fallback. The hybrid text path uses the deterministic #4 rule interpreter and the live release
-run checks the Groq key/model once; audio runs on the self-hosted LiveKit server with LFM3
-STT/TTS. The baseline is a deliberately naive single-prompt writer: it is expected to fail and
-is never part of a release decision.
+fallback. Release text uses a provider-backed interpreter (Groq for hybrid, LFM3 for local);
+the deterministic policy still owns intent, confirmation, writes, emergency triage and
+handoff. Smoke uses the deterministic interpreter. Audio runs on the self-hosted LiveKit
+server with LFM3 STT/TTS. The baseline is a one-prompt direct-write model path; it is expected
+to fail and is never part of a release decision. The baseline report includes a fixed
+comparison with n/denominator for every metric.
 
-Each run writes `reports/<run_id>/report.json` (source of truth), `report.md` (generated),
-`transcripts/` and the sealed held-out manifest. The report includes per-scenario rows, the
-gate table, failure gallery, held-out and audio sections, repeat stability, cost assumptions
-and the latency caveat. See [docs/evaluation.md](docs/evaluation.md) for the metric and
-isolation contract.
+Each run writes `reports/<run_id>/report.json` (compact source of truth), `report.md`
+(generated), local transcripts and the sealed held-out manifest. The report includes
+per-scenario rows, the gate table, failure gallery, held-out and audio sections, repeat
+stability, baseline vs fixed, cost assumptions and the latency caveat. Audio hard gates are
+gated exactly like text hard gates. See [docs/evaluation.md](docs/evaluation.md) for the
+metric, isolation and rate-limit contract.
 
 `make demo-smoke` variants:
 

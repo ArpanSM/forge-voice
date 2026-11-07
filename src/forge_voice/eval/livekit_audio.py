@@ -242,6 +242,7 @@ class LiveKitAudioRunner:
             turns_used=len(chunks),
             asr_entities={key: None for key in expected},
             asr_expected_entities=expected,
+            asr_source="not_measured",
             barge_in_recovered=None if view.id != "audio_bargein_01" else False,
             error_code=type(exc).__name__,
         )
@@ -337,15 +338,6 @@ class LiveKitAudioRunner:
                 "agent_audio_frames": len(audio.frames),
                 "trace": str(trace.path),
             }
-        except Exception as exc:
-            return {
-                "call_id": call_id,
-                "events": trace.events(),
-                "barge": barge,
-                "agent_audio_frames": len(audio.frames),
-                "trace": str(trace.path),
-                "error": f"{type(exc).__name__}: {exc}"[:300],
-            }
         finally:
             await audio.aclose()
             await room.disconnect()
@@ -424,8 +416,6 @@ class LiveKitAudioRunner:
             qa_flags.append("degraded_audio")
         if result.get("barge") and result["barge"].get("recovered"):
             qa_flags.append("barge_in_recovered")
-        if result.get("error"):
-            qa_flags.append("live_call_error")
         expected_entities = self._expected_entities(view, setup)
         actual_entities = self._actual_entities(
             book_args, ticket_args, expected_entities, book=book, ticket=ticket
@@ -510,6 +500,7 @@ class LiveKitAudioRunner:
             turns_used=len(chunks),
             asr_entities=actual_entities,
             asr_expected_entities=expected_entities,
+            asr_source="live_asr",
             barge_in_recovered=(
                 bool(result["barge"]["recovered"]) if result.get("barge") else None
             ),

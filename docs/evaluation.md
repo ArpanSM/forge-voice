@@ -34,9 +34,10 @@ for a started run and for the missing-key failure, so a release failure is visib
   repeats are a stability check, not a best-of-three; any hard-gate failure in any repeat
   fails the gate.
 - The loader separates held-out labels into a scorer-only view and writes a sealed manifest
-  whose SHA-256 is recorded in every report. `agent_view` gives the runner only the caller
-  inputs (turns/fixture, persona, goal, max turns and runtime fixtures); expected outcomes,
-  pass conditions and gate labels never cross that seam.
+  whose SHA-256 is pinned in `scenarios/heldout.sha256` and recorded in every report.
+  `agent_view` verifies the pin and gives the runner only the caller inputs (turns/fixture,
+  persona, goal, max turns and runtime fixtures); expected outcomes, pass conditions and gate
+  labels never cross that seam.
 - `make eval-heldout` is the sealed release check. The held-out set is not used for prompt
   tuning.
 
@@ -44,10 +45,14 @@ for a started run and for the missing-key failure, so a release failure is visib
 
 - **Fixed:** the #4 `CallRunner` for text and the #5 `AudioCallSession` for audio, both with
   the same policy, eight tools, confirmation token, idempotency, emergency triage, handoff and
-  tenant configs. Audio uses the committed LFM3 caller fixtures and the local LiveKit stack.
-- **Baseline:** one prompt over the same tenant context, no tools, state, policy, confirmation
-  or idempotency. It writes directly to a separate sandbox calendar and is expected to fail.
-  It never gates; its report exists to show the comparison.
+  tenant configs. Release text runs use a provider-backed interpreter: Groq for hybrid and
+  LFM3 for local. The model extracts caller facts; the policy still owns intent classification,
+  confirmation, writes, emergency triage and handoff. Smoke uses the deterministic interpreter.
+  Audio uses the committed LFM3 caller fixtures and the local LiveKit stack.
+- **Baseline:** one prompt through the same provider, no tools, state, policy, confirmation or
+  idempotency. It writes directly to a separate sandbox calendar and is expected to fail. The
+  baseline report includes a fixed comparison with n/denominator for every metric. It never
+  gates; its report exists to show the comparison.
 
 The text harness supplies deterministic caller identity, clock, fault and precondition
 fixtures. Compressed text scenarios are normalised for the text turn boundary: a mixed
@@ -59,14 +64,16 @@ uses the seed's already booked Monday 9 slot.
 
 ## Metrics and gates
 
-Hard gates (any failure fails the fixed run): 0 double bookings, 100% confirmation accuracy,
-100% slot correctness, 100% emergency triage, 100% handoff correctness, 100% audit
-completeness, 0 unsafe promises, 0 cross-tenant leaks and 0 unauthorized writes.
+Hard gates (any failure fails the fixed run, including audio): 0 double bookings, 100%
+confirmation accuracy, 100% slot correctness, 100% emergency triage, 100% handoff correctness,
+100% audit completeness, 0 unsafe promises, 0 cross-tenant leaks and 0 unauthorized writes.
+Handoff completeness uses the product `HandoffPacket.missing_fields()`; a packet without the
+caller name, phone, address, service, summary, reason and booking/ticket fails the gate.
 
 Release gates: the hybrid text run also requires task completion ≥90%; the audio runs require
-emergency transfer and barge-in recovery ≥90%. The local text run enforces the safety hard
-gates but reports task completion and latency without gating them, per #26. The baseline never
-gates.
+emergency transfer and barge-in recovery. The local text run enforces the safety hard gates but
+reports task completion and latency without gating them, per #26. Task completion is
+report-only on audio. The baseline never gates.
 
 Reported metrics include task completion, slot correctness, confirmation accuracy, emergency
 triage, handoff correctness, barge-in recovery, ASR entity accuracy (clean/noisy), containment,
@@ -92,7 +99,15 @@ assumptions and the latency caveat.
   WebRTC first-audio latency.
 - The audio scripts are compressed to at most three caller turns for the eval budget. The
   scripts carry the full scenario content; a long compressed turn is still one caller turn.
+- The hybrid provider-backed text run is subject to Groq free-tier rate limits. A 429 that
+  outlives the #5 retry budget fails the run; the report says `not_run_text_provider` or marks
+  the affected scenarios with `provider_error`. The gate is not claimed in that case.
+- Text ASR is `not_applicable`; text entity checks use transcript extraction. Session audio
+  reports `transcript_extraction`, live audio reports `live_asr`; an unmeasured run is not 100%.
+- Audio hard gates are gated exactly like text hard gates. The local audio command must run on
+  the self-hosted LiveKit server; the session replay is a separate diagnostic and is not a
+  substitute for a live pass.
 - Latency is report-only. The demo runs free/local models on a 4 GB GPU; production APIs must
   be re-measured before quoting a number. Do not claim sub-3 s or sub-2 s from this report.
 - Audio and text results are not pooled; a local report is not a substitute for the hybrid
-  release gate.
+  release gate. Committed reports are the summary JSON/Markdown; full transcripts stay local.

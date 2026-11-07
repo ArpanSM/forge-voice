@@ -65,6 +65,9 @@ class ScenarioExecution(StrictModel):
     turns_used: int = 0
     asr_entities: dict[str, str | None] = Field(default_factory=dict)
     asr_expected_entities: dict[str, str | None] = Field(default_factory=dict)
+    asr_source: Literal["not_measured", "text_extraction", "transcript_extraction", "live_asr"] = (
+        "not_measured"
+    )
     barge_in_recovered: bool | None = None
     error_code: str | None = None
 
@@ -96,6 +99,8 @@ class ScenarioResult(StrictModel):
     pass_: bool = Field(alias="pass")
     gate_labels: list[str] = Field(default_factory=list)
     tool_calls: list[dict[str, Any]] = Field(default_factory=list)
+    failure_excerpt: str = ""
+    tool_timeline: list[str] = Field(default_factory=list)
     transcript_ref: str
     recording_ref: str
     latency: dict[str, Any] = Field(default_factory=dict)
@@ -103,7 +108,7 @@ class ScenarioResult(StrictModel):
     qa_flags: list[str] = Field(default_factory=list)
     failure_reason: str | None = None
     verdict: ScenarioVerdict
-    execution: ScenarioExecution
+    execution: ScenarioExecution = Field(exclude=True)
 
     def report_dict(self) -> dict[str, Any]:
         return self.model_dump(mode="json", by_alias=True)
@@ -172,6 +177,7 @@ class EvalReport(StrictModel):
     caveats: list[str] = Field(default_factory=list)
     provider: dict[str, Any] = Field(default_factory=dict)
     repeats: dict[str, Any] = Field(default_factory=dict)
+    comparison: dict[str, Any] | None = None
     counts: dict[str, Any] = Field(default_factory=dict)
 
     def report_dict(self) -> dict[str, Any]:

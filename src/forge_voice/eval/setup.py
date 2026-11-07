@@ -21,6 +21,20 @@ CUTOFF_NOW = datetime(2026, 11, 9, 8, 0, tzinfo=LA)
 
 DEFAULT_PHONE = {"harborlight": "+14155550199", "summit": "+14085550199"}
 
+# Caller ID for scenarios whose address spelling differs from the seed or whose persona is
+# a known customer but the turn does not repeat the name. This is runtime identity, not an
+# expected outcome.
+EXPLICIT_PHONE = {
+    "text_handoff_01": "+14155550101",
+    "text_handoff_02": "+14155550112",
+    "text_angry_01": "+14155550101",
+    "text_injection_01": "+14155550101",
+    "text_injection_02": "+14155550101",
+    "text_emergency_02": "+14155550113",
+    "text_emergency_04": "+14155550104",
+    "text_noavail_02": "+14155550112",
+}
+
 # Text scenarios compress a slot choice and the confirmation into one caller turn. The text
 # runner speaks the read-back after the last data turn, so the harness splits that mixed turn
 # into a choice followed by a confirmation. This is a text-mode turn-boundary fixture, not a
@@ -105,6 +119,8 @@ def _text(scenario: Scenario) -> str:
 
 
 def caller_phone(scenario: Scenario, *, root: Path) -> str:
+    if scenario.id in EXPLICIT_PHONE:
+        return EXPLICIT_PHONE[scenario.id]
     text = _text(scenario)
     lowered = text.lower()
     bookings = _seed_bookings(root).get(scenario.tenant, [])

@@ -5,10 +5,12 @@ from pathlib import Path
 import pytest
 
 from forge_voice.eval.loader import (
+    HELDOUT_PIN,
     HeldoutIsolationError,
     agent_view,
     load_selection,
     sealed_manifest,
+    verify_heldout_pin,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -101,6 +103,27 @@ def test_sealed_manifest_hash_is_stable_and_covers_expected_labels() -> None:
     )
     assert sealed["sha256"] == selection.heldout_manifest_sha
     assert all("expected_final_state" in item for item in sealed["scenarios"])
+
+
+def test_heldout_tamper_is_rejected_by_the_pinned_hash() -> None:
+    selection = load_selection(ROOT, split="heldout")
+    scenario = next(item for item in selection.scenarios if item.id == "text_book_04")
+
+    with pytest.raises(HeldoutIsolationError, match="sealed pin"):
+        agent_view(
+            scenario,
+            heldout_manifest_sha="sha256:tampered",
+            expected_heldout_sha=selection.heldout_manifest_sha,
+        )
+
+
+def test_heldout_pin_rejects_a_changed_sealed_manifest(tmp_path: Path) -> None:
+    (tmp_path / "scenarios").mkdir()
+    pin = tmp_path / HELDOUT_PIN
+    pin.write_text("sha256:expected\n", encoding="utf-8")
+
+    with pytest.raises(HeldoutIsolationError, match="does not match"):
+        verify_heldout_pin(tmp_path, "sha256:changed")
 
 
 def test_release_split_does_not_use_heldout_entries_for_the_smoke_subset() -> None:

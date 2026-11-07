@@ -24,6 +24,7 @@ recordings/
 reports/*
 !reports/release-*/
 reports/release-*/stack/
+reports/release-*/transcripts/
 
 # OS / editor
 .DS_Store

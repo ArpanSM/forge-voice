@@ -129,8 +129,9 @@ def _booking_dict(booking: BookingRecord) -> dict[str, Any]:
 
 
 class BaselineRunner:
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path, *, facts_provider: Any = None) -> None:
         self.root = Path(root)
+        self.facts_provider = facts_provider
         self.tenants = load_all_tenants(self.root / "tenants")
         self.store = SQLiteAdapter(":memory:")
         for path in sorted((self.root / "fixtures" / "corpus" / "seed").glob("*.json")):
@@ -140,10 +141,22 @@ class BaselineRunner:
         started = time.perf_counter()
         tenant = self.tenants[view.tenant]
         turns = setup.turns_override or list(view.turns)
-        facts = extract_facts(tenant, turns, self.store, setup.now, caller_phone=setup.caller_phone)
+        if self.facts_provider is not None:
+            facts = self.facts_provider.extract(
+                scenario_id=view.id,
+                tenant=tenant,
+                turns=turns,
+                caller_phone=setup.caller_phone,
+                now=setup.now,
+                trust_intent=True,
+            )
+        else:
+            facts = extract_facts(
+                tenant, turns, self.store, setup.now, caller_phone=setup.caller_phone
+            )
         prompt = _prompt(tenant, turns)
         prompt_sha = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
-        intent = _intent(facts.text)
+        intent = facts.intent or _intent(facts.text)
         before_bookings = {
             booking.booking_id for booking in self.store.list_bookings(tenant.tenant_id)
         }
@@ -202,7 +215,9 @@ class BaselineRunner:
                     service_id=booking.service_id,
                     zip_code=booking.address.zip,
                     now=setup.now,
-                    day=_first_day(turns),
+                    day=facts.preferred_day.weekday()
+                    if facts.preferred_day is not None
+                    else _first_day(turns),
                     hour=None,
                 )
                 slot = _ensure_unique_slot(self.store, tenant, slot)
@@ -253,7 +268,11 @@ class BaselineRunner:
                 service_id=service_id,
                 zip_code=address.zip,
                 now=setup.now,
-                day=_first_day(turns),
+                day=(
+                    facts.preferred_day.weekday()
+                    if facts.preferred_day is not None
+                    else _first_day(turns)
+                ),
                 hour=None,
             )
             slot = _ensure_unique_slot(self.store, tenant, slot)

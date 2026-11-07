@@ -6,11 +6,30 @@ from pathlib import Path
 import httpx
 import pytest
 
+from forge_voice.adapters.sqlite import SQLiteAdapter
 from forge_voice.eval.fixed import FixedTextRunner
 from forge_voice.eval.provider_check import check_groq
+from forge_voice.eval.provider_text import TextProviderError
 from forge_voice.eval.runner import RunConfig, run_eval
+from forge_voice.runtime.interpreter import extract_facts
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+class DeterministicFacts:
+    model = "fake-text"
+
+    def extract(self, *, scenario_id, tenant, turns, caller_phone, now, trust_intent=False):
+        store = SQLiteAdapter(":memory:")
+        for path in sorted((ROOT / "fixtures" / "corpus" / "seed").glob("*.json")):
+            store.seed(json.loads(path.read_text(encoding="utf-8")))
+        return extract_facts(
+            tenant,
+            turns,
+            store,
+            now,
+            caller_phone=caller_phone,
+        )
 
 
 def _config(tmp_path: Path, **overrides) -> RunConfig:
@@ -24,6 +43,7 @@ def _config(tmp_path: Path, **overrides) -> RunConfig:
         "report_dir": tmp_path,
         "run_id": "test_run",
         "quiet": True,
+        "facts_provider": DeterministicFacts(),
     }
     values.update(overrides)
     return RunConfig(**values)
@@ -215,6 +235,104 @@ def test_a_hard_gate_failure_exits_non_zero_and_still_writes_the_report(
     assert report["gates"]["audit_completeness"]["passed"] is False
     assert report["gates"]["audit_completeness"]["gated"] is True
     assert (tmp_path / "test_gate_failure" / "report.md").is_file()
+
+
+def test_provider_check_off_fails_a_hybrid_release_instead_of_passing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+
+    code = run_eval(
+        _config(
+            tmp_path,
+            profile="hybrid",
+            provider_check="off",
+            facts_provider=None,
+            run_id="test_provider_off",
+        )
+    )
+
+    report = json.loads(
+        (tmp_path / "test_provider_off" / "report.json").read_text(encoding="utf-8")
+    )
+    assert code == 1
+    assert report["verdict"] == "fail"
+    assert report["provider"]["check"]["status"] == "not_run"
+    assert report["gates"]["hybrid_provider"]["passed"] is False
+    assert report["gates"]["hybrid_provider"]["gated"] is True
+
+
+def test_text_provider_error_is_a_failed_scenario_not_a_silent_fallback(
+    tmp_path: Path,
+) -> None:
+    class BrokenFacts:
+        model = "broken"
+
+        def extract(self, **kwargs):
+            raise TextProviderError("provider unavailable")
+
+    code = run_eval(
+        _config(
+            tmp_path,
+            facts_provider=BrokenFacts(),
+            run_id="test_provider_error",
+        )
+    )
+
+    report = json.loads(
+        (tmp_path / "test_provider_error" / "report.json").read_text(encoding="utf-8")
+    )
+    assert code == 1
+    assert report["verdict"] == "fail"
+    assert any(scenario["qa_flags"].count("provider_error") for scenario in report["scenarios"])
+
+
+def test_live_audio_error_retries_then_fails_the_run(tmp_path: Path) -> None:
+    from forge_voice.eval.livekit_audio import LiveKitAudioRunner
+    from forge_voice.eval.models import ScenarioExecution
+
+    class FakeStack:
+        web_url = "http://127.0.0.1:1"
+
+    calls: list[int] = []
+
+    runner = LiveKitAudioRunner.__new__(LiveKitAudioRunner)
+    runner.root = ROOT
+    runner.profile = "local"
+    runner.stack = FakeStack()
+    runner.timeout = 1.0
+    runner.terminal_timeout = 1.0
+    runner.tenants = {}
+    runner.seeds = {}
+    runner.manifest = None
+    runner.scripts = {
+        "audio_bargein_01": type(
+            "Script",
+            (),
+            {"turns": [type("Turn", (), {"text": "Hello"})()]},
+        )()
+    }
+
+    async def broken_call(*args, **kwargs):
+        calls.append(1)
+        raise TimeoutError("agent never answered")
+
+    runner._call = broken_call
+    runner._expected_entities = lambda view, setup: {"zip": "94107"}
+
+    view = type(
+        "View",
+        (),
+        {"id": "audio_bargein_01", "tenant": "harborlight", "mode": "audio"},
+    )()
+    setup = type("Setup", (), {"now": None, "caller_phone": "+14155550101"})()
+    execution = runner.run_view(view, setup)
+
+    assert isinstance(execution, ScenarioExecution)
+    assert len(calls) == 2
+    assert execution.outcome == "failed"
+    assert "harness_error" in execution.qa_flags
+    assert execution.asr_source == "not_measured"
 
 
 def test_provider_check_retries_then_reports_a_rate_limit(monkeypatch: pytest.MonkeyPatch) -> None:

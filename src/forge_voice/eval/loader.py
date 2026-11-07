@@ -40,6 +40,25 @@ def _canonical_sha256(payload: object) -> str:
     return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
 
 
+HELDOUT_PIN = "scenarios/heldout.sha256"
+
+
+def verify_heldout_pin(root: Path | str, computed: str) -> str:
+    path = Path(root) / HELDOUT_PIN
+    try:
+        pinned = path.read_text(encoding="utf-8").strip()
+    except OSError as exc:
+        raise HeldoutIsolationError(f"held-out pin is missing: {path}") from exc
+    if not pinned:
+        raise HeldoutIsolationError(f"held-out pin is empty: {path}")
+    if pinned != computed:
+        raise HeldoutIsolationError(
+            "held-out manifest hash does not match the committed pin; "
+            f"pinned={pinned} computed={computed}"
+        )
+    return pinned
+
+
 def sealed_manifest(manifest: ScenarioManifest) -> dict[str, object]:
     """Return the scorer-only held-out labels and their stable hash."""
     held_out = sorted(
@@ -89,6 +108,7 @@ def load_selection(root: Path | str, *, split: str) -> EvalSelection:
     tenant_slugs = {path.stem for path in (root / "tenants").glob("*.yaml")}
     manifest = load_manifest(manifest_path, known_tenants=tenant_slugs)
     sealed = sealed_manifest(manifest)
+    verify_heldout_pin(root, str(sealed["sha256"]))
     return EvalSelection(
         manifest=manifest,
         scenarios=_select(manifest, split),
@@ -103,6 +123,7 @@ def agent_view(
     scenario: Scenario,
     *,
     heldout_manifest_sha: str | None,
+    expected_heldout_sha: str | None = None,
     caller_phone: str | None = None,
     now: datetime | None = None,
     faults: dict[str, str] | None = None,
@@ -113,6 +134,10 @@ def agent_view(
     if scenario.held_out and not heldout_manifest_sha:
         raise HeldoutIsolationError(
             "held-out scenarios require the sealed held-out manifest hash before a runner starts"
+        )
+    if expected_heldout_sha is not None and heldout_manifest_sha != expected_heldout_sha:
+        raise HeldoutIsolationError(
+            "held-out manifest hash does not match the sealed pin; refusing to start"
         )
     from forge_voice.eval.models import AgentScenarioView
 

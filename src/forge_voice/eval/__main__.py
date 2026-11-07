@@ -18,6 +18,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--pipeline", choices=["fixed", "baseline"], default="fixed")
     parser.add_argument("--repeat-critical", action="store_true")
     parser.add_argument("--provider-check", choices=["auto", "off"], default="auto")
+    parser.add_argument("--compare-fixed", action="store_true")
     parser.add_argument("--transport", choices=["session", "livekit"], default="session")
     parser.add_argument("--report-dir", default="reports")
     parser.add_argument("--run-id", default=None)
@@ -38,6 +39,7 @@ def main(argv: list[str] | None = None) -> int:
         pipeline=args.pipeline,
         repeat_critical=args.repeat_critical,
         provider_check=args.provider_check,
+        compare_fixed=args.compare_fixed,
         report_dir=Path(args.report_dir),
         run_id=args.run_id,
         max_seconds=args.max_seconds,

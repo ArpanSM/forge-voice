@@ -21,6 +21,7 @@ from forge_voice.eval.models import (
     ScenarioVerdict,
     WriteRecord,
 )
+from forge_voice.policy.handoff import HandoffPacket
 from forge_voice.scenarios.models import Scenario
 
 HARD_GATES = (
@@ -167,15 +168,10 @@ def _handoff_complete(execution: ScenarioExecution) -> bool:
     packet = execution.handoff_packet
     if not isinstance(packet, dict):
         return False
-    caller = packet.get("caller") or {}
-    if not isinstance(caller, dict) or not caller.get("phone"):
+    try:
+        return not HandoffPacket.model_validate(packet).missing_fields()
+    except Exception:
         return False
-    if not packet.get("summary") or not packet.get("reason"):
-        return False
-    intent = packet.get("intent")
-    if intent in {"reschedule", "cancel"} and not packet.get("booking_id"):
-        return False
-    return not (intent == "emergency" and not packet.get("emergency_ticket_id"))
 
 
 def _audit_complete(execution: ScenarioExecution) -> bool:
@@ -248,6 +244,8 @@ def _slot_correctness(execution: ScenarioExecution, scenario: Scenario) -> bool:
     expected = scenario.expected_final_state
     rows = _booking_rows(execution)
     writes = _write_records(execution)
+    if not writes:
+        return True
     expected_service = expected.get("service_id")
     expected_zip = expected.get("address_zip")
     service_ok = expected_service is None or expected_service in _booked_service_ids(execution)
@@ -306,7 +304,8 @@ def _emergency_triage(execution: ScenarioExecution, scenario: Scenario) -> bool:
         return False
     if expected.get("vulnerable_occupant") and not execution.vulnerable_occupant:
         return False
-    if "911" not in execution.response_text:
+    life_safety_scripts = {"gas_co", "fire_smoke", "electrical_hazard"}
+    if execution.safety_script in life_safety_scripts and "911" not in execution.response_text:
         return False
     return not (execution.booking_count > 0 or execution.write_count > 0)
     return True
@@ -319,27 +318,30 @@ def _handoff_correctness(execution: ScenarioExecution, scenario: Scenario) -> bo
         and execution.outcome == "booked"
     ):
         return True
-    handoff_expected = expected.get("outcome") in {
+    handoff_expected = "handoff_correctness" in scenario.hard_gates or expected.get("outcome") in {
         "transferred",
-        "callback",
         "emergency_ticket",
-    } or ("handoff_correctness" in scenario.hard_gates)
+    }
     if not handoff_expected:
         return True
     if _is_false_connected(execution):
         return False
     if execution.outcome == "emergency_ticket":
-        return execution.ticket_count >= 1 and (
-            execution.transfer_status in {"connected", "queued_callback", "no_answer"}
-            or execution.callback_count >= 1
+        return (
+            execution.ticket_count >= 1
+            and _handoff_complete(execution)
+            and (
+                execution.transfer_status in {"connected", "queued_callback", "no_answer"}
+                or execution.callback_count >= 1
+            )
         )
     if execution.transfer_status == "connected":
         return _handoff_complete(execution)
     if execution.outcome == "callback":
-        return execution.callback_count >= 1 or execution.transfer_status in {
-            "queued_callback",
-            "no_answer",
-        }
+        return _handoff_complete(execution) and (
+            execution.callback_count >= 1
+            or execution.transfer_status in {"queued_callback", "no_answer"}
+        )
     if execution.outcome == "transferred":
         return execution.transfer_status == "connected" and _handoff_complete(execution)
     return False
@@ -360,19 +362,60 @@ def _outcome_satisfied(expected: str, execution: ScenarioExecution) -> bool:
     return False
 
 
-def _entity_accuracy(execution: ScenarioExecution) -> float:
-    expected = execution.asr_expected_entities
-    actual = execution.asr_entities
+def _entity_score(execution: ScenarioExecution) -> tuple[int, int, int]:
+    """Return (matches, total, invented) from measured entities.
+
+    ``total`` is zero when nothing was measured; callers must not treat that as a pass.
+    ``invented`` counts actual values that do not match any expected value.
+    """
+    expected = {
+        key: value
+        for key, value in execution.asr_expected_entities.items()
+        if value not in (None, "")
+    }
+    actual = {
+        key: value for key, value in execution.asr_entities.items() if value not in (None, "")
+    }
     if not expected:
-        return 1.0
-    matches = 0
-    for key, value in expected.items():
-        if value is None:
+        return 0, 0, 0
+    matches = sum(1 for key, value in expected.items() if actual.get(key) == value)
+    expected_values = set(expected.values())
+    invented = sum(1 for value in actual.values() if value not in expected_values)
+    return matches, len(expected), invented
+
+
+def _in_area(execution: ScenarioExecution) -> bool | None:
+    for call in reversed(execution.tool_calls):
+        if call.get("name") != "get_service_area":
             continue
-        if actual.get(key) == value:
-            matches += 1
-    total = sum(1 for value in expected.values() if value is not None)
-    return matches / total if total else 1.0
+        data = (call.get("result") or {}).get("data")
+        if isinstance(data, dict) and "in_area" in data:
+            return bool(data["in_area"])
+    return None
+
+
+def _duplicate_write_count(execution: ScenarioExecution) -> int:
+    extra = 0
+    books: dict[str, set[str]] = {}
+    repeats: dict[tuple[str, str], int] = {}
+    for write in execution.writes:
+        if not write.ok:
+            continue
+        if write.tool == "book_appointment":
+            slot = write.args.get("slot_id")
+            data = (write.result or {}).get("data") or (write.result or {})
+            booking = data.get("booking") or {}
+            booking_id = booking.get("booking_id")
+            if isinstance(slot, str) and isinstance(booking_id, str):
+                books.setdefault(slot, set()).add(booking_id)
+        elif write.tool in {"cancel_appointment", "reschedule_appointment"}:
+            target = write.args.get("booking_id")
+            if isinstance(target, str):
+                key = (write.tool, target)
+                repeats[key] = repeats.get(key, 0) + 1
+    extra += sum(max(0, len(ids) - 1) for ids in books.values())
+    extra += sum(max(0, count - 1) for count in repeats.values())
+    return extra
 
 
 def _expected_checks(scenario: Scenario, execution: ScenarioExecution) -> dict[str, bool]:
@@ -436,16 +479,13 @@ def _expected_checks(scenario: Scenario, execution: ScenarioExecution) -> dict[s
             execution.confirmation_queued == expected["confirmation_queued"]
         )
     if "confirmed_entities" in expected:
-        checks["confirmed_entities"] = _entity_accuracy(execution) == 1.0
-    if "invented_entities" in expected:
-        checks["invented_entities"] = all(
-            value in (None, "") or actual == value
-            for actual, value in zip(
-                execution.asr_entities.values(),
-                execution.asr_expected_entities.values(),
-                strict=False,
-            )
+        matches, total, _ = _entity_score(execution)
+        checks["confirmed_entities"] = (
+            total > 0 and matches == total if expected["confirmed_entities"] else True
         )
+    if "invented_entities" in expected:
+        _, _, invented = _entity_score(execution)
+        checks["invented_entities"] = invented == int(expected["invented_entities"])
     if "rejected_slot_once" in expected:
         taken = "taken" in " ".join(scenario.turns).lower()
         checks["rejected_slot_once"] = _has_slot_unavailable(execution) or (
@@ -475,6 +515,15 @@ def _expected_checks(scenario: Scenario, execution: ScenarioExecution) -> dict[s
             str(write.args.get("reason")) for write in execution.writes if write.args.get("reason")
         )
         checks["reason"] = str(expected["reason"]) in reasons
+    if "in_area" in expected:
+        actual_in_area = _in_area(execution)
+        checks["in_area"] = actual_in_area is not None and actual_in_area == bool(
+            expected["in_area"]
+        )
+    if "duplicate_writes" in expected:
+        checks["duplicate_writes"] = _duplicate_write_count(execution) == int(
+            expected["duplicate_writes"]
+        )
     if "contains" in expected:
         text = execution.response_text.lower()
         checks["contains"] = all(str(item).lower() in text for item in expected["contains"])
@@ -551,6 +600,12 @@ def build_scenario_result(
     repeat_index: int = 0,
 ) -> ScenarioResult:
     transcript_ref = f"transcripts/{scenario.id}.json"
+    if repeat_index:
+        transcript_ref = f"transcripts/{scenario.id}_r{repeat_index}.json"
+    excerpt = " / ".join(
+        f"{turn.get('role', '?')}: {turn.get('text', '')}" for turn in execution.transcript[-4:]
+    )
+    timeline = [str(call.get("name", "tool")) for call in execution.tool_calls]
     return ScenarioResult(
         scenario_id=scenario.id,
         category=scenario.category,
@@ -576,7 +631,16 @@ def build_scenario_result(
         },
         **{"pass": verdict.passed},
         gate_labels=list(scenario.hard_gates),
-        tool_calls=execution.tool_calls,
+        tool_calls=[
+            {
+                "name": call.get("name"),
+                "ok": call.get("ok"),
+                "error_code": call.get("error_code"),
+            }
+            for call in execution.tool_calls
+        ],
+        failure_excerpt=excerpt,
+        tool_timeline=timeline,
         transcript_ref=transcript_ref,
         recording_ref=execution.recording_ref,
         latency={
@@ -670,38 +734,44 @@ def build_aggregates(results: list[ScenarioResult], *, pipeline: str = "fixed") 
     qa_total = sum(len(result.qa_flags) for result in first_runs)
     contained = sum(1 for result in first_runs if result.execution.outcome not in {"transferred"})
     audio = [result for result in first_runs if result.mode == "audio"]
-    clean_audio = [
+    measured_audio = [
         result
         for result in audio
-        if result.execution.asr_expected_entities and not _has_degraded_flag(result)
+        if result.execution.asr_source in {"live_asr", "transcript_extraction"}
+        and result.execution.asr_expected_entities
     ]
-    noisy_audio = [
-        result
-        for result in audio
-        if result.execution.asr_expected_entities and _has_degraded_flag(result)
-    ]
+    clean_audio = [result for result in measured_audio if not _has_degraded_flag(result)]
+    noisy_audio = [result for result in measured_audio if _has_degraded_flag(result)]
 
     def entity_metric(items: list[ScenarioResult]) -> dict[str, Any]:
-        matches = 0
-        total = 0
+        if not items:
+            return {
+                "status": "not_applicable" if not audio else "not_measured",
+                "numerator": 0,
+                "denominator": 0,
+                "n": 0,
+                "percent": None,
+                "wilson_low": None,
+                "wilson_high": None,
+            }
+        matches = total = invented = 0
         for result in items:
-            expected = result.execution.asr_expected_entities
-            actual = result.execution.asr_entities
-            for key, value in expected.items():
-                if value is None:
-                    continue
-                total += 1
-                if actual.get(key) == value:
-                    matches += 1
-        percent = round(100 * matches / total, 2) if total else 0.0
-        low, high = _wilson(matches, total)
+            item_matches, item_total, item_invented = _entity_score(result.execution)
+            matches += item_matches
+            total += item_total
+            invented += item_invented
+        percent = round(100 * matches / total, 2) if total else None
+        low, high = _wilson(matches, total) if total else (0.0, 0.0)
         return {
+            "status": "measured" if total else "not_measured",
             "numerator": matches,
             "denominator": total,
             "n": total,
             "percent": percent,
-            "wilson_low": round(low * 100, 2),
-            "wilson_high": round(high * 100, 2),
+            "invented": invented,
+            "wilson_low": round(low * 100, 2) if total else None,
+            "wilson_high": round(high * 100, 2) if total else None,
+            "source": items[0].execution.asr_source,
         }
 
     barge_in = [result for result in audio if result.execution.barge_in_recovered is not None]
@@ -881,7 +951,7 @@ def evaluate_gates(
     split: str = "release",
 ) -> dict[str, GateResult]:
     gated = pipeline != "baseline"
-    hard_gated = gated and mode != "audio"
+    hard_gated = gated
     first_runs = [result for result in results if result.repeat_index == 0]
     all_runs = results
     gates: dict[str, GateResult] = {}

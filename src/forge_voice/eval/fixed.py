@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from forge_voice.adapters.sqlite import SQLiteAdapter
 from forge_voice.audio.fixtures import load_audio_scripts
 from forge_voice.eval.models import AgentScenarioView, ScenarioExecution, WriteRecord
 from forge_voice.eval.setup import ScenarioSetup, prepare_store
@@ -23,6 +24,7 @@ from forge_voice.runtime import CallRunner, CallScenario
 from forge_voice.runtime.audio_session import AudioCallSession, ToolReply
 from forge_voice.runtime.interpreter import extract_facts
 from forge_voice.scenarios import load_manifest
+from forge_voice.tenants import load_all_tenants
 
 WRITE_TOOLS = frozenset({"book_appointment", "reschedule_appointment", "cancel_appointment"})
 WEEKDAYS = {
@@ -80,12 +82,40 @@ def _write_records(tool_events: list[Any]) -> list[WriteRecord]:
     return records
 
 
+def _actual_entities(execution: ScenarioExecution) -> dict[str, str | None]:
+    for write in reversed(execution.writes):
+        if not write.ok or write.tool != "book_appointment":
+            continue
+        data = (write.result or {}).get("data") or {}
+        booking = data.get("booking") or {}
+        customer = write.args.get("customer") or {}
+        address = booking.get("address") or customer.get("address") or {}
+        name = customer.get("name")
+        value = {
+            "name": None if name in (None, "Caller") else name,
+            "phone": customer.get("phone") or booking.get("contact_phone"),
+            "line1": address.get("line1"),
+            "zip": address.get("zip"),
+            "service_id": booking.get("service_id") or write.args.get("service_id"),
+        }
+        return value
+    return {
+        "name": None,
+        "phone": None,
+        "line1": None,
+        "zip": None,
+        "service_id": execution.service_id,
+    }
+
+
 def execution_from_call_result(
     view: AgentScenarioView,
     result: Any,
     *,
     wall_ms: int,
     turns_used: int,
+    expected_entities: dict[str, str | None] | None = None,
+    asr_source: str = "not_measured",
 ) -> ScenarioExecution:
     tool_calls = [
         {
@@ -101,7 +131,7 @@ def execution_from_call_result(
         for event in result.tool_events
     ]
     assistant = [turn.text for turn in result.transcript if turn.role == "assistant"]
-    return ScenarioExecution(
+    execution = ScenarioExecution(
         scenario_id=view.id,
         tenant=view.tenant,
         mode="text",
@@ -141,20 +171,64 @@ def execution_from_call_result(
         wall_ms=wall_ms,
         recording_ref=result.recording_ref,
         turns_used=turns_used,
+        asr_entities={},
+        asr_expected_entities=dict(expected_entities or {}),
+        asr_source=asr_source,
         error_code=result.error_code,
     )
+    return execution.model_copy(update={"asr_entities": _actual_entities(execution)})
 
 
 class FixedTextRunner:
-    def __init__(self, root: Path, *, now: datetime | None = None) -> None:
+    def __init__(
+        self, root: Path, *, now: datetime | None = None, facts_provider: Any = None
+    ) -> None:
         from forge_voice.eval.setup import DEFAULT_NOW
 
         self.root = Path(root)
         self.runner = CallRunner.from_repo(self.root, now=now or DEFAULT_NOW)
+        self.facts_provider = facts_provider
+        self.tenants = load_all_tenants(self.root / "tenants")
+        self.seeds = {
+            path.stem: json.loads(path.read_text(encoding="utf-8"))
+            for path in sorted((self.root / "fixtures" / "corpus" / "seed").glob("*.json"))
+        }
+
+    def expected_entities(
+        self, view: AgentScenarioView, setup: ScenarioSetup
+    ) -> dict[str, str | None]:
+        store = SQLiteAdapter(":memory:")
+        for data in self.seeds.values():
+            store.seed(data)
+        turns = setup.turns_override or list(view.turns)
+        facts = extract_facts(
+            self.tenants[view.tenant],
+            turns,
+            store,
+            setup.now,
+            caller_phone=setup.caller_phone,
+        )
+        return {
+            "name": facts.name if facts.name != "Caller" else None,
+            "phone": facts.phone,
+            "line1": facts.address.line1 if facts.address else None,
+            "zip": facts.address.zip if facts.address else None,
+            "service_id": facts.service_id,
+        }
 
     def run_view(self, view: AgentScenarioView, setup: ScenarioSetup) -> ScenarioExecution:
         started = time.perf_counter()
         call = _text_call_scenario(view, setup)
+        expected_entities = self.expected_entities(view, setup)
+        facts = None
+        if self.facts_provider is not None:
+            facts = self.facts_provider.extract(
+                scenario_id=view.id,
+                tenant=self.tenants[view.tenant],
+                turns=call.turns,
+                caller_phone=setup.caller_phone,
+                now=setup.now,
+            )
 
         def prepare(store: Any) -> None:
             prepare_store(
@@ -164,9 +238,16 @@ class FixedTextRunner:
                 when=setup.now,
             )
 
-        result = self.runner.run_call(call, prepare=prepare)
+        result = self.runner.run_call(call, prepare=prepare, facts=facts)
         wall_ms = round((time.perf_counter() - started) * 1000)
-        return execution_from_call_result(view, result, wall_ms=wall_ms, turns_used=len(call.turns))
+        return execution_from_call_result(
+            view,
+            result,
+            wall_ms=wall_ms,
+            turns_used=len(call.turns),
+            expected_entities=expected_entities,
+            asr_source="text_extraction",
+        )
 
 
 def _chunks(turns: list[str], limit: int = 3) -> list[str]:
@@ -247,6 +328,11 @@ class FixedAudioRunner:
         self.scripts = load_audio_scripts(
             self.root / "scenarios" / "audio_scripts.yaml", self.manifest
         )
+        self.tenants = load_all_tenants(self.root / "tenants")
+        self.seeds = {
+            path.stem: json.loads(path.read_text(encoding="utf-8"))
+            for path in sorted((self.root / "fixtures" / "corpus" / "seed").glob("*.json"))
+        }
 
     def run_view(self, view: AgentScenarioView, setup: ScenarioSetup) -> ScenarioExecution:
         started = time.perf_counter()
@@ -479,6 +565,23 @@ class FixedAudioRunner:
                 "zip": facts.address.zip if facts.address else None,
                 "service_id": facts.service_id,
             }
+            actual_store = SQLiteAdapter(":memory:")
+            for data in self.seeds.values():
+                actual_store.seed(data)
+            actual_facts = extract_facts(
+                session.tenant,
+                chunks,
+                actual_store,
+                session.clock.now,
+                caller_phone=setup.caller_phone,
+            )
+            entity_actual = {
+                "name": actual_facts.name if actual_facts.name != "Caller" else None,
+                "phone": actual_facts.phone,
+                "line1": actual_facts.address.line1 if actual_facts.address else None,
+                "zip": actual_facts.address.zip if actual_facts.address else None,
+                "service_id": actual_facts.service_id,
+            }
             wall_ms = round((time.perf_counter() - started) * 1000)
             return ScenarioExecution(
                 scenario_id=view.id,
@@ -520,8 +623,9 @@ class FixedAudioRunner:
                 wall_ms=wall_ms,
                 recording_ref=view.audio.fixture,
                 turns_used=len(chunks),
-                asr_entities=entity_expected,
+                asr_entities=entity_actual,
                 asr_expected_entities=entity_expected,
+                asr_source="transcript_extraction",
                 barge_in_recovered=barge_in_recovered,
                 error_code=None,
             )

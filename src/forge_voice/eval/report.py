@@ -87,14 +87,8 @@ def _failure_gallery(
     lines: list[str] = []
     for scenario in failures:
         verdict = scenario.get("verdict") or {}
-        execution = scenario.get("execution") or {}
-        transcript = execution.get("transcript") or []
-        excerpt = " / ".join(
-            f"{turn.get('role', '?')}: {turn.get('text', '')}" for turn in transcript[-4:]
-        )
-        timeline = ", ".join(
-            str(call.get("name", "tool")) for call in (scenario.get("tool_calls") or [])
-        )
+        excerpt = scenario.get("failure_excerpt") or ""
+        timeline = ", ".join(str(item) for item in (scenario.get("tool_timeline") or []))
         lines.extend(
             [
                 f"### {scenario.get('scenario_id')}",
@@ -147,12 +141,9 @@ def _audio_lines(payload: dict[str, Any]) -> list[str]:
     noisy = aggregates.get("asr_entity_accuracy_noisy") or {}
     lines = [
         f"- Audio scenarios: {len(scenarios)}",
-        f"- Barge-in recovery: {barge.get('percent', 0.0):.2f}% "
-        f"({barge.get('numerator', 0)}/{barge.get('denominator', 0)})",
-        f"- ASR entity accuracy, clean: {clean.get('percent', 0.0):.2f}% "
-        f"({clean.get('numerator', 0)}/{clean.get('denominator', 0)})",
-        f"- ASR entity accuracy, noisy: {noisy.get('percent', 0.0):.2f}% "
-        f"({noisy.get('numerator', 0)}/{noisy.get('denominator', 0)})",
+        f"- Barge-in recovery: {_percent_text(barge)}",
+        f"- ASR entity accuracy, clean: {_percent_text(clean)}",
+        f"- ASR entity accuracy, noisy: {_percent_text(noisy)}",
         "",
         "| Scenario | Category | Pass | Barge-in | QA flags |",
         "|---|---|---|---|---|",
@@ -166,6 +157,13 @@ def _audio_lines(payload: dict[str, Any]) -> list[str]:
             f"{_cell(', '.join(scenario.get('qa_flags') or []) or '-')} |"
         )
     return lines
+
+
+def _percent_text(metric: dict[str, Any]) -> str:
+    percent = metric.get("percent")
+    if percent is None:
+        return f"{metric.get('status', 'not_measured')} (n=0)"
+    return f"{percent:.2f}% ({metric.get('numerator', 0)}/{metric.get('denominator', 0)})"
 
 
 def _repeat_lines(payload: dict[str, Any]) -> list[str]:
@@ -258,6 +256,10 @@ def render_markdown(payload: dict[str, Any]) -> str:
         f"| p95 tool path | {aggregates.get('latency', {}).get('p95_tool_path_ms', 0)} ms |",
         f"| n | {aggregates.get('latency', {}).get('n', 0)} |",
         "",
+        "## Baseline vs fixed",
+        "",
+        *_comparison_lines(payload),
+        "",
         "## Caveats and limits",
         "",
     ]
@@ -278,6 +280,40 @@ def render_markdown(payload: dict[str, Any]) -> str:
         )
     lines.append("")
     return "\n".join(lines)
+
+
+def _comparison_lines(payload: dict[str, Any]) -> list[str]:
+    comparison = payload.get("comparison") or {}
+    fixed = comparison.get("fixed") or {}
+    if not fixed:
+        return [
+            "No fixed comparison in this report. Run `make eval-baseline` to generate the "
+            "one-prompt baseline and the fixed side-by-side."
+        ]
+    baseline = payload.get("aggregates") or {}
+    fixed_aggregates = fixed.get("aggregates") or {}
+    rows = ["| Metric | Baseline n | Baseline | Fixed n | Fixed |", "|---|---|---|---|---|"]
+    for key in sorted(set(baseline) & set(fixed_aggregates)):
+        if key in {"by_mode", "latency", "cost"}:
+            continue
+        base = baseline.get(key) or {}
+        fix = fixed_aggregates.get(key) or {}
+        if not isinstance(base, dict) or not isinstance(fix, dict):
+            continue
+        if "percent" not in base and "percent" not in fix:
+            continue
+
+        def pct(metric: dict[str, Any]) -> str:
+            value = metric.get("percent")
+            return "n/a" if value is None else f"{value}%"
+
+        rows.append(
+            f"| {_cell(key)} | {base.get('denominator', 0)} | {pct(base)} | "
+            f"{fix.get('denominator', 0)} | {pct(fix)} |"
+        )
+    gates = fixed.get("gates") or {}
+    rows.extend(["", "Fixed gates in this comparison:", "", *_gate_rows(gates)])
+    return rows
 
 
 def _json_block(value: Any) -> str:

@@ -21,6 +21,7 @@ from forge_voice.eval.loader import (
 )
 from forge_voice.eval.models import CostModel, EvalReport, GateResult, ScenarioResult
 from forge_voice.eval.provider_check import check_groq
+from forge_voice.eval.provider_text import TextProviderError, build_text_interpreter
 from forge_voice.eval.report import LATENCY_CAVEAT, render_markdown
 from forge_voice.eval.scoring import (
     build_aggregates,
@@ -51,6 +52,8 @@ class RunConfig:
     max_seconds: float | None = None
     transport: str = "session"
     quiet: bool = False
+    compare_fixed: bool = False
+    facts_provider: Any = None
     notes: list[str] = field(default_factory=list)
 
 
@@ -84,6 +87,27 @@ def _filter_scenarios(selection: EvalSelection, mode: str) -> list[Scenario]:
     return scenarios
 
 
+def _failed_text_execution(view: Any, setup: Any, exc: Exception) -> Any:
+    from forge_voice.eval.models import ScenarioExecution
+
+    message = f"The text provider failed: {type(exc).__name__}: {exc}"[:500]
+    return ScenarioExecution(
+        scenario_id=view.id,
+        tenant=view.tenant,
+        mode="text",
+        outcome="failed",
+        transcript=[
+            *[{"role": "caller", "text": turn} for turn in view.turns],
+            {"role": "assistant", "text": message},
+        ],
+        response_text=message,
+        qa_flags=["provider_error", f"provider_{type(exc).__name__.lower()}"],
+        recording_ref="text_only",
+        turns_used=len(view.turns),
+        error_code=type(exc).__name__,
+    )
+
+
 def _run_one(
     scenario: Scenario,
     *,
@@ -93,11 +117,13 @@ def _run_one(
     audio_runner: FixedAudioRunner,
     baseline: BaselineRunner,
     repeat_index: int = 0,
+    pipeline: str | None = None,
 ) -> ScenarioResult:
     setup = setup_for(scenario, root=config.root)
     view = agent_view(
         scenario,
         heldout_manifest_sha=selection.heldout_manifest_sha,
+        expected_heldout_sha=selection.heldout_manifest_sha,
         caller_phone=setup.caller_phone,
         now=setup.now,
         faults=setup.faults,
@@ -105,19 +131,23 @@ def _run_one(
         extra_turns=setup.turns_override,
     )
     assert_runner_view(view)
-    if config.pipeline == "baseline":
+    selected_pipeline = pipeline or config.pipeline
+    if selected_pipeline == "baseline":
         execution = baseline.run_view(view, setup)
     elif scenario.mode == "text":
-        execution = text_runner.run_view(view, setup)
+        try:
+            execution = text_runner.run_view(view, setup)
+        except TextProviderError as exc:
+            execution = _failed_text_execution(view, setup, exc)
     else:
         execution = audio_runner.run_view(view, setup)
-    verdict = score_scenario(scenario, execution, pipeline=config.pipeline)
+    verdict = score_scenario(scenario, execution, pipeline=selected_pipeline)
     return build_scenario_result(
         scenario,
         execution,
         verdict,
         profile=config.profile,
-        pipeline=config.pipeline,
+        pipeline=selected_pipeline,
         split=config.split,
         repeat_index=repeat_index,
     )
@@ -167,11 +197,16 @@ def _cost_model() -> CostModel:
 def _caveats(config: RunConfig, *, had_heldout: bool, provider: dict[str, Any]) -> list[str]:
     caveats = [
         LATENCY_CAVEAT,
-        "Text mode uses the deterministic #4 rule interpreter. The hybrid label selects the "
-        "release profile; the live Groq check proves the key/model are usable, not a per-turn "
-        "LLM quality measurement.",
-        "The baseline is a deliberately naive single-prompt stand-in with no tools, state, "
-        "policy, confirmation or idempotency. It is expected to fail and never gates.",
+        (
+            "Text mode uses the provider-backed interpreter for this profile; the same #4 "
+            "policy, eight tools, confirmation and idempotency path executes the call. The "
+            "provider is an extraction model, not an unconstrained booking agent."
+            if config.pipeline == "fixed" and config.split in {"release", "heldout"}
+            else "Text mode uses the deterministic #4 rule interpreter for this non-release "
+            "subset; the provider is exercised only by the release profiles."
+        ),
+        "The baseline is a one-prompt direct-write model path with no tools, state, policy, "
+        "confirmation or idempotency. It is expected to fail and never gates.",
         "Synthetic data only. No production SLA, HIPAA/PCI claim or real customer data.",
     ]
     if had_heldout:
@@ -208,9 +243,12 @@ def run_eval(config: RunConfig) -> int:
     git_sha = _git_sha(config.root)
     had_heldout = any(scenario.held_out for scenario in scenarios)
 
-    hybrid_required = (
-        config.profile == "hybrid" and config.pipeline == "fixed" and config.provider_check != "off"
+    hybrid_release = (
+        config.profile == "hybrid"
+        and config.pipeline == "fixed"
+        and config.split in {"release", "heldout", "audio", "audio-local"}
     )
+    hybrid_required = hybrid_release and config.provider_check != "off"
     api_key = os.environ.get("GROQ_API_KEY", "").strip()
     provider: dict[str, Any] = {
         "text_engine": "deterministic_rule_interpreter",
@@ -237,14 +275,59 @@ def run_eval(config: RunConfig) -> int:
         print(payload["caveats"][-1] if payload["caveats"] else "missing GROQ_API_KEY")
         return 2
 
-    if hybrid_required and config.provider_check == "auto":
+    if hybrid_release and config.provider_check == "off":
+        provider["check"] = {
+            "ok": False,
+            "status": "not_run",
+            "model": GROQ_MODEL,
+            "error": (
+                "the hybrid release gate requires a live provider check; "
+                "--provider-check off was used"
+            ),
+        }
+    elif hybrid_required:
         provider["check"] = check_groq(api_key)
-    elif config.profile == "hybrid" and config.provider_check == "off":
-        provider["check"] = {"ok": True, "status": "skipped", "model": GROQ_MODEL}
     else:
         provider["check"] = {"ok": True, "status": "not_required", "model": GROQ_MODEL}
 
-    text_runner = FixedTextRunner(config.root)
+    use_provider_text = (
+        config.pipeline in {"fixed", "baseline"}
+        and config.mode in {"text", "all"}
+        and config.split in {"release", "heldout"}
+        and not (config.profile == "hybrid" and config.provider_check == "off")
+    )
+    text_interpreter = config.facts_provider
+    if use_provider_text and text_interpreter is None:
+        try:
+            text_interpreter = build_text_interpreter(config.root, config.profile, dict(os.environ))
+        except TextProviderError as exc:
+            payload = _failure_payload(
+                run_id=run_id,
+                started=started,
+                config=config,
+                selection=selection,
+                git_sha=git_sha,
+                verdict="not_run_text_provider",
+                error=str(exc),
+                provider=provider,
+            )
+            _write_report(directory, payload)
+            print(f"eval text provider unavailable: {exc}")
+            return 2
+        provider["text_engine"] = f"provider:{getattr(text_interpreter, 'model', 'injected')}"
+        provider["text_profile"] = config.profile
+        provider["baseline_engine"] = (
+            f"provider:{getattr(text_interpreter, 'model', 'injected')}"
+            if config.pipeline == "baseline"
+            else None
+        )
+        if config.profile == "local":
+            provider["check"] = {
+                "ok": True,
+                "status": "local_lfm3",
+                "model": text_interpreter.model,
+            }
+    text_runner = FixedTextRunner(config.root, facts_provider=text_interpreter)
     audio_runner: Any
     stack = None
     if any(scenario.mode == "audio" for scenario in scenarios) and config.transport == "livekit":
@@ -259,7 +342,41 @@ def run_eval(config: RunConfig) -> int:
         audio_runner = LiveKitAudioRunner(config.root, profile=config.profile, stack=stack)
     else:
         audio_runner = FixedAudioRunner(config.root)
-    baseline = BaselineRunner(config.root)
+    baseline = BaselineRunner(
+        config.root,
+        facts_provider=text_interpreter if config.pipeline == "baseline" else None,
+    )
+    if use_provider_text and text_interpreter is not None and hasattr(text_interpreter, "prefetch"):
+        cases = []
+        for scenario in scenarios:
+            setup = setup_for(scenario, root=config.root)
+            cases.append(
+                {
+                    "scenario_id": scenario.id,
+                    "tenant": getattr(text_interpreter, "tenants", {})[scenario.tenant],
+                    "turns": setup.turns_override or list(getattr(scenario, "turns", [])),
+                    "caller_phone": setup.caller_phone,
+                    "now": setup.now,
+                }
+            )
+        try:
+            text_interpreter.prefetch(cases, trust_intent=config.pipeline == "baseline")
+            if config.pipeline == "baseline" and config.compare_fixed:
+                text_interpreter.prefetch(cases, trust_intent=False)
+        except TextProviderError as exc:
+            payload = _failure_payload(
+                run_id=run_id,
+                started=started,
+                config=config,
+                selection=selection,
+                git_sha=git_sha,
+                verdict="not_run_text_provider",
+                error=str(exc),
+                provider=provider,
+            )
+            _write_report(directory, payload)
+            print(f"eval text provider batch failed: {exc}")
+            return 2
     results: list[ScenarioResult] = []
     repeats = {"requested": config.repeat_critical, "scenarios": {}, "runs": 0}
 
@@ -323,6 +440,39 @@ def run_eval(config: RunConfig) -> int:
         if stack is not None:
             stack.stop()
 
+    comparison: dict[str, Any] | None = None
+    if config.pipeline == "baseline" and config.compare_fixed:
+        fixed_results = [
+            _run_one(
+                scenario,
+                selection=selection,
+                config=config,
+                text_runner=text_runner,
+                audio_runner=audio_runner,
+                baseline=baseline,
+                pipeline="fixed",
+            )
+            for scenario in scenarios
+        ]
+        fixed_aggregates = build_aggregates(fixed_results, pipeline="fixed")
+        fixed_gates = evaluate_gates(
+            fixed_results,
+            fixed_aggregates,
+            mode=config.mode,
+            pipeline="fixed",
+            profile=config.profile,
+            split=config.split,
+        )
+        comparison = {
+            "fixed": {
+                "aggregates": fixed_aggregates,
+                "gates": {name: gate.model_dump(mode="json") for name, gate in fixed_gates.items()},
+            },
+            "fixed_failures": [
+                result.scenario_id for result in fixed_results if not result.verdict.passed
+            ],
+        }
+
     aggregates = build_aggregates(results, pipeline=config.pipeline)
     if config.mode == "all":
         aggregates["by_mode"] = {
@@ -344,7 +494,7 @@ def run_eval(config: RunConfig) -> int:
         split=config.split,
     )
     check = provider.get("check") or {}
-    if hybrid_required:
+    if hybrid_release:
         gates["hybrid_provider"] = GateResult(
             name="hybrid_provider",
             description="The hybrid release profile has a working Groq key and model.",
@@ -390,6 +540,7 @@ def run_eval(config: RunConfig) -> int:
         caveats=_caveats(config, had_heldout=had_heldout, provider=provider),
         provider=provider,
         repeats=repeats,
+        comparison=comparison,
         counts={
             "scenarios": len(scenarios),
             "runs": len(results),

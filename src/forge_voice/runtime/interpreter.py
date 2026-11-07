@@ -93,6 +93,7 @@ class CallerFacts:
     wants_human: bool
     human_mode: str
     emergency_text: str
+    intent: str | None = None
 
 
 def extract_facts(
