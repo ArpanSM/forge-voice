@@ -924,3 +924,28 @@ def test_confirmation_accepts_a_matching_spoken_time(session: AudioCallSession) 
 
     assert message is not None
     assert session.state.outcome == "booked"
+
+
+def test_confirmation_accepts_next_weekday_when_it_matches_the_slot(
+    session: AudioCallSession,
+) -> None:
+    slot = first_slot(session)
+    session.book_appointment(slot_id=slot["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    session.note_caller_utterance("Yes, next weekday at seven.")
+
+    message = session.confirmation_step("Yes, next weekday at seven.")
+
+    assert message is not None
+    assert session.state.outcome == "booked"
+
+
+def test_confirmation_rejects_next_weekday_when_it_does_not_match_the_slot(
+    session: AudioCallSession,
+) -> None:
+    slots = session.get_availability(service_id="drain_cleaning", zip="94107").data["slots"]
+    session.book_appointment(slot_id=slots[1]["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    session.note_caller_utterance("Yes, next weekday.")
+
+    assert session.confirmation_step("Yes, next weekday.") is None
+    assert session.pending is None
+    assert session.store.count_bookings(session.tenant.tenant_id) == 4

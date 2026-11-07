@@ -1368,7 +1368,7 @@ class AudioCallSession:
             if name_match.group(1).strip().casefold() != pending.payload.customer_name.casefold():
                 return False
         schedule_seen = False
-        if "next week" in lowered:
+        if re.search(r"\bnext week\b", lowered):
             return False
         day = self._day_in(lowered)
         if day is not None:
