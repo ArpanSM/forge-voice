@@ -65,7 +65,7 @@ class ProviderResponse(StrictModel):
 
 
 class ProviderSettings(StrictModel):
-    provider: Literal["fake", "lfm3", "groq"]
+    provider: Literal["fake", "lfm3", "groq", "orcarouter"]
     model: str = Field(min_length=1)
     base_url: str | None = None
     timeout_seconds: float = Field(default=3.0, gt=0.0)

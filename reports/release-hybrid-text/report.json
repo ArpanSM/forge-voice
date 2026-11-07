@@ -18,8 +18,7 @@
   },
   "caveats": [
     "The run did not start or did not complete; this report is written so the failure is visible rather than silent.",
-    "{\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01jppc8f0xexvt56hmkh0dj7k6` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199889, Requested 616. Please try again in 3m38.16s. Need more tokens? Upgrade to Dev Tier today at https://conso",
-    "Report metadata refreshed to the current code commit; metrics are from the recorded run. Full transcripts are local-only and not committed."
+    "the hybrid release gate requires GROQ_API_KEY; the fully local report is available with make eval-local"
   ],
   "cost_model": {
     "as_of": "2026-11-07",
@@ -40,9 +39,9 @@
     "runs": 0,
     "scenarios": 0
   },
-  "finished_at": "2026-11-07T09:24:35.683779+00:00",
+  "finished_at": "2026-11-07T13:31:22.428756+00:00",
   "gates": {},
-  "git_sha": "81e71cf",
+  "git_sha": "00764f7",
   "heldout_manifest_sha": "sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd",
   "manifest_sha": "sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2",
   "mode": "text",
@@ -50,25 +49,20 @@
   "profile": "hybrid",
   "provider": {
     "audio_transport": "session",
-    "baseline_engine": null,
-    "check": {
-      "attempts": 1,
-      "error": "{\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01jppc8f0xexvt56hmkh0dj7k6` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199889, Requested 616. Please try again in 3m38.16s. Need more tokens? Upgrade to Dev Tier today at https://conso",
-      "model": "qwen/qwen3.8-27b",
-      "ok": false,
-      "retry_after_seconds": 219.0,
-      "status": "insufficient_quota"
-    },
+    "check": null,
     "groq_model": "qwen/qwen3.8-27b",
-    "hybrid_key_present": true,
-    "text_engine": "provider:qwen/qwen3.8-27b",
-    "text_profile": "hybrid"
+    "hybrid_key_present": false,
+    "llm_provider": "groq",
+    "model": "qwen/qwen3.8-27b",
+    "orcarouter_base_url": "https://api.orcarouter.ai/v1",
+    "orcarouter_model": "deepseek/deepseek-v4.1-flash-free",
+    "text_engine": "deterministic_rule_interpreter"
   },
   "repeats": {},
   "run_id": "release-hybrid-text",
   "scenarios": [],
   "schema_version": 1,
   "split": "release",
-  "started_at": "2026-11-07T09:24:35.418408+00:00",
-  "verdict": "not_run_provider_quota"
+  "started_at": "2026-11-07T13:31:22.425894+00:00",
+  "verdict": "not_run_missing_groq_key"
 }

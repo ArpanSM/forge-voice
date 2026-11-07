@@ -4,7 +4,7 @@ export PYTHONPATH := src
 .PHONY: help install bootstrap corpus corpus-check test lint format text-demo audio-fixtures \
 	audio-check demo demo-local demo-compose demo-hybrid demo-hybrid-local demo-hybrid-compose \
 	demo-smoke demo-hybrid-smoke down reset logs rollback health release retention \
-	eval eval-local eval-audio eval-audio-local eval-heldout eval-smoke eval-baseline \
+	eval eval-orca eval-local eval-audio eval-audio-local eval-heldout eval-smoke eval-baseline \
 	dashboard dashboard-seed dashboard-export review-smoke
 
 DOCKER_AVAILABLE := $(shell ./scripts/docker_available.sh >/dev/null 2>&1 && echo 1 || echo 0)
@@ -35,12 +35,13 @@ help:
 	  'make demo-smoke    Start the local stack and run a scripted WebRTC booking call' \
 	  'make demo-hybrid-smoke  Hybrid stack + scripted booking (needs GROQ_API_KEY)' \
 	  'make eval          Full 40 text hybrid release gate + 10 critical repeats' \
+	  'make eval-orca     Optional eval-only fallback experiment (not the release gate)' \
 	  'make eval-local    Full 40 text local safety-fallback report' \
 	  'make eval-audio    10 audio hybrid on the self-hosted LiveKit server' \
 	  'make eval-audio-local  6 audio local on the self-hosted LiveKit server' \
 	  'make eval-heldout  Sealed 8 text + 2 audio held-out release check' \
 	  'make eval-smoke    8 text dev subset, hard gates, under two minutes' \
-	  'make eval-baseline 40 text baseline vs fixed on both profiles; never gates' \
+	  'make eval-baseline 40 text baseline vs fixed (local + hybrid when keyed); never gates' \
 	  'make dashboard     Start the local FastAPI + HTMX dashboard on 127.0.0.1:8000' \
 	  'make dashboard-seed  Seed the synthetic 30-day dashboard call set' \
 	  'make dashboard-export  Write the handover static HTML sample' \
@@ -153,6 +154,12 @@ EVAL_RUN_ID_ARG = $(if $(EVAL_RUN_ID),--run-id $(EVAL_RUN_ID),)
 
 eval:
 	$(EVAL_PYTHON) --profile hybrid --mode text --split release --pipeline fixed --repeat-critical $(EVAL_RUN_ID_ARG)
+
+eval-orca:
+	@test -n "$$ORCAROUTER_API_KEY" || { \
+	  echo "ORCAROUTER_API_KEY is required for the optional OrcaRouter fallback experiment" >&2; exit 2; }
+	EVAL_LLM_PROVIDER=orcarouter $(EVAL_PYTHON) --profile hybrid --mode text --split release \
+	  --pipeline fixed --repeat-critical $(EVAL_RUN_ID_ARG)
 
 eval-local:
 	$(EVAL_PYTHON) --profile local --mode text --split release --pipeline fixed $(EVAL_RUN_ID_ARG)

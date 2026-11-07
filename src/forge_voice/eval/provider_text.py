@@ -21,6 +21,7 @@ from pydantic import ConfigDict
 from forge_voice.adapters.sqlite import SQLiteAdapter
 from forge_voice.clock import FixedClock
 from forge_voice.domain import Address
+from forge_voice.eval.provider_check import ORCAROUTER_BASE_URL, ORCAROUTER_MODEL
 from forge_voice.models import StrictModel
 from forge_voice.policy.conversation import ConversationPolicy
 from forge_voice.policy.state import CallIntent
@@ -177,7 +178,9 @@ class ProviderTextInterpreter:
                 ChatMessage(role="user", content=_prompt(tenant, turns, now)),
             ],
             temperature=0.0,
-            max_tokens=160,
+            # Free reasoning models may emit hidden reasoning before the JSON. Keep
+            # enough budget for both; 160 tokens is enough only for non-reasoning models.
+            max_tokens=640,
             seed=abs(int(hashlib.sha256(scenario_id.encode()).hexdigest()[:8], 16)) % 2_147_483_647,
         )
         response = self._complete(request)
@@ -208,8 +211,8 @@ class ProviderTextInterpreter:
             key = self._cache_key(case, trust_intent)
             if key not in self._cache:
                 pending.append(case)
-        for start in range(0, len(pending), 3):
-            self._prefetch_batch(pending[start : start + 3], trust_intent)
+        for start in range(0, len(pending), 2):
+            self._prefetch_batch(pending[start : start + 2], trust_intent)
 
     def _cache_key(self, case: dict[str, Any], trust_intent: bool) -> tuple[Any, ...]:
         return (
@@ -243,7 +246,10 @@ class ProviderTextInterpreter:
                 ChatMessage(role="user", content=prompt),
             ],
             temperature=0.0,
-            max_tokens=min(800, 260 * len(cases)),
+            # DeepSeek/GLM free tiers reason before returning JSON; a 780-token batch
+            # cap truncated the result and looked like a provider failure. Two cases
+            # per request also keeps the reasoning budget bounded.
+            max_tokens=max(2400, 900 * len(cases)),
             seed=7,
         )
         response = self._complete(request)
@@ -429,18 +435,44 @@ def build_text_interpreter(
 ) -> ProviderTextInterpreter:
     values = dict(env or {})
     tenants = load_all_tenants(Path(root) / "tenants")
+    requested = values.get("EVAL_LLM_PROVIDER", "").strip().lower()
     if profile == "hybrid":
-        key = values.get("GROQ_API_KEY", "").strip()
-        if not key:
-            raise TextProviderError("the hybrid text interpreter requires GROQ_API_KEY")
-        settings = ProviderSettings(
-            provider="groq",
-            model=values.get("GROQ_MODEL", "qwen/qwen3.8-27b"),
-            base_url="https://api.groq.com/openai/v1",
-            timeout_seconds=30.0,
-        )
-        min_interval = 20.0
+        selected = requested or "groq"
+        if selected == "groq":
+            key = values.get("GROQ_API_KEY", "").strip()
+            if not key:
+                raise TextProviderError("the hybrid text interpreter requires GROQ_API_KEY")
+            settings = ProviderSettings(
+                provider="groq",
+                model=values.get("GROQ_MODEL", "qwen/qwen3.8-27b"),
+                base_url="https://api.groq.com/openai/v1",
+                timeout_seconds=30.0,
+            )
+            min_interval = 20.0
+        elif selected == "orcarouter":
+            key = values.get("ORCAROUTER_API_KEY", "").strip()
+            if not key:
+                raise TextProviderError("EVAL_LLM_PROVIDER=orcarouter requires ORCAROUTER_API_KEY")
+            settings = ProviderSettings(
+                provider="orcarouter",
+                model=values.get("ORCAROUTER_MODEL", ORCAROUTER_MODEL),
+                base_url=values.get("ORCAROUTER_BASE_URL", ORCAROUTER_BASE_URL),
+                timeout_seconds=60.0,
+            )
+            # OrcaRouter free is 10 RPM; leave a margin for the tiny provider check.
+            min_interval = 6.5
+        else:
+            raise TextProviderError(
+                f"unsupported EVAL_LLM_PROVIDER {selected!r} for the hybrid profile; "
+                "expected groq or orcarouter"
+            )
     else:
+        if requested not in {"", "lfm3"}:
+            raise TextProviderError(
+                f"unsupported EVAL_LLM_PROVIDER {requested!r} for the local profile; "
+                "the local safety report requires lfm3"
+            )
+        key = "local"
         base = values.get("LFM3_AUDIO_BASE_URL", DEFAULT_LFM3_BASE).rstrip("/")
         try:
             health = httpx.get(f"{base}/health", timeout=3.0)
@@ -457,9 +489,7 @@ def build_text_interpreter(
             timeout_seconds=60.0,
         )
         min_interval = 0.0
-    provider = build_provider(
-        settings, transport=HttpxTransport(api_key=key if profile == "hybrid" else "local")
-    )
+    provider = build_provider(settings, transport=HttpxTransport(api_key=key))
     return ProviderTextInterpreter(
         provider=provider,
         tenants=tenants,

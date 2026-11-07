@@ -1,238 +1,201 @@
 # Forge Voice
 
-**Status:** scaffold and deterministic corpus (#3), booking policy/tools/text runner (#4), the
-local LiveKit transport, browser demo and LFM3 audio path (#5), evaluation harness and report
-(#6), monitoring dashboard and weekly review (#7), and the local Compose deployment, validating
-admin editor, runbook and handover kit (#8) are complete.
+**An open-source, local-first voice agent that books home-services calls and proves its own
+safety, handoff and monitoring layers with a reproducible evaluation.**
 
-A public, local-first voice booking agent delivery kit for two fictional home-services
-tenants: **Harborlight Home Services** (plumbing, HVAC, electrical) and **Summit Heating &
-Air** (HVAC). The caller talks to a browser demo; deterministic code owns validation,
-confirmation, writes, emergency classification and handoff.
+**Who it is for:** home-services operators who want a narrow first slice with real safety and
+handover; agencies that want a reusable two-tenant engine; and engineers who want to inspect the
+evaluation and monitoring layers, not just a prompt.
 
-## What runs
+**Status:** `evaluated · demo local`. The demo assets are complete. The local text safety run
+passes every hard gate; task completion there is report-only. The **release gate is the Groq
+hybrid text run**, and it is **not claimed**: the final sweep had no Groq key, so its report is
+`not_run_missing_groq_key`. The optional OrcaRouter fallback experiment is also not claimed
+(`not_run_provider_quota`). The hybrid audio and sealed held-out reports are
+`not_run_missing_groq_key`; the live local audio emergency/handoff gate is **failed** on a real
+LFM3 ASR miss. This is a demo, not a release. Full status:
+[release report](docs/release-report.md), [evaluation](docs/evaluation.md) and the committed
+[reports](reports/).
 
-```text
-Browser (http://localhost:8000)
-  └── self-hosted livekit-server (ws://localhost:7880, no Cloud/TURN/SIP)
-        └── LiveKit Agents worker
-              ├── LFM3-Audio-2B STT/TTS on the host GPU (127.0.0.1:8082)
-              ├── LLM: LFM3 local (make demo) or Groq qwen/qwen3.8-27b (make demo-hybrid)
-              └── #4 ConversationPolicy + eight typed tools + idempotent BookingService
+## Start here
+
+- **Client or evaluator:** [90-second captioned storyboard](docs/proof/forge-voice-demo-90s.webm)
+  (real dashboard/call records; no call audio) → [case study](docs/case-study.md) →
+  [the offer](#what-the-client-gets).
+- **Engineer:** [architecture](#how-it-works) → [learning map](docs/learning-map.md) →
+  [evaluation](docs/evaluation.md) → [tool contracts](src/forge_voice/tools/registry.py).
+- **Operator:** [local quickstart](#quickstart) → [runbook](docs/runbook.md) →
+  [handover](docs/handover.md). The 5-minute
+  [dashboard/admin/runbook walkthrough](docs/proof/forge-voice-walkthrough-5min.webm) is the
+  guided tour. A live captioned browser-call recording is a **manual follow-up**; the current
+  assets have no call audio.
+
+The public proof is the recorded storyboard/walkthrough plus a reproducible local quickstart.
+There is no always-on hosted URL, no Cloud transport, no SIP and no paid provider in the default
+path.
+
+## What it proves
+
+- **One booking, not a maybe.** The caller hears the service, date/time, technician, address and
+  phone read back, says an explicit yes, and the policy commits one idempotent write. A replay
+  returns the same booking; a different payload is a conflict. No double booking, no unconfirmed
+  write, no model-minted token.
+- **Emergencies do not depend on a 2B model.** Triage runs deterministically before the model: a
+  tenant 911-first script, a structured ticket, and an on-call transfer or an honest callback.
+  A transfer is never claimed before a human answers.
+- **Two tenants, one engine.** Harborlight and Summit are schema-validated YAML configs resolved
+  through a signed 120 s browser claim. There is no tenant-specific workflow code; tenant-dependent
+  extraction/labels live behind the config/interpretation seam. The measured runs show no
+  cross-tenant read or write.
+- **The failure is visible.** The evaluation keeps a failure gallery, a sealed held-out set and
+  hard gates. The live local audio emergency gate currently fails; the README, case study and
+  walkthrough state it instead of hiding it.
+
+**Caveat next to every measured claim:** local-only, no production SLA. The measured 10-turn
+WebRTC p95 first audio is **5.3 s** and barge-in yield is **~0.88 s**; there is no sub-3 s,
+sub-2 s or sub-1 s claim. One 10-turn sample per profile on a 4 GB laptop is evidence, not a
+benchmark. Production APIs must be re-measured before quoting. The known gaps are no proactive
+silence prompt, fragile degraded-ZIP recognition and no long-utterance turn-taking guard.
+
+### Measured evaluation
+
+Text, audio, hybrid and local are reported separately and never pooled. The JSON report is the
+source of truth; the Markdown is generated. The full table, Wilson intervals and failure
+gallery are in [reports](reports/) and [docs/evaluation.md](docs/evaluation.md).
+
+| Command | Scenarios | Verdict | Honest note |
+|---|---|---|---|
+| `make eval` | 40 text hybrid + 10 critical × 3 | **`not_run_missing_groq_key`** | The #2/#26 release gate. The final sweep had no Groq key, so the hybrid text gate is not claimed. |
+| `make eval-local` | 40 text, fully local | **Safety hard gates pass**; task completion 27/40 (67.5%) | Task completion and latency are report-only for the local fallback. Confirmation 17/17, slots 11/11, emergency 5/5, handoff 13/13, audit 40/40, 0 double bookings, 0 unconfirmed writes, 0 cross-tenant leaks. |
+| `make eval-smoke` | 8 text dev | **8/8 pass** | Fast commit/PR subset; not a release claim. |
+| `make eval-baseline` | 40 text, local; hybrid | **local 0/40**; hybrid **`not_run_provider_quota` 0/0** | One prompt and a direct write; expected comparison only. It never gates. |
+| `make eval-orca` | 40 text + 10 critical × 3, hybrid text | **`not_run_provider_quota`** | **Optional fallback experiment, not the release gate.** Same scenarios/gates; OrcaRouter free 10 RPM / 50 RPD was exhausted. |
+| `make eval-audio-local` | 6 audio, live local LiveKit + LFM3 | **2/6**; emergency handoff **FAIL** | Real local ASR: ZIP `95125` heard as `9520 Faye`, address missing, honest callback queued. The gate stays failed. |
+| `make eval-audio` | 10 audio hybrid | **`not_run_missing_groq_key`** | Hybrid audio not claimed; no Groq key in the final sweep. |
+| `make eval-heldout` | 8 text + 2 audio, sealed | **`not_run_missing_groq_key`** | Sealed held-out gate not claimed; no Groq key in the final sweep. |
+
+Committed reports: [local text](reports/release-local-text/report.md) ·
+[local audio](reports/release-audio-local/report.md) ·
+[Orca quota](reports/release-hybrid-text-orca/report.md) ·
+[smoke](reports/release-smoke/report.md) ·
+[release report](docs/release-report.md).
+
+**Latency:** p50 first audio **2.87 s**, p95 **5.3 s**, barge-in **~0.88 s** (hybrid 880 ms;
+local 884 ms), one 10-turn run per profile over self-hosted LiveKit. The direct 3-turn bench was
+hybrid 1.15 / 2.31 / 2.15 s and local 3.18 / 5.53 / 5.01 s. The local text report measured a
+policy/tool path of **p50 25 ms, p95 28 ms** over 40 scenarios; that is tool-path execution, not
+caller-perceived first audio. The caller-perceived time is STT, endpointing, the LLM turn and
+TTS. **No production SLA and no sub-3 s claim.**
+
+**Cost:** demo marginal cost **$0** on free tiers plus the local GPU. The production estimate is
+**$0.03–0.06/min**, dated and not measured here. The local self-hosted LiveKit server does not
+consume Cloud agent minutes; a free Groq key is needed for `make demo-hybrid` and the hybrid
+evaluation gate. The OrcaRouter fallback is eval-only and optional.
+
+## What the client gets
+
+I scope, build, deploy, evaluate and monitor voice agents on an open-source core, then hand the
+team the runbook. The first slice is four weeks at 15–20 hours/week.
+
+- **Scope:** discovery template, call-flow map, tenant config schema, tool contracts,
+  latency/cost calculator and acceptance-test template.
+- **Build:** LiveKit Agents pipeline, pure booking policy, eight typed tools, local synthetic
+  calendar/CRM/SMS, two tenant configs and a browser demo.
+- **Evaluate:** 40 text + 10 audio scenarios, a naive baseline, hard gates, Wilson intervals,
+  JSON/Markdown reports and a failure gallery.
+- **Deploy:** local Docker Compose or host-binary stack, self-hosted LiveKit, healthchecks,
+  reset/logs/rollback and a one-page runbook.
+- **Monitor and hand over:** local dashboard, per-call timeline, aggregates, alerts, validating
+  YAML admin editor, 5-minute training, handover checklist and a 30-day support boundary.
+
+**The eight typed tools** (one `{ok, data | error, request_id}` envelope; stable error codes):
+
+| Tool | What it does |
+|---|---|
+| `lookup_customer` | Find the caller/booking after ownership verification; masked before verification. |
+| `get_service_area` | Check the tenant ZIP allowlist/exclusions; no invented coverage. |
+| `get_availability` | Return real open slots; never invent a time. |
+| `book_appointment` | Read-back first, then one idempotent write after the explicit yes and policy token. |
+| `reschedule_appointment` | Move the same booking atomically; never cancel the old one before the new move succeeds. |
+| `cancel_appointment` | Cancel once, release the slot, queue one confirmation. |
+| `create_emergency_ticket` | Deterministic category, severity, vulnerable-occupant flag and 911-first script. |
+| `transfer_to_human` | Complete packet, configured target, connected / queued-callback / no-answer status. |
+
+`send_confirmation` and `log_call` are side effects, not model tools. The model cannot mint a
+confirmation token or supply an idempotency key.
+
+## How it works
+
+```mermaid
+flowchart LR
+  browser["Browser<br/>localhost:8000"] --> web["FastAPI web app<br/>token · dashboard · admin"]
+  browser <-->|WebRTC| lk["Self-hosted LiveKit server<br/>ws://localhost:7880"]
+  lk <-->|WebRTC| agent["LiveKit Agents worker"]
+  agent -->|OpenAI-compatible HTTP| lfm3["LFM3-Audio-2B<br/>host GPU · STT/TTS"]
+  agent -->|hybrid only| groq["Groq Qwen<br/>free API · LLM only"]
+  agent -->|call events| data[("SQLite + JSONL<br/>./data")]
+  web -->|read-only| data
 ```
 
-The token endpoint mints a 120 s LiveKit token containing a **server-signed tenant claim**. The
-agent verifies that claim and never trusts a room name or browser query parameter. An unknown
-tenant fails closed.
+The browser fetches a 120 s token whose participant metadata carries a server-signed tenant
+claim. The agent verifies the HMAC, expiry and room binding before any policy state exists; an
+unknown tenant fails closed. The same call events feed the dashboard and the eval. The policy
+owns intent, confirmation, writes, emergency classification and handoff; the model talks and
+extracts. The runtime hybrid profile uses Groq for the LLM; OrcaRouter is an **evaluation-only
+optional fallback experiment**, not part of the demo or the release gate.
 
-## Quickstart (fully local)
+### Quickstart
 
-Requires Linux, LFM3-Audio-2B on the host GPU, and either Docker Compose v2.20+ (preferred)
-or Python 3.12 for the host-binary fallback. Both paths also use `curl` and Python 3.12+
-for the preflight/health helpers (`python3` is accepted when it is 3.12+). The Compose path
-uses Linux host networking so browser and agent media share the host loopback; it is not a
-Docker Desktop path. Set `FORGE_VOICE_UID`/`FORGE_VOICE_GID` from `id -u`/`id -g` if they
-are not 1000 so `./data`, `./recordings` and `./tenants` stay user-owned.
+Requires Linux, LFM3-Audio-2B on the host GPU, Python 3.12+, and either Docker Compose v2.20+
+or the host-binary fallback. All binds are loopback; this is not a Docker Desktop path.
 
 ```bash
-make install        # Python deps, dev tools and demo extras (host fallback/tests)
-cp .env.example .env.local   # gitignored; fill the local LiveKit key/secret
-lfm3 audio          # separate terminal: LFM3 on 127.0.0.1:8082
-make demo           # prints MODE: Compose or host-binary, then starts that path
+make install                         # Python deps, dev tools and demo extras
+cp .env.example .env.local           # gitignored; fill the local LiveKit key/secret
+lfm3 audio                           # separate terminal: LFM3 on 127.0.0.1:8082
+make demo                            # Compose when available, host binaries otherwise
 ```
 
 Open <http://localhost:8000>, choose a business and press **Start call**. The same app serves
-`/dashboard`, `/review` and `/admin`; all binds are loopback.
-
-The deployment path is explicit when you need it:
-
-```bash
-make demo-local     # host-binary livekit-server in .tools/; no Docker
-make demo-compose   # one Compose stack: self-hosted LiveKit + agent + web; LFM3 stays on the host
-make demo-hybrid    # Compose/host with LFM3 audio + Groq qwen/qwen3.8-27b as the only external LLM
-```
-
-`make demo` is fully local: no Cloud transport, paid model, SIP or external call. It prints
-the selected mode explicitly; it does not claim Compose ran when it used the host binary.
-The first run creates a gitignored `.env.local` with a random local LiveKit dev secret; the
-demo key/secret never enters the repo. Compose waits for LiveKit, web `/health`, agent
-readiness and LFM3 `/health`, and fails closed if LFM3 or a port is missing. `make
-demo-compose` is the one-stack path; `make demo-local` is the no-Docker fallback.
-
-### Hybrid profile
+`/dashboard`, `/review` and `/admin`. Explicit paths: `make demo-compose`, `make demo-local`
+and `GROQ_API_KEY=... make demo-hybrid`.
 
 ```bash
-GROQ_API_KEY=... make demo-hybrid
+make test
+make lint
+make eval-smoke
+make eval-local
+make eval-audio-local     # live self-hosted LiveKit + LFM3
+make eval-orca            # optional eval-only fallback experiment; not the release gate
 ```
 
-Same local transport, audio and tools; the only external call is Groq `qwen/qwen3.8-27b` for
-the LLM. The key is passed into the Compose agent environment from `.env.local` or the shell.
-Without a key the command fails closed and `make demo` still works fully local.
+`make demo` never claims Compose ran when it used the host binary. The first run creates a
+gitignored `.env.local` with a random local LiveKit dev secret; no key enters the repo. The
+hybrid profile fails closed without `GROQ_API_KEY` and the fully local demo still works.
 
-## Demo paths
+## Limits and docs
 
-| Path | What it proves |
+**Three limits to read before the demo:**
+
+1. **Local-only, demo tier.** No production SLA, Cloud transport, hosted URL, SIP, TURN, real
+   calendar/CRM/SMS, payments, HIPAA/PCI claim or 24/7 on-call. A live local demo runs by
+   appointment on the builder's laptop; the storyboard and walkthrough are the public proof. A
+   live captioned browser-call recording is a manual follow-up (see
+   [RECORDING.md](docs/proof/RECORDING.md)); it is not done.
+2. **Measured latency is not a target.** p95 5.3 s, barge-in ~0.88 s, one 10-turn sample per
+   profile. Do not claim sub-3 s, sub-2 s or sub-1 s. Production APIs must be re-measured.
+3. **Known product gaps.** No proactive silence prompt; degraded ZIP recognition is fragile; no
+   long-utterance turn-taking guard. The demo avoids them with clean audio, short turns, ZIP
+   digits one at a time and no long silence. The live local audio emergency handoff currently
+   fails on a real LFM3 ASR miss and stays failed.
+
+**Docs index**
+
+| Audience | Start |
 |---|---|
-| Book | Greeting/disclosure, collect service/name/address/ZIP/phone, real availability, read-back, explicit yes, exactly one committed booking, queued confirmation. |
-| Emergency | Deterministic triage (no model guess), 911-first safety script, structured ticket, on-call handoff or queued callback. |
-| Human handoff | Complete packet or callback; never claims a transfer before a human answers. |
-| Barge-in | Caller speech stops the agent and a new response follows; `min_interruption_words=0` and a 0.3 s VAD threshold. |
-| Unknown tenant | `/token` fails closed; a tampered claim is rejected by the agent. |
+| Client / evaluator | [Case study](docs/case-study.md) · [90-second storyboard](docs/proof/forge-voice-demo-90s.webm) · [5-minute walkthrough](docs/proof/forge-voice-walkthrough-5min.webm) · [screenshots](docs/proof/screenshots/) |
+| Engineer | [Learning map](docs/learning-map.md) · [evaluation harness](docs/evaluation.md) · [local voice demo](docs/local-voice-demo.md) · [ADRs](docs/adr/) |
+| Operator | [Runbook](docs/runbook.md) · [monitoring](docs/monitoring.md) · [training](docs/training.md) · [handover](docs/handover.md) |
+| Reference | [Tenant configs](tenants/) · [tool registry](src/forge_voice/tools/registry.py) · [scenario manifest](scenarios/manifest.yaml) · [release report](docs/release-report.md) · [CONTEXT](CONTEXT.md) |
 
-## Commands
-
-```bash
-make test           # offline unit tests, no network
-make lint           # ruff check + format check
-make corpus         # deterministic tenants, seeds, scenarios, audio copies and hashes
-make corpus-check   # fail if committed fixtures drift
-make audio-fixtures # regenerate the ten WAVs with LFM3 TTS (fixed seed, temperature 0)
-make audio-check    # verify committed WAVs and hashes offline
-make text-demo      # text-mode book/reschedule/emergency/handoff calls
-make demo-smoke     # start the host stack and run a scripted WebRTC booking
-make down           # stop the Compose stack; ./data and ./recordings stay
-make reset          # delete synthetic call/booking state and reseed
-make logs           # follow LiveKit, web and agent logs
-make rollback       # previous image tags; restore ./data/backup on a schema change
-                     # schema-changing release: FORGE_VOICE_SCHEMA_VERSION=2 make release TAG=v2
-make health         # probe LFM3, LiveKit, web and agent readiness
-make release        # stop writers, tag images and snapshot ./data (TAG=v1)
-make retention      # prune raw call traces and recordings older than 30 days
-make eval           # 40 text hybrid release gate + 10 critical repeats (needs GROQ_API_KEY)
-make eval-local     # 40 text local safety-fallback report
-make eval-audio     # 10 audio hybrid on the self-hosted LiveKit server
-make eval-audio-local  # 6 audio local on the self-hosted LiveKit server
-make eval-heldout   # sealed 8 text + 2 audio held-out release check
-make eval-smoke     # 8 text dev subset, hard gates, under two minutes
-make eval-baseline  # naive baseline, 40 text on both profiles; never gates
-make dashboard      # local monitoring dashboard on http://127.0.0.1:8000/dashboard
-make dashboard-seed # seed the synthetic 30-day dashboard call set
-make dashboard-export  # write the handover static HTML dashboard sample
-```
-
-## Evaluation
-
-The harness is the implementation of the #26 decision. `scenarios/manifest.yaml` is the
-source of truth for 40 text + 10 audio scenarios; the loader enforces the dev/held-out/smoke
-splits, the ten critical repeats and the hard-gate labels.
-
-| Command | Runs | Gate |
-|---|---|---|
-| `make eval` | 40 text hybrid + 10 critical × 3 repeats | Release: hard gates + task completion ≥90% |
-| `make eval-local` | 40 text fully local | Safety hard gates; task/latency report-only |
-| `make eval-audio` | 10 audio hybrid, self-hosted LiveKit | Emergency transfer + barge-in |
-| `make eval-audio-local` | 6 audio local, self-hosted LiveKit | Emergency transfer + barge-in |
-| `make eval-heldout` | sealed 8 text + 2 audio | Hard gates |
-| `make eval-smoke` | 8 text dev | Hard gates, under 2 minutes |
-| `make eval-baseline` | 40 text on both profiles | Never gates |
-
-`make eval` fails closed without `GROQ_API_KEY`; the local run is the required safety
-fallback. Release text uses a provider-backed interpreter (Groq for hybrid, LFM3 for local);
-the deterministic policy still owns intent, confirmation, writes, emergency triage and
-handoff. Smoke uses the deterministic interpreter. Audio runs on the self-hosted LiveKit
-server with LFM3 STT/TTS. The baseline is a one-prompt direct-write model path; it is expected
-to fail and is never part of a release decision. The baseline report includes a fixed
-comparison with n/denominator for every metric.
-
-Each run writes `reports/<run_id>/report.json` (compact source of truth), `report.md`
-(generated), local-only transcripts and the sealed held-out manifest. Full transcripts are
-gitignored and never committed. The report includes
-per-scenario rows, the gate table, failure gallery, held-out and audio sections, repeat
-stability, baseline vs fixed, cost assumptions and the latency caveat. Audio hard gates are
-gated exactly like text hard gates. See [docs/evaluation.md](docs/evaluation.md) for the
-metric, isolation and rate-limit contract.
-
-`make demo-smoke` variants:
-
-```bash
-SMOKE_MODE=emergency SMOKE_TENANT=summit make demo-smoke
-SMOKE_MODE=barge-in make demo-smoke
-SMOKE_MODE=barge-in-booking make demo-smoke   # interrupt mid-booking, then commit
-```
-
-The hybrid equivalent is `GROQ_API_KEY=... make demo-hybrid-smoke`. It uses the same
-scripted booking call and surfaces a clear `hybrid free-tier rate limit; retry in Ns`
-message if Groq's 7,000 ITPM window is exhausted.
-
-An optional Playwright/Chrome fake-microphone check of the real page is documented in
-`docs/local-voice-demo.md`. The scripted WebRTC caller remains the repeatable automated
-proof; the human browser check is manual.
-
-## Monitoring, admin and handover
-
-`make demo` serves the browser page, read-only dashboard and validating admin editor from one
-FastAPI app. The admin page edits `tenants/<slug>.yaml` with the same schema the agent loads,
-writes atomically and reloads; invalid edits are rejected without touching the live config.
-
-`make dashboard` serves the local read-only FastAPI + HTMX dashboard at
-<http://127.0.0.1:8000/dashboard>; `make demo` exposes the same page inside the browser app.
-It shows aggregate cards, an alert banner, tenant/date/outcome filters and a call table with
-the synthetic caller number. `/calls/{call_id}` adds the transcript excerpt, tool timeline,
-latency waterfall, emergency triage and slot-audit state. `/metrics.json` is the
-machine-readable export, and `/review` is the weekly ten-call loop that marks a call, drafts
-a corrected scenario candidate and points at `make eval-smoke`. The first start seeds a
-synthetic 30-day set by running the real #4 call runner, so the cards and table render
-without a live call. Alerts use the #26/#27 thresholds and append only new alerts to
-`data/monitoring/alerts.jsonl` at startup or through the explicit `POST /alerts/refresh`
-action; a GET never writes alerts. An optional Discord or Telegram webhook is configured only
-by `FORGE_VOICE_ALERT_WEBHOOK`. See [docs/monitoring.md](docs/monitoring.md) for the metric
-definitions, thresholds, retention and static export. The admin is local-only and has no
-workflow graph or code generation. See [docs/runbook.md](docs/runbook.md),
-[docs/training.md](docs/training.md) and [docs/handover.md](docs/handover.md) for the local
-operations, 5-minute training outline, checklist and 30-day support boundary. No real data,
-public bind, cross-site POST or recording is used.
-
-## Layout
-
-```text
-src/forge_voice/
-  adapters/    # SQLite calendar/CRM/bookings/tickets/callbacks/events + file outbox
-  audio/       # audio scripts, deterministic WAV fixtures and hash verification
-  corpus/      # deterministic generator and CLI
-  events/      # dashboard CallRecord, JSONL store and #5 trace ingestion
-  monitoring/  # metrics, alerts, review loop, HTML pages and static export
-  policy/      # pure ConversationPolicy, BookingService, tokens, emergency and handoff
-  providers/   # ChatProvider seam, FakeProvider, LFM3/Groq adapters
-  runtime/     # LiveKit worker, audio session, LFM3 TTS, text CallRunner, session plan
-  scenarios/   # manifest schema and validating loader
-  tenants/     # tenant schema and fail-closed loader
-  tools/       # eight typed tools and common result envelope
-  web/         # FastAPI browser page, token, dashboard, admin editor, vendored LiveKit client
-  deploy/      # local health probes used by make health and the Compose preflight
-tenants/       # Harborlight and Summit YAML, synthetic only
-compose.yaml   # one local stack: LiveKit + agent + web; LFM3 stays on the host GPU
-docker/        # web and agent image build
-scenarios/     # 40 text + 10 audio scenarios, caller scripts and WAV fixtures
-fixtures/      # generated corpus (tenants, seeds, scenarios, audio, hashes)
-docs/          # ADRs, local demo guide and agent workflow
-tests/         # offline pytest suite
-```
-
-## First-slice scope
-
-- Two tenant configs, eight typed tools, seven intents.
-- Confirmation token, idempotency, no double booking, no blind retries.
-- Deterministic emergency triage, 911-first script, ticket and handoff.
-- Browser demo over a **self-hosted** LiveKit server; local LFM3 STT/TTS.
-- 40 text + 10 audio scenarios with dev, held-out and smoke splits.
-- Audio fixtures generated once with LFM3 and committed with SHA-256 hashes.
-
-No SIP, Cloud transport, hosted URL, real calendar/CRM/SMS, payments, HIPAA/PCI claim or
-production SLA. See [docs/runbook.md](docs/runbook.md) for the Compose/host operations and
-[docs/local-voice-demo.md](docs/local-voice-demo.md) for the host-binary detail.
-
-## Known limits
-
-These are documented, not hidden, and are not fixed by #5:
-
-- No proactive silence prompt; the agent recovers when the caller speaks again.
-- Degraded ZIP recognition is fragile on noisy or bad lines; the demo uses clean audio and
-  speaks ZIP digits one at a time.
-- No long-utterance turn-taking guard; a very long caller turn can split at VAD boundaries.
-- Local LFM3 is a 2B model on a 4 GB GPU. The spike measured p95 first audio 5.3 s and
-  barge-in ~0.88 s; latency is report-only, not a sub-3 s claim.
-- The automated smoke uses synthetic LFM3 caller audio, not a human handset or acoustic echo
-  path. The optional browser check uses Chrome's fake microphone and is not a human test.
-  The hybrid profile requires a free Groq key.
-- `host.docker.internal:8082` is accepted by the session plan for the #8 container
-  deployment; the #5 `make demo` host process path uses `127.0.0.1` and does not exercise it.
+Synthetic data only. No real customer data, no paid fallback and no hosted-service claim.

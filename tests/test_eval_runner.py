@@ -8,7 +8,7 @@ import pytest
 
 from forge_voice.adapters.sqlite import SQLiteAdapter
 from forge_voice.eval.fixed import FixedTextRunner
-from forge_voice.eval.provider_check import check_groq
+from forge_voice.eval.provider_check import check_groq, check_orcarouter
 from forge_voice.eval.provider_text import TextProviderError
 from forge_voice.eval.runner import RunConfig, run_eval
 from forge_voice.runtime.interpreter import extract_facts
@@ -372,6 +372,24 @@ def test_provider_check_reports_insufficient_quota_from_headers(
     assert result["ok"] is False
     assert result["status"] == "insufficient_quota"
     assert result["remaining_tokens"] == 120
+
+
+def test_orcarouter_check_reports_a_daily_free_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_post(*args, **kwargs):
+        return httpx.Response(
+            429,
+            json={"error": {"message": "free usage limit reached: 50 requests per day"}},
+            headers={"retry-after": "0"},
+            request=httpx.Request("POST", "https://api.orcarouter.ai/v1/chat/completions"),
+        )
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+
+    result = check_orcarouter("test-key", sleep=lambda _: None)
+
+    assert result["ok"] is False
+    assert result["status"] == "insufficient_quota"
+    assert result["model"] == "deepseek/deepseek-v4.1-flash-free"
 
 
 def test_provider_check_retries_then_reports_a_rate_limit(monkeypatch: pytest.MonkeyPatch) -> None:
