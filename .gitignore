@@ -33,3 +33,6 @@ reports/**/transcripts/
 .vscode/
 reports/**/recordings/
 reports/**/*.jsonl
+
+# Local model weights (download separately)
+models/
