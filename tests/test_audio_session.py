@@ -846,3 +846,14 @@ def test_confirmation_defers_a_new_phone_number(session: AudioCallSession) -> No
     assert session.confirmation_step("Yes, use 555-123-4567.") is None
     assert session.pending is None
     assert session.store.count_bookings(session.tenant.tenant_id) == 4
+
+
+def test_a_new_caller_phone_invalidates_a_stale_readback(session: AudioCallSession) -> None:
+    slot = first_slot(session)
+    session.book_appointment(slot_id=slot["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    assert session.pending is not None
+
+    session.note_caller_utterance("My phone is 555-123-4567.")
+
+    assert session.pending is None
+    assert session.state.outcome is None

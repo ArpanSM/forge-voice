@@ -258,6 +258,7 @@ class AudioCallSession:
             self.caller_turns.append(self.last_utterance)
             self._turn_index += 1
             self.entities.observe(self.last_utterance)
+            self._invalidate_readback_for_new_entities()
         self._trace("caller_utterance", text=self.last_utterance)
 
     def trace_event(self, event: str, **fields: Any) -> None:
@@ -747,10 +748,6 @@ class AudioCallSession:
         zip: str | None = None,
     ) -> ToolReply:
         facts = self._facts()
-        if facts is not None and facts.address is not None:
-            self.entities.remember_address(facts.address)
-        if facts is not None and facts.phone is not None and self.entities.phone is None:
-            self.entities.phone = facts.phone
         address = self.address
         if line1 or city or zip:
             try:
@@ -764,8 +761,6 @@ class AudioCallSession:
                 address = self.address
         if address is None:
             address = self.entities.best_address()
-        if address is None and facts is not None:
-            address = facts.address
         caller_name = (
             name
             or self.customer_name
@@ -784,8 +779,6 @@ class AudioCallSession:
                 caller_phone = None
         if not caller_phone:
             caller_phone = self.customer_phone
-        if not caller_phone and facts is not None:
-            caller_phone = facts.phone
         if caller_name:
             self.customer_name = caller_name
         if caller_phone:
@@ -1107,6 +1100,21 @@ class AudioCallSession:
         self.tool_session.confirmed = False
         self.tool_session.confirmation_token = None
         self._trace("readback_invalidated", reason=reason)
+
+    def _invalidate_readback_for_new_entities(self) -> None:
+        pending = self.pending
+        if pending is None:
+            return
+        if self.entities.phone and self.entities.phone != pending.payload.contact_phone:
+            self._invalidate_readback("caller_phone_changed")
+            return
+        if self.entities.zip and self.entities.zip != pending.payload.address.zip:
+            self._invalidate_readback("caller_zip_changed")
+            return
+        if self.entities.line1 and street_key(self.entities.line1) != street_key(
+            pending.payload.address.line1
+        ):
+            self._invalidate_readback("caller_address_changed")
 
     def _slot_choice(self, lowered: str) -> str | None:
         for index, word in enumerate(("first", "second", "third")):
@@ -1518,8 +1526,6 @@ class AudioCallSession:
         ):
             resolved_name = facts.name
         resolved_phone = phone or self.entities.phone
-        if not resolved_phone and facts is not None:
-            resolved_phone = facts.phone
         address = self.address
         if line1 or city or zip:
             try:
@@ -1533,8 +1539,6 @@ class AudioCallSession:
                 address = self.address
         if address is None:
             address = self.entities.best_address()
-        if address is None and facts is not None:
-            address = facts.address
         if not resolved_name or not resolved_phone or address is None:
             return None
         try:
@@ -1559,10 +1563,6 @@ class AudioCallSession:
         zip: str | None,
     ) -> CustomerInput:
         facts = self._facts()
-        if facts is not None and facts.address is not None:
-            self.entities.remember_address(facts.address)
-        if facts is not None and facts.phone is not None and self.entities.phone is None:
-            self.entities.phone = facts.phone
         resolved_name = name or self.customer_name or self._name_from_turns()
         if (
             not resolved_name
@@ -1576,8 +1576,6 @@ class AudioCallSession:
         address = self._address(line1, city, state, zip) or self.address
         if address is None:
             address = self.entities.best_address()
-        if address is None and facts is not None:
-            address = facts.address
         if address is None:
             address = self.entities.resolve_address(
                 line1=None,
