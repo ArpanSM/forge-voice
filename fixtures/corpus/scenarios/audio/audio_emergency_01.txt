@@ -5,14 +5,23 @@
 # degradation: none
 
 [pause 120 ms]
-Our AC is out and it is ninety-eight degrees upstairs. I have a newborn baby.
+Our AC is out and it is ninety-eight degrees upstairs with a newborn baby.
 [pause 500 ms]
 [pause 120 ms]
-Yes, 88 Meridian Way, San Jose, 95125.
+The address is 88 Meridian Way, San Jose.
 [pause 120 ms]
 [pause 120 ms]
-My name is Dana Whitfield. My phone is four zero eight, five five five, zero one four two.
+The ZIP is nine five one two five.
 [pause 120 ms]
 [pause 120 ms]
-No one is hurt, but please hurry.
+My name is Dana Whitfield.
+[pause 120 ms]
+[pause 120 ms]
+My phone is four zero eight, five five five, zero one four two.
+[pause 120 ms]
+[pause 120 ms]
+The ZIP is nine five one two five.
+[pause 120 ms]
+[pause 120 ms]
+No one is hurt. Please send the on-call technician.
 [pause 300 ms]

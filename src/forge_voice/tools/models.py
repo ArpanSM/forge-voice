@@ -122,6 +122,7 @@ class TransferToHumanArgs(StrictModel):
         "tool_failure",
         "after_hours",
         "complex_request",
+        "entity_capture_failed",
     ]
     urgency: Literal["emergency", "urgent", "normal"]
     mode: Literal["live", "callback"]

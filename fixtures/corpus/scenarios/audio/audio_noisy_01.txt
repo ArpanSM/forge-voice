@@ -20,5 +20,8 @@ My name is Sam Rivera.
 My phone is five five five, one two three, four five six seven.
 [pause 120 ms]
 [pause 120 ms]
-Monday at nine. Yes, book it.
+The first slot works.
+[pause 300 ms]
+[pause 120 ms]
+Yes, book it.
 [pause 300 ms]

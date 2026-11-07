@@ -242,6 +242,11 @@ def _last_user_text(chat_ctx: Any) -> str:
     return ""
 
 
+def _current_user_text(chat_ctx: Any, fallback: str) -> str:
+    """Return the current turn from the live context; stale fallback only when empty."""
+    return _last_user_text(chat_ctx) or fallback.strip()
+
+
 HYBRID_BOOKING_TOOL_NAMES = (
     "get_service_area",
     "get_availability",
@@ -282,7 +287,7 @@ class BookingAgent(Agent):
         model_settings: Any,
     ) -> Any:
         """Intercept emergencies before the model and speak only the policy script."""
-        text = _last_user_text(chat_ctx) or self._call.last_utterance
+        text = _current_user_text(chat_ctx, self._call.last_utterance)
         if self._hybrid:
             deterministic = self._hybrid_booking_turn(text)
             if deterministic is not None:
@@ -297,6 +302,24 @@ class BookingAgent(Agent):
                 error=emergency.error,
             )
             yield emergency.message
+            return
+        reprompt = self._call.entity_reprompt_step(text) if text else None
+        if reprompt is not None:
+            self._call.trace_event(
+                "entity_guard_reply",
+                ok=reprompt.ok,
+                stage=reprompt.stage,
+                error=reprompt.error,
+            )
+            yield reprompt.message
+            return
+        confirmation = self._call.confirmation_step(text) if text else None
+        if confirmation is not None:
+            yield confirmation
+            return
+        booking = self._call.booking_step(text) if text else None
+        if booking is not None:
+            yield booking
             return
 
         selected_tools = tools
@@ -446,6 +469,9 @@ async def entrypoint(ctx: JobContext) -> None:
 
     def on_event(event: Any) -> None:
         call.trace_event("session_event", **_event_summary(event))
+        state = getattr(event, "new_state", None)
+        if state is not None:
+            call.note_agent_state(str(state))
 
     session.on("user_input_transcribed", on_user_transcript)
     for event_name in (

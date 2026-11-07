@@ -30,7 +30,7 @@ browser-call recording is not done.**
 | Review page | Real `/review` route and weekly sample. |
 | Admin page | Real `/admin` validating YAML editor for both tenants. |
 | Runbook slide | The committed `docs/runbook.md` rendered locally. |
-| Eval numbers | The committed reports under `reports/`, including the failed local audio gate. |
+| Eval numbers | The committed reports under `reports/`, including the 5/6 local audio run and its one genuine ASR entity miss. |
 
 **Not real in the video:** the spoken call audio and the browser call. It is a captioned
 storyboard of the documented demo script and the real call records, not a screen recording of a
@@ -113,7 +113,7 @@ player's declared total duration, then save the video. Convert to MP4 if a site 
 11. Admin editor and the same schema the agent loads.
 12. YAML advanced fields and fail-closed validation.
 13. Runbook start/recover/stop.
-14. Eval gate status, including the failed local audio gate.
+14. Eval gate status, including the 5/6 local audio run with every hard gate passing and one genuine ASR entity miss.
 15. Known limits and the demo script that avoids them.
 16. Handover and the 30-day support boundary.
 
@@ -125,5 +125,6 @@ player's declared total duration, then save the video. Convert to MP4 if a site 
 - The known gaps are real: no proactive silence prompt, degraded ZIP recognition and no
   long-utterance turn-taking guard. The demo uses clean audio, short turns, ZIP digits one at a
   time and no long silence.
-- The local audio emergency handoff currently fails on a real LFM3 ASR miss (ZIP misheard);
-  see the eval report and case study. The video does not hide that.
+- The live local audio run is **5/6** with every hard gate green; the remaining failure is a
+  genuine ASR entity miss in the address read-back. See the eval report and case study. The
+  video does not hide that.

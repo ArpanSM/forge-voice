@@ -12,7 +12,6 @@ from pydantic import ValidationError
 from forge_voice.adapters.sqlite import SQLiteAdapter
 from forge_voice.clock import Clock
 from forge_voice.domain import (
-    Address,
     BookingRecord,
     CallbackRecord,
     IdempotencyRecord,
@@ -39,7 +38,7 @@ from forge_voice.tools.models import (
     TransferToHumanArgs,
 )
 from forge_voice.transfer import TransferSimulator
-from forge_voice.validation import normalize_phone, normalize_zip
+from forge_voice.validation import normalize_phone, normalize_zip, validate_service_address
 
 TOOL_NAMES = (
     "lookup_customer",
@@ -475,7 +474,11 @@ class ToolRegistry:
                 ErrorCode.invalid_argument,
                 "The handoff packet does not match this call.",
             )
-        if args.mode == "callback" and not packet.caller.phone:
+        if (
+            args.mode == "callback"
+            and not packet.caller.phone
+            and args.reason not in {"entity_capture_failed", "emergency"}
+        ):
             raise StableError(
                 ErrorCode.invalid_argument,
                 "A callback number is required for a callback handoff.",
@@ -610,7 +613,7 @@ class ToolRegistry:
                 tenant_id=self.tenant.tenant_id,
                 call_id=self.session.call_id,
                 name=packet.caller.name or "Caller",
-                phone=packet.caller.phone,
+                phone=packet.caller.phone or "",
                 reason=args.reason,
                 window_start=window_start,
                 window_end=window_end,
@@ -639,15 +642,17 @@ class ToolRegistry:
         return f"{args.callback_window.start.isoformat()}:{args.callback_window.end.isoformat()}"
 
     def _customer_input(self, args: Any) -> CustomerInput:
+        address = validate_service_address(
+            self.tenant,
+            line1=args.address.line1,
+            city=args.address.city,
+            state=args.address.state,
+            zip_code=args.address.zip,
+        )
         return CustomerInput(
             name=args.name,
             phone=normalize_phone(args.phone),
-            address=Address(
-                line1=args.address.line1,
-                city=args.address.city,
-                state=args.address.state,
-                zip=normalize_zip(args.address.zip),
-            ),
+            address=address,
         )
 
     def _caller_verified(self, customer: Any, args: LookupCustomerArgs) -> bool:

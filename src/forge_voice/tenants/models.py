@@ -78,6 +78,8 @@ class ServiceArea(StrictModel):
     zip_allowlist: list[Zip] = Field(min_length=1)
     zip_exclusions: list[Zip] = Field(default_factory=list)
     dispatch_zones: dict[Zip, str] = Field(min_length=1)
+    city: str = ""
+    state: str = ""
     notes: str = ""
 
     @model_validator(mode="after")
@@ -99,6 +101,8 @@ class ServiceArea(StrictModel):
             )
         if any(not zone.strip() for zone in self.dispatch_zones.values()):
             raise ValueError("dispatch_zone names must not be empty")
+        if self.state and len(self.state) != 2:
+            raise ValueError("service_area.state must be a two-letter state or empty")
         return self
 
 
