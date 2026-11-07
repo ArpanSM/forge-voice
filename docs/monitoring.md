@@ -26,6 +26,7 @@ imported read-only into that cache at startup and on the explicit refresh action
 | `/metrics.json` | Machine-readable aggregate export with definitions, filters, per-tenant metrics and alerts. |
 | `/review` | Weekly 10-call sample, mark-reviewed and create-scenario-candidate actions. |
 | `POST /alerts/refresh` | Explicit alert evaluation; only new alerts are written/sent. |
+| `/admin` | Validating tenant YAML editor; local-only, no workflow graph or code changes. |
 | `/health` | Existing local liveness endpoint. |
 
 The first dashboard start runs the real #4 text call runner once for each dev scenario, then
@@ -112,11 +113,24 @@ the seeded cards, table and one sample call detail. It exports only records mark
 `synthetic`; live trace transcripts, tool arguments, recordings and credentials are excluded.
 It has no HTMX, CDN or scripts, so it can be attached to a handover without a running service.
 
+## Admin editor
+
+`/admin` edits `tenants/<slug>.yaml` with the same Pydantic schema the agent loads. A valid
+edit is written atomically and reloads the tenant registry; invalid YAML, an unknown field or
+a changed `tenant_id` is rejected without writing or reloading. Identity, hours, services and
+prices, service area, transfer targets, adapter endpoints, knowledge base and emergency rules
+are all editable; advanced fields stay in YAML. New tenants, services and integrations are
+change requests, not admin actions.
+
 ## Retention and privacy
 
 - Synthetic data only; no real customer records, phone numbers or recordings.
-- Calls older than **30 days** are excluded from every read and pruned when the dashboard
-  starts. Expired traces are skipped before import so they cannot reappear on every sync.
+- Dashboard calls older than **30 days** are excluded from every read and pruned when the
+  dashboard starts. Expired traces are skipped before import so they cannot reappear on
+  every sync.
+- The same startup runs `forge_voice.monitoring.retention`, which deletes raw
+  `data/calls/*.jsonl` traces and `recordings/` files older than **30 days**. `make retention`
+  runs that job explicitly; `make reset` deletes synthetic traces and recordings.
 - `recording_opt_out` calls from traces or the seed show a text-only notice; the dashboard
   never renders an audio player or claims a recording exists.
 - **Read-only** for call data: the only writes are the dashboard seed/trace cache, the alert

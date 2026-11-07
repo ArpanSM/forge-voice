@@ -17,6 +17,7 @@ build/
 
 # Local data
 data/
+.release/
 .tools/
 recordings/
 

@@ -5,6 +5,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILE="${FORGE_VOICE_PROFILE:-local}"
+# shellcheck source=scripts/python_bin.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/python_bin.sh"
+PYTHON_BIN="$(find_python_bin)" || exit 1
 SMOKE=0
 for arg in "$@"; do
   case "$arg" in
@@ -18,12 +22,18 @@ if [[ "$PROFILE" != "local" && "$PROFILE" != "hybrid" ]]; then
   exit 2
 fi
 
+echo "MODE: host-binary local demo (no Docker Compose; profile: $PROFILE)."
 "$ROOT/scripts/prepare_local_env.sh" "$ROOT"
 
+PRESERVED_GROQ_KEY="${GROQ_API_KEY:-}"
 set -a
 # shellcheck disable=SC1091
 source "$ROOT/.env.local"
 set +a
+# A copied .env.example may carry an empty GROQ_API_KEY; keep an explicit shell key.
+if [[ -n "$PRESERVED_GROQ_KEY" ]]; then
+  export GROQ_API_KEY="$PRESERVED_GROQ_KEY"
+fi
 export FORGE_VOICE_PROFILE="$PROFILE"
 export LIVEKIT_URL="${LIVEKIT_URL:-ws://localhost:7880}"
 export LIVEKIT_API_KEY="${LIVEKIT_API_KEY:-devkey}"
@@ -89,7 +99,7 @@ fi
 echo "Starting the local browser/token page on http://localhost:8000 …"
 (
   cd "$ROOT"
-  PYTHONPATH=src exec python3.12 -m forge_voice.web.app
+  PYTHONPATH=src exec "$PYTHON_BIN" -m forge_voice.web.app
 ) >"$LOG_DIR/web.log" 2>&1 &
 PIDS+=("$!")
 for _ in $(seq 1 40); do
@@ -106,7 +116,7 @@ fi
 echo "Starting the LiveKit agent worker (profile: $PROFILE) …"
 (
   cd "$ROOT"
-  PYTHONPATH=src exec python3.12 -m forge_voice.runtime.livekit_agent dev
+  PYTHONPATH=src exec "$PYTHON_BIN" -m forge_voice.runtime.livekit_agent dev
 ) >"$LOG_DIR/agent.log" 2>&1 &
 PIDS+=("$!")
 echo "Waiting for the agent worker to register …"
@@ -135,7 +145,7 @@ echo "Press Ctrl-C to stop all three processes."
 echo
 
 if [[ "$SMOKE" == "1" ]]; then
-  PYTHONPATH=src python3.12 "$ROOT/scripts/livekit_smoke.py" \
+  PYTHONPATH=src "$PYTHON_BIN" "$ROOT/scripts/livekit_smoke.py" \
     --web-url http://127.0.0.1:8000 \
     --tenant "${SMOKE_TENANT:-harborlight}" \
     --mode "${SMOKE_MODE:-booking}" \

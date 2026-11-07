@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
-from urllib.parse import urlparse
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
@@ -17,27 +16,9 @@ from forge_voice.monitoring.page import (
 )
 from forge_voice.monitoring.service import MonitoringService
 from forge_voice.policy.state import CallOutcome
+from forge_voice.web.local_access import require_safe_post
 
 HTMX_PATH = Path(__file__).resolve().parents[1] / "web" / "static" / "htmx.min.js"
-LOCAL_HOSTS = frozenset({"127.0.0.1", "localhost", "::1", "testserver"})
-
-
-def _require_safe_post(request: Request) -> None:
-    """Reject cross-origin state changes unless the Host is the local app."""
-    host = (request.url.hostname or "").lower()
-    if host not in LOCAL_HOSTS:
-        raise HTTPException(status_code=403, detail="local_only")
-    origin = request.headers.get("origin")
-    if origin:
-        parsed = urlparse(origin)
-        if (
-            parsed.scheme not in {"http", "https"}
-            or parsed.hostname not in LOCAL_HOSTS
-            or parsed.hostname != host
-        ):
-            raise HTTPException(status_code=403, detail="cross_origin_post")
-    if request.headers.get("sec-fetch-site") == "cross-site":
-        raise HTTPException(status_code=403, detail="cross_origin_post")
 
 
 def register_dashboard_routes(app: FastAPI, service: MonitoringService) -> None:
@@ -92,7 +73,7 @@ def register_dashboard_routes(app: FastAPI, service: MonitoringService) -> None:
 
     @app.post("/alerts/refresh")
     async def refresh_alerts(request: Request) -> RedirectResponse:
-        _require_safe_post(request)
+        require_safe_post(request)
         service.sync_traces()
         service.refresh_alerts(notify=True)
         return RedirectResponse(url="/dashboard", status_code=303)
@@ -102,7 +83,7 @@ def register_dashboard_routes(app: FastAPI, service: MonitoringService) -> None:
         request: Request,
         call_id: str = Query(min_length=1),
     ) -> RedirectResponse:
-        _require_safe_post(request)
+        require_safe_post(request)
         try:
             service.mark_review(call_id)
         except ValueError as exc:
@@ -116,7 +97,7 @@ def register_dashboard_routes(app: FastAPI, service: MonitoringService) -> None:
         request: Request,
         call_id: str = Query(min_length=1),
     ) -> RedirectResponse:
-        _require_safe_post(request)
+        require_safe_post(request)
         try:
             service.create_scenario_candidate(call_id)
         except ValueError as exc:

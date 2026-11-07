@@ -11,3 +11,8 @@ service/technician/transfer reference or filename/`tenant_id` mismatch.
 
 `make corpus` validates both files and copies them byte-for-byte into
 `fixtures/corpus/tenants/` with hashes.
+
+The local `/admin` page edits these same files with schema validation, an atomic write and a
+reload. Invalid edits are rejected without writing. It never renames a tenant, creates a
+tenant or changes code; new tenants and services are change requests (see
+`docs/handover.md`).
