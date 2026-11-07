@@ -1,17 +1,17 @@
 {
   "fixtures": [
     {
-      "bytes": 1189484,
+      "bytes": 1240364,
       "channels": 1,
       "degradation": "badline",
-      "duration_ms": 24780,
+      "duration_ms": 25840,
       "fixture": "fixtures/audio/badline_01.wav",
       "sample_rate": 24000,
       "scenario_id": "audio_badline_01",
       "seed": 2928340169,
-      "sha256": "0bd52faf59467a1fedfbe2182b4ae7b6e5fbb716abf0aa05696e85a7133eaaf8",
+      "sha256": "c4bcda936b08a418020c115a27bd409f5578cc560919da48e5d25708fd623584",
       "tenant": "harborlight",
-      "turns_sha256": "55a08f79810cfb4bbce15c900043b33e2fdd837cdc4b6e6fcab734bdf3674ef7"
+      "turns_sha256": "2e51886b73fe248a466db1790214192f6b0936b6c8a0443285b5702c440bd3a8"
     },
     {
       "bytes": 1187564,
@@ -27,17 +27,17 @@
       "turns_sha256": "84ca08bb27182958ec82acad561fb78cdce1c1b5cc9722b88f1727444c15f466"
     },
     {
-      "bytes": 1063724,
+      "bytes": 1443884,
       "channels": 1,
       "degradation": null,
-      "duration_ms": 22160,
+      "duration_ms": 30080,
       "fixture": "fixtures/audio/emergency_01.wav",
       "sample_rate": 24000,
       "scenario_id": "audio_emergency_01",
       "seed": 2503138867,
-      "sha256": "a55313dc06d186171bab0513797b9704d17c92c8a7e324d83ed2248aaa01783f",
+      "sha256": "8be2f3c48915768e0b34f1b65387ef2ec2b67faa88de69ce10d027b7278e7fb0",
       "tenant": "summit",
-      "turns_sha256": "f895bf66532cb796ddb5e11d5434bf44a99fe99529108435c3e89abecc8d076d"
+      "turns_sha256": "0db068d82c74b7f4bea0c1a517db504464969b1a9b4a488fa4d5b828770dc748"
     },
     {
       "bytes": 1039724,
@@ -79,17 +79,17 @@
       "turns_sha256": "638a4cb78aa26a8677806bddf9cfd2e7dfcd766a70e748f17bf95da8744c289d"
     },
     {
-      "bytes": 1070444,
+      "bytes": 1105964,
       "channels": 1,
       "degradation": "noisy",
-      "duration_ms": 22300,
+      "duration_ms": 23040,
       "fixture": "fixtures/audio/noisy_01.wav",
       "sample_rate": 24000,
       "scenario_id": "audio_noisy_01",
       "seed": 3805215134,
-      "sha256": "f5ab416e35304da4aa6342eb2d3227c669769f066bab1195706907c69f2cc6b9",
+      "sha256": "1cef1725f6476a7802aa07654014da3fe61bd90ef15a486a2231e911c154eaf6",
       "tenant": "harborlight",
-      "turns_sha256": "50db01136b9506c8ee822cc5b88220dbb453f6f6d0666de77810cd5521929298"
+      "turns_sha256": "bd39f56a161ae0bf4fde5c0da3331192bf6ed05c5a3225cebac3b967562d37f7"
     },
     {
       "bytes": 1012844,
@@ -105,30 +105,30 @@
       "turns_sha256": "cd97d18c0bcb3bd8429c833a26658393801ba1d6188cf92830c5ef143ee3c566"
     },
     {
-      "bytes": 1184684,
+      "bytes": 1204844,
       "channels": 1,
       "degradation": null,
-      "duration_ms": 24680,
+      "duration_ms": 25100,
       "fixture": "fixtures/audio/readback_01.wav",
       "sample_rate": 24000,
       "scenario_id": "audio_readback_01",
       "seed": 3741205312,
-      "sha256": "0d95e51d69f97e9cc6593fa376e818c6ddf07ffed3a74eccfd4eadb267846978",
+      "sha256": "87624d0a9b83f615199d8386bf563fa22868cacdfc6b8c32d21a1fa0205deb51",
       "tenant": "summit",
-      "turns_sha256": "113f954e6190468de911f17cd0b0381599fd16dba3be971770acc954b85a5ad5"
+      "turns_sha256": "15a5a205187e04fdddf7a0f463ee72c86e660b9a841a238b37f806b4e5c845e8"
     },
     {
-      "bytes": 1161644,
+      "bytes": 1239404,
       "channels": 1,
       "degradation": null,
-      "duration_ms": 24200,
+      "duration_ms": 25820,
       "fixture": "fixtures/audio/silence_01.wav",
       "sample_rate": 24000,
       "scenario_id": "audio_silence_01",
       "seed": 8682726,
-      "sha256": "dfcca5f220cb98ef7400f3b0ebbfd00d5015559b09b5e352e9a7ae64384444af",
+      "sha256": "2a39484090a6c5aff740fc8fe97eeb395db1287385b1dfe856605592a3385ac4",
       "tenant": "harborlight",
-      "turns_sha256": "f91f267436b0307e77a3971b5c84d7ee5bc0714e061b22caba46c6e2d972efdc"
+      "turns_sha256": "62abc13e0f66b7fd34da77cb035a810ed660b2dca24ec41cc5de1685d8e46793"
     }
   ],
   "generator": "forge_voice.audio.fixtures",

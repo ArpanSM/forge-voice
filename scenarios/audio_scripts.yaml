@@ -13,7 +13,9 @@ scenarios:
       - text: "My address is 12 Alder Street, San Francisco."
       - text: "My name is Sam Rivera."
       - text: "My phone is five five five, one two three, four five six seven."
-      - text: "Monday morning works. Yes, book it."
+      - text: "The first slot works."
+        pause_after_ms: 300
+      - text: "Yes, book it."
         pause_after_ms: 300
 
   audio_bargein_01:
@@ -35,9 +37,12 @@ scenarios:
     turns:
       - text: "Our AC is out and it is ninety-eight degrees upstairs. I have a newborn baby."
         pause_after_ms: 500
-      - text: "Yes, 88 Meridian Way, San Jose, 95125."
-      - text: "My name is Dana Whitfield. My phone is four zero eight, five five five, zero one four two."
-      - text: "No one is hurt, but please hurry."
+      - text: "The address is 88 Meridian Way, San Jose."
+      - text: "The ZIP is nine five one two five."
+      - text: "My name is Dana Whitfield."
+      - text: "My phone is four zero eight, five five five, zero one four two."
+      - text: "The ZIP is nine five one two five."
+      - text: "No one is hurt. Please send the on-call technician."
         pause_after_ms: 300
 
   audio_entities_01:
@@ -85,7 +90,9 @@ scenarios:
       - text: "My address is 12 Alder Street."
       - text: "My name is Sam Rivera."
       - text: "My phone is five five five, one two three, four five six seven."
-      - text: "Monday at nine. Yes, book it."
+      - text: "The first slot works."
+        pause_after_ms: 300
+      - text: "Yes, book it."
         pause_after_ms: 300
 
   audio_packetloss_01:
@@ -111,7 +118,9 @@ scenarios:
       - text: "My phone is four zero eight, five five five, zero one four two."
       - text: "Monday at eleven works."
         pause_after_ms: 500
-      - text: "Actually, make it Tuesday at nine. Yes, that is correct."
+      - text: "Actually, make it Tuesday at eleven."
+        pause_after_ms: 300
+      - text: "Yes, that is correct."
         pause_after_ms: 300
 
   audio_silence_01:
@@ -124,7 +133,8 @@ scenarios:
         pause_after_ms: 400
       - text: "The ZIP is nine four one zero seven."
       - text: "My address is 12 Alder Street."
-      - text: "My name is Sam Rivera."
-      - text: "My phone is five five five, one two three, four five six seven."
-      - text: "Monday at nine. Yes, book it."
+      - text: "My name is Sam Rivera. My phone is five five five, one two three, four five six seven."
+      - text: "The first slot works."
+        pause_after_ms: 300
+      - text: "Yes, book it."
         pause_after_ms: 300

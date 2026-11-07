@@ -20,5 +20,8 @@ My phone is four zero eight, five five five, zero one four two.
 Monday at eleven works.
 [pause 500 ms]
 [pause 120 ms]
-Actually, make it Tuesday at nine. Yes, that is correct.
+Actually, make it Tuesday at eleven.
+[pause 300 ms]
+[pause 120 ms]
+Yes, that is correct.
 [pause 300 ms]

@@ -3,7 +3,7 @@
   "artifacts": [
     {
       "path": "scenarios/audio/audio_badline_01.txt",
-      "sha256": "e161431fe491bf27b78eb029f369eb9f83b682a62a763c4274eb2e1d1185e2b7"
+      "sha256": "0c0736cee3f3bd8e5065547139a00afeff47c2ab4f4d67867cca0154506650f2"
     },
     {
       "path": "scenarios/audio/audio_bargein_01.txt",
@@ -11,7 +11,7 @@
     },
     {
       "path": "scenarios/audio/audio_emergency_01.txt",
-      "sha256": "517c0ed501a526f210d6bdcbc1593c78cfb55294146760c4c4ba1eeafb46c83d"
+      "sha256": "bae5bb9d5bc407777771fbd050d72307c5566bd668bbc15e724deebef1daf603"
     },
     {
       "path": "scenarios/audio/audio_entities_01.txt",
@@ -27,7 +27,7 @@
     },
     {
       "path": "scenarios/audio/audio_noisy_01.txt",
-      "sha256": "b1be160ba77aa1d9d9601418f3eda430cc606c3470e820d75606ed03643d0d39"
+      "sha256": "43b1787a1c90e886813758cee8dcf687e9c067dd55da74e8a106210c12068078"
     },
     {
       "path": "scenarios/audio/audio_packetloss_01.txt",
@@ -35,11 +35,11 @@
     },
     {
       "path": "scenarios/audio/audio_readback_01.txt",
-      "sha256": "eaa3600f76f5f72817e14c4586785e48c2a1dbbe0cee6ca3da70783e81b82d1f"
+      "sha256": "47e22119629cc1a8d1835b7f3f7036394f7ab018d064d64652fa62efbff8a937"
     },
     {
       "path": "scenarios/audio/audio_silence_01.txt",
-      "sha256": "54a97f4e5bd9850605d70d3a514adc395d825a41242e06cf3012704542152f9b"
+      "sha256": "8326f72c261ba5d244d20f46c8132936d69f1265f5be0614ad364085323f00e7"
     },
     {
       "path": "scenarios/callers/text_accent_01.txt",
@@ -203,7 +203,7 @@
     },
     {
       "path": "scenarios/fixtures/audio/badline_01.wav",
-      "sha256": "0bd52faf59467a1fedfbe2182b4ae7b6e5fbb716abf0aa05696e85a7133eaaf8"
+      "sha256": "c4bcda936b08a418020c115a27bd409f5578cc560919da48e5d25708fd623584"
     },
     {
       "path": "scenarios/fixtures/audio/bargein_01.wav",
@@ -211,7 +211,7 @@
     },
     {
       "path": "scenarios/fixtures/audio/emergency_01.wav",
-      "sha256": "a55313dc06d186171bab0513797b9704d17c92c8a7e324d83ed2248aaa01783f"
+      "sha256": "8be2f3c48915768e0b34f1b65387ef2ec2b67faa88de69ce10d027b7278e7fb0"
     },
     {
       "path": "scenarios/fixtures/audio/entities_01.wav",
@@ -219,7 +219,7 @@
     },
     {
       "path": "scenarios/fixtures/audio/hashes.json",
-      "sha256": "25e6974cabb369ea97506623baacd0ba2d4639bcb91637763c2fa93925b4cee4"
+      "sha256": "79c65477c44b0a4bfd2e74113cffe1b701e8510d142b20180c68329d2cd4790f"
     },
     {
       "path": "scenarios/fixtures/audio/lowmic_01.wav",
@@ -231,7 +231,7 @@
     },
     {
       "path": "scenarios/fixtures/audio/noisy_01.wav",
-      "sha256": "f5ab416e35304da4aa6342eb2d3227c669769f066bab1195706907c69f2cc6b9"
+      "sha256": "1cef1725f6476a7802aa07654014da3fe61bd90ef15a486a2231e911c154eaf6"
     },
     {
       "path": "scenarios/fixtures/audio/packetloss_01.wav",
@@ -239,11 +239,11 @@
     },
     {
       "path": "scenarios/fixtures/audio/readback_01.wav",
-      "sha256": "0d95e51d69f97e9cc6593fa376e818c6ddf07ffed3a74eccfd4eadb267846978"
+      "sha256": "87624d0a9b83f615199d8386bf563fa22868cacdfc6b8c32d21a1fa0205deb51"
     },
     {
       "path": "scenarios/fixtures/audio/silence_01.wav",
-      "sha256": "dfcca5f220cb98ef7400f3b0ebbfd00d5015559b09b5e352e9a7ae64384444af"
+      "sha256": "2a39484090a6c5aff740fc8fe97eeb395db1287385b1dfe856605592a3385ac4"
     },
     {
       "path": "scenarios/manifest.yaml",
