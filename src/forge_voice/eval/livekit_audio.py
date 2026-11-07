@@ -427,7 +427,9 @@ class LiveKitAudioRunner:
         if result.get("error"):
             qa_flags.append("live_call_error")
         expected_entities = self._expected_entities(view, setup)
-        actual_entities = self._actual_entities(book_args, ticket_args, expected_entities)
+        actual_entities = self._actual_entities(
+            book_args, ticket_args, expected_entities, book=book, ticket=ticket
+        )
         writes: list[WriteRecord] = []
         for event in tool_results:
             if event.get("tool") not in {
@@ -540,7 +542,21 @@ class LiveKitAudioRunner:
         book_args: list[dict[str, Any]],
         ticket_args: list[dict[str, Any]],
         expected: dict[str, str | None],
+        *,
+        book: dict[str, Any] | None = None,
+        ticket: dict[str, Any] | None = None,
     ) -> dict[str, str | None]:
+        book = book or {}
+        if book.get("service_id") or book.get("address"):
+            address = book.get("address") or {}
+            return {
+                "name": book.get("customer_name"),
+                "phone": book.get("contact_phone"),
+                "line1": address.get("line1"),
+                "zip": address.get("zip"),
+                "service_id": book.get("service_id"),
+            }
+        ticket = ticket or {}
         for args in reversed([*book_args, *ticket_args]):
             customer = args.get("customer") or {}
             address = customer.get("address") or {}

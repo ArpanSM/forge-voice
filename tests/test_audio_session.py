@@ -419,6 +419,8 @@ def test_trace_records_booking_details_for_the_eval_and_dashboard(tmp_path: Path
     assert booked["service_id"] == "drain_cleaning"
     assert booked["start"]
     assert booked["address"]["zip"] == "94107"
+    assert booked["customer_name"] == "Sam Rivera"
+    assert booked["contact_phone"] == "+14155550123"
 
 
 def test_trace_records_the_emergency_script_and_vulnerable_occupant(tmp_path: Path) -> None:

@@ -887,6 +887,8 @@ class AudioCallSession:
                 start=booking.get("start"),
                 end=booking.get("end"),
                 address=booking.get("address"),
+                customer_name=self.customer_name,
+                contact_phone=booking.get("contact_phone"),
             )
         elif pending.intent is CallIntent.reschedule:
             booking = data["booking"]
