@@ -49,6 +49,7 @@ class CallRecord(StrictModel):
     booking_id: str | None = None
     ticket_id: str | None = None
     callback_id: str | None = None
+    service_id: str | None = None
     started_at: datetime
     ended_at: datetime
     transcript: list[TranscriptTurn] = Field(default_factory=list)
@@ -58,7 +59,17 @@ class CallRecord(StrictModel):
     qa_flags: list[str] = Field(default_factory=list)
     recording_ref: str = "text_only"
     recording_opt_out: bool = False
+    synthetic: bool = True
+    expected_service_id: str | None = None
+    expected_address_zip: str | None = None
+    expected_slot_id: str | None = None
+    booked_service_id: str | None = None
+    booked_address_zip: str | None = None
+    booked_slot_id: str | None = None
+    slot_checked: bool = False
     slot_error: bool = False
+    emergency_category: str | None = None
+    emergency_safety_script: str | None = None
     emergency_triage_ok: bool | None = None
 
     @property
@@ -74,6 +85,22 @@ class CallRecord(StrictModel):
         return self.outcome is CallOutcome.transferred or (
             self.transfer_status is TransferStatus.connected
         )
+
+    @property
+    def resolved(self) -> bool:
+        """A call resolved without a live transfer, per the #26 containment definition."""
+        if self.transferred:
+            return False
+        if self.outcome in {
+            CallOutcome.booked,
+            CallOutcome.rescheduled,
+            CallOutcome.cancelled,
+            CallOutcome.info_only,
+        }:
+            return True
+        if self.outcome is CallOutcome.emergency_ticket:
+            return self.emergency_triage_ok is True
+        return False
 
     @property
     def first_audio_p95_ms(self) -> int | None:
@@ -96,24 +123,58 @@ class CallRecord(StrictModel):
         ended_at: datetime,
         turn_latencies: list[LatencyBreakdown] | None = None,
         cost_usd: float = 0.0,
+        caller_phone: str | None = None,
         recording_opt_out: bool = False,
         recording_ref: str = "text_only",
-        slot_error: bool = False,
+        expected_service_id: str | None = None,
+        expected_address_zip: str | None = None,
+        expected_slot_id: str | None = None,
+        booked_service_id: str | None = None,
+        booked_address_zip: str | None = None,
+        booked_slot_id: str | None = None,
+        emergency_safety_script: str | None = None,
     ) -> CallRecord:
+        slot_checked = bool(
+            result.outcome in {CallOutcome.booked, CallOutcome.rescheduled}
+            and expected_service_id
+            and expected_address_zip
+            and booked_service_id
+            and booked_address_zip
+        )
+        slot_error = slot_checked and (
+            expected_service_id != booked_service_id
+            or expected_address_zip != booked_address_zip
+            or (
+                expected_slot_id is not None
+                and booked_slot_id is not None
+                and expected_slot_id != booked_slot_id
+            )
+        )
+        emergency_category = result.emergency_category
+        safety_script = emergency_safety_script or _emergency_safety_text(result)
+        safety_ok = bool(
+            safety_script
+            and any(token in safety_script.lower() for token in ("911", "emergency", "call"))
+        )
         emergency_ok: bool | None = None
         if result.intent is CallIntent.emergency:
-            emergency_ok = result.outcome is CallOutcome.emergency_ticket and bool(result.ticket_id)
+            handled = result.transfer_status in {
+                TransferStatus.connected,
+                TransferStatus.queued_callback,
+            }
+            emergency_ok = bool(emergency_category and safety_ok and result.ticket_id and handled)
         return cls(
             call_id=result.call_id,
             tenant_id=result.tenant_id,
             profile=profile,
-            caller_phone=None,
+            caller_phone=caller_phone,
             intent=result.intent,
             outcome=result.outcome,
             transfer_status=result.transfer_status,
             booking_id=result.booking_id,
             ticket_id=result.ticket_id,
             callback_id=result.callback_id,
+            service_id=result.service_id,
             started_at=started_at,
             ended_at=ended_at,
             transcript=list(result.transcript),
@@ -135,6 +196,25 @@ class CallRecord(StrictModel):
             qa_flags=list(result.qa_flags),
             recording_ref=recording_ref,
             recording_opt_out=recording_opt_out,
+            expected_service_id=expected_service_id,
+            expected_address_zip=expected_address_zip,
+            expected_slot_id=expected_slot_id,
+            booked_service_id=booked_service_id,
+            booked_address_zip=booked_address_zip,
+            booked_slot_id=booked_slot_id,
+            slot_checked=slot_checked,
             slot_error=slot_error,
+            emergency_category=emergency_category,
+            emergency_safety_script=safety_script,
             emergency_triage_ok=emergency_ok,
         )
+
+
+def _emergency_safety_text(result: CallResult) -> str | None:
+    for turn in result.transcript:
+        if turn.role != "assistant":
+            continue
+        lowered = turn.text.lower()
+        if "911" in lowered or "emergency" in lowered:
+            return turn.text
+    return result.safety_script

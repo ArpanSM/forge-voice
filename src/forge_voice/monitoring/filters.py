@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from forge_voice.events.models import CallRecord
 from forge_voice.models import StrictModel
 from forge_voice.policy.state import CallOutcome
 
@@ -14,7 +15,7 @@ class CallFilters(StrictModel):
     to_date: date | None = None
     outcome: CallOutcome | None = None
 
-    def matches(self, record) -> bool:
+    def matches(self, record: CallRecord) -> bool:
         if self.tenant is not None and record.tenant_id != self.tenant:
             return False
         started = record.started_at.date()

@@ -80,6 +80,30 @@ def evaluate_alerts(
             )
         )
 
+    slot_error = metrics["slot_error_rate"]
+    if slot_error["denominator"] and slot_error["numerator"] > 0:
+        slot_calls = [
+            call.call_id
+            for call in calls
+            if call.committed_booking and call.slot_checked and call.slot_error
+        ]
+        alerts.append(
+            Alert(
+                alert_id=f"slot_correctness_failure_{suffix}",
+                kind="slot_correctness_failure",
+                severity="critical",
+                title="Slot correctness failure",
+                message=(
+                    f"{slot_error['numerator']} of {slot_error['denominator']} checked "
+                    "bookings did not match the requested service, address or slot."
+                ),
+                observed=float(slot_error["numerator"]),
+                threshold=0.0,
+                unit="calls",
+                call_ids=slot_calls,
+            )
+        )
+
     booking_failure = metrics["booking_failure_rate"]
     if (
         booking_failure["denominator"]
@@ -115,8 +139,9 @@ def evaluate_alerts(
                 severity="critical",
                 title="Emergency transfer failure",
                 message=(
-                    f"{len(emergency_failures)} emergency call(s) did not record a ticket "
-                    "and a completed 911/on-call handoff."
+                    f"{len(emergency_failures)} emergency call(s) did not record a correct "
+                    "category, the 911/life-safety script, a ticket and a connected or "
+                    "queued on-call handoff."
                 ),
                 observed=float(len(emergency_failures)),
                 threshold=0.0,
@@ -146,12 +171,12 @@ def evaluate_alerts(
     return alerts
 
 
-def append_alerts(path: Path | str, alerts: Iterable[Alert]) -> int:
+def append_alerts(path: Path | str, alerts: Iterable[Alert]) -> list[Alert]:
     """Append new alerts once; the alert id is the daily dedupe key."""
     destination = Path(path)
     incoming = list(alerts)
     if not incoming:
-        return 0
+        return []
     existing: set[str] = set()
     if destination.exists():
         for line in destination.read_text(encoding="utf-8").splitlines():
@@ -163,9 +188,9 @@ def append_alerts(path: Path | str, alerts: Iterable[Alert]) -> int:
                 continue
     fresh = [alert for alert in incoming if alert.alert_id not in existing]
     if not fresh:
-        return 0
+        return []
     destination.parent.mkdir(parents=True, exist_ok=True)
     with destination.open("a", encoding="utf-8") as handle:
         for alert in fresh:
             handle.write(alert.model_dump_json() + "\n")
-    return len(fresh)
+    return fresh

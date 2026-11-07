@@ -116,4 +116,4 @@ dashboard-export:
 	$(PYTHON) -m forge_voice.monitoring.export --data-dir data/dashboard-sample --output docs/samples/dashboard-sample.html --now 2026-11-07T12:00:00-08:00
 
 review-smoke:
-	$(PYTHON) -m forge_voice.monitoring.review $(if $(CALL_ID),--call-id $(CALL_ID),) --run-smoke
+	$(PYTHON) -m forge_voice.monitoring.review $(if $(CALL_ID),--call-id "$(CALL_ID)",) --run-smoke

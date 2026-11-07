@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
+from forge_voice.events.models import CallRecord
 from forge_voice.events.store import CallStore
 from forge_voice.monitoring.filters import CallFilters
 from forge_voice.monitoring.metrics import aggregate_metrics
 from forge_voice.policy.state import CallIntent, CallOutcome, TransferStatus
+from forge_voice.runtime.models import CallResult, TranscriptTurn
 from support_monitoring import latency, make_call, tool
 
 
@@ -19,6 +21,11 @@ def _sample_calls():
             turn_latencies=[latency(2000)],
             tool_events=[tool("get_availability"), tool("book_appointment")],
             cost_usd=0.01,
+            slot_checked=True,
+            booked_service_id="drain_cleaning",
+            expected_service_id="drain_cleaning",
+            booked_address_zip="94107",
+            expected_address_zip="94107",
         ),
         make_call(
             "call_b",
@@ -27,6 +34,11 @@ def _sample_calls():
             tool_events=[tool("book_appointment")],
             cost_usd=0.02,
             slot_error=True,
+            slot_checked=True,
+            expected_service_id="leak_repair",
+            booked_service_id="drain_cleaning",
+            booked_address_zip="94107",
+            expected_address_zip="94107",
         ),
         make_call(
             "call_c",
@@ -76,6 +88,77 @@ def test_aggregate_metrics_use_the_documented_denominators() -> None:
     assert metrics["latency"]["samples"] == 4
     assert metrics["cost"]["total_usd"] == 0.06
     assert metrics["cost"]["per_call_usd"] == 0.015
+
+
+def test_emergency_triage_requires_a_connected_or_queued_handoff() -> None:
+    base = {
+        "scenario_id": "text_emergency_01",
+        "tenant_id": "harborlight",
+        "call_id": "call_emergency",
+        "intent": CallIntent.emergency,
+        "outcome": CallOutcome.emergency_ticket,
+        "ticket_id": "em_1",
+        "safety_script": "gas_co",
+        "emergency_category": "gas_or_co",
+        "transcript": [
+            TranscriptTurn(
+                role="assistant",
+                text="Leave the building and call 911.",
+            )
+        ],
+    }
+    started = datetime(2026, 11, 7, 12, 0, tzinfo=UTC)
+    no_answer = CallRecord.from_call_result(
+        CallResult(**base, transfer_status=TransferStatus.no_answer),
+        profile="local",
+        started_at=started,
+        ended_at=started,
+    )
+    queued = CallRecord.from_call_result(
+        CallResult(**base, transfer_status=TransferStatus.queued_callback),
+        profile="local",
+        started_at=started,
+        ended_at=started,
+    )
+    connected = CallRecord.from_call_result(
+        CallResult(**base, transfer_status=TransferStatus.connected),
+        profile="local",
+        started_at=started,
+        ended_at=started,
+    )
+
+    assert no_answer.emergency_triage_ok is False
+    assert queued.emergency_triage_ok is True
+    assert connected.emergency_triage_ok is True
+
+
+def test_containment_excludes_failed_abandoned_and_callback_calls() -> None:
+    records = [
+        make_call("call_booked", outcome=CallOutcome.booked),
+        make_call("call_failed", outcome=CallOutcome.failed, intent=CallIntent.book, booking_id=""),
+        make_call(
+            "call_abandoned", outcome=CallOutcome.abandoned, intent=CallIntent.human, booking_id=""
+        ),
+        make_call(
+            "call_callback", outcome=CallOutcome.callback, intent=CallIntent.book, booking_id=""
+        ),
+        make_call(
+            "call_emergency_ok",
+            intent=CallIntent.emergency,
+            outcome=CallOutcome.emergency_ticket,
+            ticket_id="em_1",
+            emergency_triage_ok=True,
+        ),
+    ]
+
+    metrics = aggregate_metrics(records)
+
+    assert metrics["containment"] == {
+        "numerator": 2,
+        "denominator": 5,
+        "n": 5,
+        "percent": 40.0,
+    }
 
 
 def test_booking_failure_rate_counts_failed_write_calls_only() -> None:

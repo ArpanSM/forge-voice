@@ -71,7 +71,9 @@ def client(service) -> TestClient:
     return TestClient(app)
 
 
-def test_dashboard_renders_cards_the_alert_banner_and_the_call_table(client: TestClient) -> None:
+def test_dashboard_renders_cards_the_alert_banner_and_the_call_table(
+    client: TestClient, service: MonitoringService
+) -> None:
     response = client.get("/dashboard")
 
     assert response.status_code == 200
@@ -89,7 +91,9 @@ def test_dashboard_renders_cards_the_alert_banner_and_the_call_table(client: Tes
     assert "call_summit" in html
     assert "Harborlight Home Services" in html
     assert "Summit Heating &amp; Air" in html
+    assert "+14155550101" in html
     assert "htmx.min.js" in html
+    assert not (service.data_dir / "monitoring" / "alerts.jsonl").exists()
 
 
 def test_dashboard_filters_by_tenant_date_and_outcome(client: TestClient) -> None:
@@ -126,6 +130,7 @@ def test_call_detail_shows_transcript_tools_latency_and_outcome(client: TestClie
     assert "bk_hl_1" in html
     assert "Booked" in html
     assert "$0.0000" in html
+    assert "+14155550101" in html
     assert "recording_opt_out" in html
 
 
@@ -143,7 +148,9 @@ def test_call_detail_returns_404_for_an_unknown_call(client: TestClient) -> None
     assert response.status_code == 404
 
 
-def test_metrics_json_is_machine_readable_and_matches_the_dashboard(client: TestClient) -> None:
+def test_metrics_json_is_machine_readable_and_matches_the_dashboard(
+    client: TestClient, service: MonitoringService
+) -> None:
     response = client.get("/metrics.json")
 
     assert response.status_code == 200
@@ -159,6 +166,7 @@ def test_metrics_json_is_machine_readable_and_matches_the_dashboard(client: Test
     assert body["metrics"]["latency"]["p95_ms"] == 3900
     assert "tool_error_rate" in body["definitions"]
     assert body["alerts"] == []
+    assert not (service.data_dir / "monitoring" / "alerts.jsonl").exists()
     assert "secret" not in json.dumps(body).lower()
 
 
@@ -192,6 +200,10 @@ def test_dashboard_banner_and_alerts_jsonl_record_a_failing_threshold(tmp_path) 
 
     assert response.status_code == 200
     assert "Emergency transfer failure" in response.text
+    assert not (tmp_path / "monitoring" / "alerts.jsonl").exists()
+
+    refresh = client.post("/alerts/refresh")
+    assert refresh.status_code == 200
     alert_lines = [
         json.loads(line)
         for line in (tmp_path / "monitoring" / "alerts.jsonl")
@@ -199,3 +211,68 @@ def test_dashboard_banner_and_alerts_jsonl_record_a_failing_threshold(tmp_path) 
         .splitlines()
     ]
     assert alert_lines[0]["kind"] == "emergency_transfer_failure"
+
+
+def test_cross_origin_review_post_is_rejected(tmp_path, service) -> None:
+    client = TestClient(
+        create_app(
+            tenants=load_all_tenants(ROOT / "tenants"),
+            minter=None,
+            claim_signer=None,
+            livekit_url="",
+            monitoring=service,
+        ),
+        follow_redirects=False,
+    )
+
+    response = client.post(
+        "/review/mark",
+        params={"call_id": "call_hl"},
+        headers={"Origin": "http://evil.example"},
+    )
+
+    assert response.status_code == 403
+    assert not (tmp_path / "monitoring" / "review.json").exists()
+
+    same_origin = client.post(
+        "/review/mark",
+        params={"call_id": "call_hl"},
+        headers={"Origin": "http://testserver"},
+    )
+    assert same_origin.status_code == 303
+
+
+def test_call_candidate_path_traversal_is_rejected(service) -> None:
+    client = TestClient(
+        create_app(
+            tenants=load_all_tenants(ROOT / "tenants"),
+            minter=None,
+            claim_signer=None,
+            livekit_url="",
+            monitoring=service,
+        ),
+        follow_redirects=False,
+    )
+
+    response = client.post(
+        "/review/candidate",
+        params={"call_id": "../../etc/passwd"},
+    )
+
+    assert response.status_code == 400
+    assert list((service.data_dir / "monitoring").glob("*.yaml")) == []
+
+
+def test_non_loopback_host_is_rejected(service) -> None:
+    app = create_app(
+        tenants=load_all_tenants(ROOT / "tenants"),
+        minter=None,
+        claim_signer=None,
+        livekit_url="",
+        monitoring=service,
+    )
+    client = TestClient(app, base_url="http://evil.example")
+
+    response = client.get("/dashboard")
+
+    assert response.status_code == 403

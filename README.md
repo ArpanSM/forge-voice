@@ -136,16 +136,18 @@ proof; the human browser check is manual.
 
 `make dashboard` serves the local read-only FastAPI + HTMX dashboard at
 <http://127.0.0.1:8000/dashboard>; `make demo` exposes the same page inside the browser app.
-It shows aggregate cards, an alert banner, tenant/date/outcome filters and a call table.
-`/calls/{call_id}` adds the transcript excerpt, tool timeline and latency waterfall.
-`/metrics.json` is the machine-readable export, and `/review` is the weekly ten-call loop that
-marks a call, drafts a scenario candidate and points at `make eval-smoke`. The first start
-seeds a synthetic 30-day set by running the real #4 call runner, so the cards and table render
-without a live call. Alerts use the #26/#27 thresholds and append to
-`data/monitoring/alerts.jsonl`; an optional Discord-compatible webhook is configured only by
-`FORGE_VOICE_ALERT_WEBHOOK`. See [docs/monitoring.md](docs/monitoring.md) for the metric
-definitions, thresholds, retention and static export. No real data, public bind or recording
-is used.
+It shows aggregate cards, an alert banner, tenant/date/outcome filters and a call table with
+the synthetic caller number. `/calls/{call_id}` adds the transcript excerpt, tool timeline,
+latency waterfall, emergency triage and slot-audit state. `/metrics.json` is the
+machine-readable export, and `/review` is the weekly ten-call loop that marks a call, drafts
+a corrected scenario candidate and points at `make eval-smoke`. The first start seeds a
+synthetic 30-day set by running the real #4 call runner, so the cards and table render
+without a live call. Alerts use the #26/#27 thresholds and append only new alerts to
+`data/monitoring/alerts.jsonl` at startup or through the explicit `POST /alerts/refresh`
+action; a GET never writes alerts. An optional Discord or Telegram webhook is configured only
+by `FORGE_VOICE_ALERT_WEBHOOK`. See [docs/monitoring.md](docs/monitoring.md) for the metric
+definitions, thresholds, retention and static export. No real data, public bind, cross-site
+POST or recording is used.
 
 ## Layout
 

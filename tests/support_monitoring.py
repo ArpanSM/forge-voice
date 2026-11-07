@@ -45,23 +45,37 @@ def make_call(
     tool_events: list[DashboardToolEvent] | None = None,
     qa_flags: list[str] | None = None,
     cost_usd: float = 0.0,
+    caller_phone: str | None = "+14155550101",
     recording_ref: str = "text_only",
     recording_opt_out: bool = False,
+    synthetic: bool = True,
     slot_error: bool = False,
+    slot_checked: bool | None = None,
+    expected_service_id: str | None = None,
+    expected_address_zip: str | None = None,
+    expected_slot_id: str | None = None,
+    booked_service_id: str | None = None,
+    booked_address_zip: str | None = None,
+    booked_slot_id: str | None = None,
+    emergency_category: str | None = None,
+    emergency_safety_script: str | None = None,
     emergency_triage_ok: bool | None = None,
 ) -> CallRecord:
+    if slot_checked is None:
+        slot_checked = slot_error
     if booking_id is None and outcome in {CallOutcome.booked, CallOutcome.rescheduled}:
         booking_id = f"bk_{call_id}"
     return CallRecord(
         call_id=call_id,
         tenant_id=tenant_id,
         profile=profile,  # type: ignore[arg-type]
-        caller_phone="+14155550101",
         intent=intent,
         outcome=outcome,
         transfer_status=transfer_status,
         booking_id=booking_id,
         ticket_id=ticket_id,
+        service_id=booked_service_id,
+        caller_phone=caller_phone,
         started_at=started_at,
         ended_at=started_at + timedelta(minutes=3),
         transcript=[
@@ -74,7 +88,17 @@ def make_call(
         cost_usd=cost_usd,
         recording_ref=recording_ref,
         recording_opt_out=recording_opt_out,
+        synthetic=synthetic,
+        expected_service_id=expected_service_id,
+        expected_address_zip=expected_address_zip,
+        expected_slot_id=expected_slot_id,
+        booked_service_id=booked_service_id,
+        booked_address_zip=booked_address_zip,
+        booked_slot_id=booked_slot_id,
+        slot_checked=slot_checked,
         slot_error=slot_error,
+        emergency_category=emergency_category,
+        emergency_safety_script=emergency_safety_script,
         emergency_triage_ok=emergency_triage_ok,
     )
 

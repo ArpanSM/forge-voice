@@ -40,6 +40,13 @@ class CallStore:
     def get(self, call_id: str) -> CallRecord | None:
         return next((record for record in self.records() if record.call_id == call_id), None)
 
+    def all_records(self) -> list[CallRecord]:
+        """Every stored record, including expired records awaiting pruning."""
+        return sorted(self._read(), key=lambda record: record.started_at, reverse=True)
+
+    def cutoff(self) -> datetime:
+        return self._cutoff()
+
     def append(self, records: Iterable[CallRecord]) -> None:
         incoming = list(records)
         if not incoming:

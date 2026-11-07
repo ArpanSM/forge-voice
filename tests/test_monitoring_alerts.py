@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from pathlib import Path
 
 from forge_voice.monitoring.alerts import append_alerts, evaluate_alerts
+from forge_voice.monitoring.service import MonitoringService, send_webhook
 from forge_voice.policy.state import CallIntent, CallOutcome
 from support_monitoring import latency, make_call, tool
+
+ROOT = Path(__file__).resolve().parents[1]
 
 NOW = datetime(2026, 11, 7, 12, 0, tzinfo=UTC)
 
@@ -89,6 +93,36 @@ def test_booking_failure_alerts_above_one_percent() -> None:
     assert _kinds(alerts) == {"booking_failure_rate_over_budget"}
     assert alerts[0].observed == 2.0
 
+    at_one_percent = [
+        make_call(f"call_ok_{index}", tool_events=[tool("book_appointment")]) for index in range(99)
+    ]
+    at_one_percent.append(
+        make_call(
+            "call_failed_write",
+            tool_events=[tool("book_appointment", ok=False, error_code="timeout")],
+        )
+    )
+    assert evaluate_alerts(at_one_percent, profile="local", now=NOW) == []
+
+
+def test_slot_correctness_failure_alerts() -> None:
+    records = [
+        make_call(
+            "call_booked",
+            slot_checked=True,
+            slot_error=True,
+            expected_service_id="leak_repair",
+            booked_service_id="drain_cleaning",
+            expected_address_zip="94107",
+            booked_address_zip="94107",
+        )
+    ]
+
+    alerts = evaluate_alerts(records, profile="local", now=NOW)
+
+    assert _kinds(alerts) == {"slot_correctness_failure"}
+    assert alerts[0].call_ids == ["call_booked"]
+
 
 def test_emergency_transfer_failure_and_security_anomaly_alert() -> None:
     records = [
@@ -133,3 +167,71 @@ def test_append_alerts_deduplicates_and_writes_jsonl(tmp_path) -> None:
     assert len(lines) == 1
     assert lines[0]["kind"] == "emergency_transfer_failure"
     assert lines[0]["alert_id"].startswith("emergency_transfer_failure_local_")
+
+
+def test_refresh_alerts_sends_only_new_alerts_once(tmp_path, monkeypatch) -> None:
+    service = MonitoringService(
+        data_dir=tmp_path,
+        root=ROOT,
+        seed=False,
+        now=lambda: NOW,
+        profile="local",
+    )
+    service.replace_calls(
+        [
+            make_call(
+                "call_emergency",
+                intent=CallIntent.emergency,
+                outcome=CallOutcome.failed,
+                emergency_triage_ok=False,
+            )
+        ]
+    )
+    sent: list[list] = []
+    monkeypatch.setenv("FORGE_VOICE_ALERT_WEBHOOK", "https://discord.com/api/webhooks/test")
+    monkeypatch.setattr(
+        "forge_voice.monitoring.service.send_webhook",
+        lambda _url, alerts: sent.append(list(alerts)),
+    )
+
+    service.refresh_alerts(notify=True)
+    service.refresh_alerts(notify=True)
+
+    assert len(sent) == 1
+    assert [alert.kind for alert in sent[0]] == ["emergency_transfer_failure"]
+
+
+def test_webhook_supports_telegram_with_a_short_timeout(monkeypatch) -> None:
+    calls = []
+
+    class Response:
+        def close(self) -> None:
+            return None
+
+    def fake_urlopen(endpoint, timeout):
+        calls.append((endpoint, timeout))
+        return Response()
+
+    monkeypatch.setenv("FORGE_VOICE_TELEGRAM_CHAT_ID", "12345")
+    monkeypatch.setattr("forge_voice.monitoring.service.request.urlopen", fake_urlopen)
+    alerts = evaluate_alerts(
+        [
+            make_call(
+                "call_emergency",
+                intent=CallIntent.emergency,
+                outcome=CallOutcome.failed,
+                emergency_triage_ok=False,
+            )
+        ],
+        profile="local",
+        now=NOW,
+    )
+
+    assert send_webhook("https://api.telegram.org/botTOKEN/sendMessage", alerts) is True
+    endpoint, timeout = calls[0]
+    body = json.loads(endpoint.data)
+    assert body["chat_id"] == "12345"
+    assert "Emergency transfer failure" in body["text"]
+    assert timeout == 1
+    assert send_webhook("http://discord.com/api/webhooks/test", alerts) is False
+    assert send_webhook("https://evil.example/webhook", alerts) is False

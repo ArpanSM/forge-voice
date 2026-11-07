@@ -11,7 +11,7 @@ import math
 from collections.abc import Iterable
 
 from forge_voice.events.models import CallRecord
-from forge_voice.policy.state import CallIntent, CallOutcome
+from forge_voice.policy.state import CallIntent
 
 WRITE_TOOLS = frozenset({"book_appointment", "reschedule_appointment", "cancel_appointment"})
 SECURITY_FLAGS = frozenset(
@@ -25,10 +25,16 @@ SECURITY_FLAGS = frozenset(
 )
 
 DEFINITIONS = {
-    "containment": "Calls resolved without a live human transfer / total calls.",
+    "containment": (
+        "Calls resolved without a live transfer (booked, rescheduled, cancelled, "
+        "info-only, or a satisfactory emergency ticket) / total calls."
+    ),
     "transfer_rate": "Calls with a connected human transfer / total calls.",
     "booking_rate": "Calls ending in a committed booking or reschedule / total calls.",
-    "slot_error_rate": "Committed bookings with a wrong service/address/slot / committed bookings.",
+    "slot_error_rate": (
+        "Checked committed bookings with a wrong service, address ZIP or slot / "
+        "checked committed bookings."
+    ),
     "latency": "Caller-perceived first audio per turn, as p50/p95 over measured turns.",
     "tool_error_rate": "Tool calls with an error envelope / total tool calls.",
     "cost": "Total synthetic call cost / total calls; the local demo is $0.",
@@ -45,7 +51,9 @@ def aggregate_metrics(records: Iterable[CallRecord]) -> dict[str, object]:
     calls = list(records)
     total = len(calls)
     transferred = sum(1 for call in calls if call.transferred)
+    contained = sum(1 for call in calls if call.resolved)
     committed = [call for call in calls if call.committed_booking]
+    checked_bookings = [call for call in committed if call.slot_checked]
     emergency = [call for call in calls if call.intent is CallIntent.emergency]
     emergency_ok = [call for call in emergency if call.emergency_triage_ok is True]
     tool_events = [event for call in calls for event in call.tool_events]
@@ -67,15 +75,16 @@ def aggregate_metrics(records: Iterable[CallRecord]) -> dict[str, object]:
             "total": total,
             "transferred": transferred,
             "committed_bookings": len(committed),
+            "checked_bookings": len(checked_bookings),
             "emergency_calls": len(emergency),
             "tool_calls": len(tool_events),
         },
-        "containment": _metric(total - transferred, total, total),
+        "containment": _metric(contained, total, total),
         "transfer_rate": _metric(transferred, total, total),
         "booking_rate": _metric(len(committed), total, total),
         "slot_error_rate": _metric(
-            sum(1 for call in committed if call.slot_error),
-            len(committed),
+            sum(1 for call in checked_bookings if call.slot_error),
+            len(checked_bookings),
             total,
         ),
         "tool_error_rate": _metric(len(tool_errors), len(tool_events), total),
@@ -127,7 +136,3 @@ def _percentile(values: list[float], percentile: float) -> float:
         return round(ordered[lower], 3)
     fraction = position - lower
     return round(ordered[lower] + (ordered[upper] - ordered[lower]) * fraction, 3)
-
-
-def committed_booking(call: CallRecord) -> bool:
-    return call.outcome in {CallOutcome.booked, CallOutcome.rescheduled}

@@ -9,7 +9,10 @@ import argparse
 from datetime import UTC, datetime
 from pathlib import Path
 
+from forge_voice.monitoring.alerts import evaluate_alerts
+from forge_voice.monitoring.atomic import atomic_write_text
 from forge_voice.monitoring.filters import CallFilters
+from forge_voice.monitoring.metrics import aggregate_metrics
 from forge_voice.monitoring.page import (
     render_call_detail_body,
     render_dashboard_body,
@@ -24,15 +27,17 @@ def export_dashboard(
     *,
     generated_at: datetime | None = None,
 ) -> Path:
-    records = service.calls()
+    records = [record for record in service.calls() if record.synthetic]
     if not records:
-        raise ValueError("no calls available to export")
-    metrics = service.metrics()
+        raise ValueError("no synthetic calls available to export")
+    metrics = {"metrics": aggregate_metrics(records)}
+    generated = generated_at or datetime.now(UTC)
+    alerts = evaluate_alerts(records, profile=service.profile, now=generated)
     dashboard = render_dashboard_body(
         metrics=metrics,
         records=records,
         filters=CallFilters(),
-        alerts=service.alerts(),
+        alerts=alerts,
         tenant_names=service.tenant_options(),
         profile=service.profile,
         interactive=False,
@@ -49,12 +54,10 @@ def export_dashboard(
     html = render_static_export(
         dashboard_body=dashboard,
         call_body=detail,
-        generated_at=generated_at or datetime.now(UTC),
+        generated_at=generated,
     )
-    destination = Path(output)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(html, encoding="utf-8")
-    return destination
+    html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
+    return atomic_write_text(output, html)
 
 
 def main(argv: list[str] | None = None) -> None:

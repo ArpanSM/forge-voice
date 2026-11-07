@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
+from urllib.parse import urlparse
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
@@ -18,6 +19,25 @@ from forge_voice.monitoring.service import MonitoringService
 from forge_voice.policy.state import CallOutcome
 
 HTMX_PATH = Path(__file__).resolve().parents[1] / "web" / "static" / "htmx.min.js"
+LOCAL_HOSTS = frozenset({"127.0.0.1", "localhost", "::1", "testserver"})
+
+
+def _require_safe_post(request: Request) -> None:
+    """Reject cross-origin state changes unless the Host is the local app."""
+    host = (request.url.hostname or "").lower()
+    if host not in LOCAL_HOSTS:
+        raise HTTPException(status_code=403, detail="local_only")
+    origin = request.headers.get("origin")
+    if origin:
+        parsed = urlparse(origin)
+        if (
+            parsed.scheme not in {"http", "https"}
+            or parsed.hostname not in LOCAL_HOSTS
+            or parsed.hostname != host
+        ):
+            raise HTTPException(status_code=403, detail="cross_origin_post")
+    if request.headers.get("sec-fetch-site") == "cross-site":
+        raise HTTPException(status_code=403, detail="cross_origin_post")
 
 
 def register_dashboard_routes(app: FastAPI, service: MonitoringService) -> None:
@@ -27,9 +47,8 @@ def register_dashboard_routes(app: FastAPI, service: MonitoringService) -> None:
 
     @app.get("/dashboard", response_class=HTMLResponse)
     async def dashboard(request: Request) -> HTMLResponse:
-        service.sync_traces()
         filters = _parse_filters(request)
-        alerts = service.refresh_alerts()
+        alerts = service.alerts()
         metrics = service.metrics(filters)
         records = service.calls(filters)
         return HTMLResponse(
@@ -46,7 +65,6 @@ def register_dashboard_routes(app: FastAPI, service: MonitoringService) -> None:
 
     @app.get("/calls/{call_id}", response_class=HTMLResponse)
     async def call_detail(call_id: str) -> HTMLResponse:
-        service.sync_traces()
         record = service.call(call_id)
         if record is None:
             raise HTTPException(status_code=404, detail="call_not_found")
@@ -59,7 +77,6 @@ def register_dashboard_routes(app: FastAPI, service: MonitoringService) -> None:
 
     @app.get("/metrics.json")
     async def metrics(request: Request) -> JSONResponse:
-        service.sync_traces()
         return JSONResponse(service.metrics(_parse_filters(request)))
 
     @app.get("/review", response_class=HTMLResponse)
@@ -73,18 +90,37 @@ def register_dashboard_routes(app: FastAPI, service: MonitoringService) -> None:
             )
         )
 
+    @app.post("/alerts/refresh")
+    async def refresh_alerts(request: Request) -> RedirectResponse:
+        _require_safe_post(request)
+        service.sync_traces()
+        service.refresh_alerts(notify=True)
+        return RedirectResponse(url="/dashboard", status_code=303)
+
     @app.post("/review/mark")
-    async def mark_review(call_id: str = Query(min_length=1)) -> RedirectResponse:
+    async def mark_review(
+        request: Request,
+        call_id: str = Query(min_length=1),
+    ) -> RedirectResponse:
+        _require_safe_post(request)
         try:
             service.mark_review(call_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="invalid_call_id") from exc
         except KeyError as exc:
             raise HTTPException(status_code=404, detail="call_not_found") from exc
         return RedirectResponse(url="/review", status_code=303)
 
     @app.post("/review/candidate")
-    async def create_candidate(call_id: str = Query(min_length=1)) -> RedirectResponse:
+    async def create_candidate(
+        request: Request,
+        call_id: str = Query(min_length=1),
+    ) -> RedirectResponse:
+        _require_safe_post(request)
         try:
             service.create_scenario_candidate(call_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="invalid_call_id") from exc
         except KeyError as exc:
             raise HTTPException(status_code=404, detail="call_not_found") from exc
         return RedirectResponse(url="/review", status_code=303)

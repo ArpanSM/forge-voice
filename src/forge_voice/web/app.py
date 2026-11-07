@@ -29,6 +29,7 @@ from forge_voice.web.page import render_page
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 _IDENTITY_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 DEFAULT_LIVEKIT_URL = "ws://localhost:7880"
+LOCAL_HOSTS = frozenset({"127.0.0.1", "localhost", "::1", "testserver"})
 
 
 class TokenRequest(StrictModel):
@@ -114,6 +115,14 @@ def create_app(
     app = FastAPI(title="forge-voice local browser")
     clock = now or (lambda: datetime.now(UTC))
     ordered = dict(sorted(tenants.items()))
+
+    @app.middleware("http")
+    async def local_only(request, call_next):
+        host = (request.url.hostname or "").lower()
+        if host not in LOCAL_HOSTS:
+            return JSONResponse(status_code=403, content={"error": "local_only"})
+        return await call_next(request)
+
     if monitoring is not None:
         from forge_voice.monitoring.routes import register_dashboard_routes
 
@@ -195,6 +204,9 @@ def create_app_from_env(
     from forge_voice.config import load_local_env
 
     load_local_env(repository)
+    configured_host = os.environ.get("FORGE_VOICE_WEB_HOST", "127.0.0.1").strip()
+    if configured_host not in LOCAL_HOSTS:
+        raise SystemExit("forge-voice is local-only; bind to 127.0.0.1, localhost or ::1")
     tenants = load_all_tenants(repository / "tenants")
     url = os.environ.get("LIVEKIT_URL", DEFAULT_LIVEKIT_URL).strip()
     api_key = os.environ.get("LIVEKIT_API_KEY", "").strip()

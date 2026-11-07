@@ -10,7 +10,7 @@ from urllib.parse import quote
 from forge_voice.events.models import CallRecord, DashboardToolEvent
 from forge_voice.monitoring.alerts import Alert
 from forge_voice.monitoring.filters import CallFilters
-from forge_voice.policy.state import CallOutcome
+from forge_voice.policy.state import CallIntent, CallOutcome
 
 OUTCOME_LABELS = {
     "booked": "Booked",
@@ -128,10 +128,17 @@ def render_dashboard_body(
     )
     rows = "".join(_call_row(record, tenant_names) for record in records)
     if not rows:
-        rows = '<tr><td colspan="9" class="empty">No calls match these filters.</td></tr>'
+        rows = '<tr><td colspan="10" class="empty">No calls match these filters.</td></tr>'
+    refresh_alerts = (
+        '<form class="alert-refresh" method="post" action="/alerts/refresh">'
+        '<button type="submit">Evaluate alerts</button></form>'
+        if interactive
+        else ""
+    )
     return f"""
 <div id="dashboard-live">
   {_alert_banner(alerts)}
+  {refresh_alerts}
   <form class="filters" method="get" action="/dashboard"{form_attrs}>
     <label>Tenant
       <select name="tenant">
@@ -164,7 +171,7 @@ def render_dashboard_body(
       <table>
         <thead>
           <tr>
-            <th>Started</th><th>Tenant</th><th>Call</th><th>Outcome</th>
+            <th>Started</th><th>Tenant</th><th>Caller</th><th>Call</th><th>Outcome</th>
             <th>Transfer</th><th>Booking / ticket</th><th>p95 first audio</th>
             <th>Cost</th><th>QA flags</th>
           </tr>
@@ -211,8 +218,9 @@ def render_call_detail_body(
         )
         or '<span class="muted">None recorded.</span>'
     )
-    booking = _e(record.booking_id or "—")
-    ticket = _e(record.ticket_id or "—")
+    booking = record.booking_id or "—"
+    ticket = record.ticket_id or "—"
+    caller = record.caller_phone or "—"
     recording = (
         '<p class="callout amber"><strong>Recording opt-out.</strong> '
         "No audio was retained for this call; the transcript is text-only.</p>"
@@ -222,9 +230,22 @@ def render_call_detail_body(
     transfer = record.transfer_status.value if record.transfer_status else "—"
     waterfall = _waterfall(record)
     back = f'<a class="back" href="{_e(back_link)}">← Back to dashboard</a>' if back_link else ""
-    outcome_label = _e(OUTCOME_LABELS[record.outcome.value])
-    intent_label = _e(record.intent.value.replace("_", " ") if record.intent else "—")
+    outcome_label = OUTCOME_LABELS[record.outcome.value]
+    intent_label = record.intent.value.replace("_", " ") if record.intent else "—"
     recording_label = "Opted out" if record.recording_opt_out else "Text only"
+    slot_label = "Error" if record.slot_error else ("OK" if record.slot_checked else "Not checked")
+    emergency_panel = (
+        f"""
+  <section class="panel">
+    <h2>Emergency triage</h2>
+    <p>Category: <strong>{_e(record.emergency_category or "—")}</strong> ·
+    triage {"passed" if record.emergency_triage_ok else "failed"}</p>
+    <p class="muted">{_e(record.emergency_safety_script or "No safety script recorded.")}</p>
+  </section>
+"""
+        if record.intent is CallIntent.emergency
+        else ""
+    )
     return f"""
 <div class="detail">
   {back}
@@ -234,19 +255,22 @@ def render_call_detail_body(
       <p class="sub">{_e(tenant_name)} · {_e(record.profile)} profile ·
         started {_e(_time(record.started_at))} · {record.duration_seconds}s</p>
     </div>
-    <span class="badge {_outcome_class(record.outcome)}">{outcome_label}</span>
+    <span class="badge {_outcome_class(record.outcome)}">{_e(outcome_label)}</span>
   </header>
 
   <section class="cards">
+    {_card("Caller", caller, "synthetic callback number")}
     {_card("Intent", intent_label, "classified intent")}
-    {_card("Transfer", _e(transfer), "human handoff status")}
+    {_card("Transfer", transfer, "human handoff status")}
     {_card("Booking ID", booking, "committed write")}
     {_card("Ticket ID", ticket, "emergency or support")}
+    {_card("Slot check", slot_label, "service / address / slot audit")}
     {_card("Cost", f"${record.cost_usd:.4f}", "synthetic / demo")}
     {_card("Recording", recording_label, "no audio player")}
   </section>
 
   {recording}
+  {emergency_panel}
 
   <section class="panel">
     <h2>QA flags</h2>
@@ -351,7 +375,7 @@ def render_static_export(
 <main>
   <h1>Static dashboard export</h1>
   <p class="sub">Sample synthetic run for handover · generated
-  {_e(generated_at.isoformat())} · no secrets, no live services.</p>
+  {_e(generated_at.isoformat())} · no credentials, no live services.</p>
   {dashboard_body}
   <hr>
   <h1>Sample call detail</h1>
@@ -389,6 +413,7 @@ def _call_row(record: CallRecord, tenant_names: dict[str, str]) -> str:
         "<tr>"
         f"<td>{_e(_time(record.started_at))}</td>"
         f"<td>{_e(tenant_names.get(record.tenant_id, record.tenant_id))}</td>"
+        f"<td>{_e(record.caller_phone or '—')}</td>"
         f'<td><a href="/calls/{quote(record.call_id)}">{_e(record.call_id)}</a></td>'
         f'<td><span class="badge {_outcome_class(record.outcome)}">'
         f"{_e(OUTCOME_LABELS[record.outcome.value])}</span></td>"
@@ -465,7 +490,7 @@ def _waterfall(record: CallRecord) -> str:
 def _card(label: str, value: str, note: str) -> str:
     return (
         f'<div class="card"><span class="card-label">{_e(label)}</span>'
-        f'<strong class="card-value">{value}</strong>'
+        f'<strong class="card-value">{_e(value)}</strong>'
         f'<span class="card-note">{_e(note)}</span></div>'
     )
 
