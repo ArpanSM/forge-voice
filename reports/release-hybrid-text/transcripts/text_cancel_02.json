@@ -1,0 +1,92 @@
+{
+  "latency": {
+    "tool_path_ms": 2,
+    "wall_ms": 5
+  },
+  "pipeline": "fixed",
+  "profile": "hybrid",
+  "qa_flags": [],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_cancel_02",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "address": {
+          "city": "San Francisco",
+          "line1": "12 Alder St",
+          "state": "CA",
+          "zip": "94107"
+        },
+        "include_bookings": true,
+        "name": "Sam Rivera",
+        "phone": "+14155550101"
+      },
+      "error_code": null,
+      "latency_ms": 2,
+      "name": "lookup_customer",
+      "ok": true,
+      "result": {
+        "data": {
+          "bookings": [
+            {
+              "booking_id": "bk_0001",
+              "service_id": "drain_cleaning",
+              "start": "2026-11-09T09:00:00-08:00",
+              "status": "booked"
+            },
+            {
+              "booking_id": "bk_0002",
+              "service_id": "leak_repair",
+              "start": "2026-11-10T13:00:00-08:00",
+              "status": "cancelled"
+            }
+          ],
+          "customer": {
+            "address": {
+              "city": "San Francisco",
+              "line1": "12 Alder St",
+              "state": "CA",
+              "zip": "94107"
+            },
+            "customer_id": "cus_0001",
+            "name": "Sam Rivera",
+            "phone": "+14155550101"
+          },
+          "match": "exact",
+          "verification_required": false
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_cancel_02_001"
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help?"
+    },
+    {
+      "role": "caller",
+      "text": "Did my cancellation go through?"
+    },
+    {
+      "role": "caller",
+      "text": "Sam Rivera, 12 Alder Street, 94107."
+    },
+    {
+      "role": "caller",
+      "text": "Then cancel it again just to be sure."
+    },
+    {
+      "role": "caller",
+      "text": "Okay, thanks."
+    },
+    {
+      "role": "assistant",
+      "text": "That appointment is already cancelled. I did not send another message."
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "latency": {
+    "tool_path_ms": 0,
+    "wall_ms": 1
+  },
+  "pipeline": "baseline",
+  "profile": "hybrid",
+  "qa_flags": [
+    "baseline_naive",
+    "unconfirmed_write"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_emergency_03",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "prompt_sha256": "1f43bb5442b033e8ba723f45405214720ff176774ef2b296ac85dfd52ac25e75"
+      },
+      "name": "baseline_single_prompt",
+      "ok": true,
+      "result": {
+        "data": {
+          "intent": "book",
+          "provider": "naive_deterministic"
+        }
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling."
+    },
+    {
+      "role": "caller",
+      "text": "My heat stopped and it's freezing in here."
+    },
+    {
+      "role": "caller",
+      "text": "I'm 78 and I live alone. The thermostat says 38."
+    },
+    {
+      "role": "caller",
+      "text": "88 Meridian Way, 95125."
+    },
+    {
+      "role": "caller",
+      "text": "Yes, please send the on-call tech."
+    },
+    {
+      "role": "assistant",
+      "text": "You're booked for ac repair on Monday at 7:00 AM. No confirmation was sent."
+    }
+  ]
+}

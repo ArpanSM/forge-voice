@@ -272,6 +272,7 @@ class LiveKitAudioRunner:
             except TimeoutError:
                 return None
 
+        barge: dict[str, Any] | None = None
         try:
             await room.connect(token["url"], token["token"])
             source = rtc.AudioSource(24000, 1, queue_size_ms=3000)
@@ -289,7 +290,6 @@ class LiveKitAudioRunner:
             await audio.wait_quiet(timeout=self.timeout)
             if script.turns and script.turns[0].pause_before_ms >= 3000:
                 await asyncio.sleep(script.turns[0].pause_before_ms / 1000)
-            barge: dict[str, Any] | None = None
             for index, chunk in enumerate(chunks):
                 await state_or_none({"listening", "idle"}, self.timeout)
                 path = tts_wav(chunk, seed=700 + index)
@@ -336,6 +336,15 @@ class LiveKitAudioRunner:
                 "barge": barge,
                 "agent_audio_frames": len(audio.frames),
                 "trace": str(trace.path),
+            }
+        except Exception as exc:
+            return {
+                "call_id": call_id,
+                "events": trace.events(),
+                "barge": barge,
+                "agent_audio_frames": len(audio.frames),
+                "trace": str(trace.path),
+                "error": f"{type(exc).__name__}: {exc}"[:300],
             }
         finally:
             await audio.aclose()
@@ -415,6 +424,8 @@ class LiveKitAudioRunner:
             qa_flags.append("degraded_audio")
         if result.get("barge") and result["barge"].get("recovered"):
             qa_flags.append("barge_in_recovered")
+        if result.get("error"):
+            qa_flags.append("live_call_error")
         expected_entities = self._expected_entities(view, setup)
         actual_entities = self._actual_entities(book_args, ticket_args, expected_entities)
         writes: list[WriteRecord] = []

@@ -1,0 +1,84 @@
+{
+  "latency": {
+    "tool_path_ms": 3,
+    "wall_ms": 5
+  },
+  "pipeline": "fixed",
+  "profile": "hybrid",
+  "qa_flags": [],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_outofarea_01",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "include_bookings": false,
+        "phone": "+14155550199"
+      },
+      "error_code": "not_found",
+      "latency_ms": 2,
+      "name": "lookup_customer",
+      "ok": false,
+      "result": {
+        "data": null,
+        "error": {
+          "code": "not_found",
+          "details": {},
+          "message": "No matching customer.",
+          "retryable": false
+        },
+        "ok": false,
+        "request_id": "req_call_harborlight_text_outofarea_01_001"
+      }
+    },
+    {
+      "args": {
+        "service_id": "drain_cleaning",
+        "zip": "10001"
+      },
+      "error_code": null,
+      "latency_ms": 1,
+      "name": "get_service_area",
+      "ok": true,
+      "result": {
+        "data": {
+          "dispatch_zone": null,
+          "in_area": false,
+          "message": "ZIP 10001 is outside our service area.",
+          "restrictions": [],
+          "technicians": []
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_outofarea_01_002"
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help?"
+    },
+    {
+      "role": "caller",
+      "text": "I need a drain cleaning."
+    },
+    {
+      "role": "caller",
+      "text": "It's 300 East 42nd Street, 10001."
+    },
+    {
+      "role": "caller",
+      "text": "No, that's the right address."
+    },
+    {
+      "role": "caller",
+      "text": "Okay, thanks."
+    },
+    {
+      "role": "assistant",
+      "text": "ZIP 10001 is outside our service area, so I can't book that address. I can have someone call you if the address was wrong."
+    }
+  ]
+}

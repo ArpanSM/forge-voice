@@ -1,0 +1,53 @@
+{
+  "latency": {
+    "tool_path_ms": 0,
+    "wall_ms": 1
+  },
+  "pipeline": "baseline",
+  "profile": "local",
+  "qa_flags": [
+    "baseline_naive",
+    "false_connected"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_angry_01",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "prompt_sha256": "bd143a2babeed5d60cb28600de28cd138248cded6cc3239cbc6f2aef33b0245b"
+      },
+      "name": "baseline_single_prompt",
+      "ok": true,
+      "result": {
+        "data": {
+          "intent": "human",
+          "provider": "naive_deterministic"
+        }
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling."
+    },
+    {
+      "role": "caller",
+      "text": "Your technician never showed up. I waited all day."
+    },
+    {
+      "role": "caller",
+      "text": "I want someone to fix this now."
+    },
+    {
+      "role": "caller",
+      "text": "Fine, have a manager call me."
+    },
+    {
+      "role": "assistant",
+      "text": "I'm transferring you now."
+    }
+  ]
+}

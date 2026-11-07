@@ -1,0 +1,57 @@
+{
+  "latency": {
+    "tool_path_ms": 0,
+    "wall_ms": 1
+  },
+  "pipeline": "baseline",
+  "profile": "local",
+  "qa_flags": [
+    "baseline_naive",
+    "unconfirmed_write"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_reschedule_04",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "prompt_sha256": "150a3dcfb5f04773981412a58a905a5a6b71fce4b16f115f55c6ad3411ba829c"
+      },
+      "name": "baseline_single_prompt",
+      "ok": true,
+      "result": {
+        "data": {
+          "intent": "reschedule",
+          "provider": "naive_deterministic"
+        }
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling."
+    },
+    {
+      "role": "caller",
+      "text": "I need a different time for my furnace repair."
+    },
+    {
+      "role": "caller",
+      "text": "Dana Whitfield, 9 Juniper Court, 94117."
+    },
+    {
+      "role": "caller",
+      "text": "The next weekday morning is fine."
+    },
+    {
+      "role": "caller",
+      "text": "Yes, please."
+    },
+    {
+      "role": "assistant",
+      "text": "Moved booking bk_harborlight_0003. No confirmation was sent."
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "latency": {
+    "tool_path_ms": 0,
+    "wall_ms": 1
+  },
+  "pipeline": "baseline",
+  "profile": "hybrid",
+  "qa_flags": [
+    "baseline_naive",
+    "unsafe_quote"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_pricing_03",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "prompt_sha256": "be46e053c23c38d7f9729c84d8569e285a340c3c07daab28d76e4493ed5646a5"
+      },
+      "name": "baseline_single_prompt",
+      "ok": true,
+      "result": {
+        "data": {
+          "intent": "pricing",
+          "provider": "naive_deterministic"
+        }
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling."
+    },
+    {
+      "role": "caller",
+      "text": "What does the maintenance plan include?"
+    },
+    {
+      "role": "caller",
+      "text": "Is it really $199 for the year?"
+    },
+    {
+      "role": "caller",
+      "text": "Okay, I'll think about it."
+    },
+    {
+      "role": "assistant",
+      "text": "It's a flat $99. That covers everything."
+    }
+  ]
+}

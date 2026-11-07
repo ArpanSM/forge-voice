@@ -1,0 +1,177 @@
+{
+  "latency": {
+    "tool_path_ms": 9,
+    "wall_ms": 8
+  },
+  "pipeline": "fixed",
+  "profile": "hybrid",
+  "qa_flags": [],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_reschedule_04",
+  "split": "heldout",
+  "tool_calls": [
+    {
+      "args": {
+        "address": {
+          "city": "San Francisco",
+          "line1": "9 Juniper Ct",
+          "state": "CA",
+          "zip": "94117"
+        },
+        "include_bookings": true,
+        "name": "Dana Whitfield",
+        "phone": "+14155550104"
+      },
+      "error_code": null,
+      "latency_ms": 2,
+      "name": "lookup_customer",
+      "ok": true,
+      "result": {
+        "data": {
+          "bookings": [
+            {
+              "booking_id": "bk_0004",
+              "service_id": "furnace_repair",
+              "start": "2026-11-12T11:00:00-08:00",
+              "status": "booked"
+            }
+          ],
+          "customer": {
+            "address": {
+              "city": "San Francisco",
+              "line1": "9 Juniper Ct",
+              "state": "CA",
+              "zip": "94117"
+            },
+            "customer_id": "cus_0002",
+            "name": "Dana Whitfield",
+            "phone": "+14155550104"
+          },
+          "match": "exact",
+          "verification_required": false
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_reschedule_04_001"
+      }
+    },
+    {
+      "args": {
+        "preferred_date": "2026-11-09",
+        "service_id": "furnace_repair",
+        "window_days": 7,
+        "zip": "94117"
+      },
+      "error_code": null,
+      "latency_ms": 3,
+      "name": "get_availability",
+      "ok": true,
+      "result": {
+        "data": {
+          "reason": "ok",
+          "slots": [
+            {
+              "end": "2026-11-10T08:30:00-08:00",
+              "offer_expires_at": "2026-11-06T08:05:00-08:00",
+              "slot_id": "slot_hl_00011",
+              "start": "2026-11-10T07:00:00-08:00",
+              "technician": {
+                "id": "tech_blair",
+                "name": "Blair"
+              }
+            },
+            {
+              "end": "2026-11-11T16:30:00-08:00",
+              "offer_expires_at": "2026-11-06T08:05:00-08:00",
+              "slot_id": "slot_hl_00021",
+              "start": "2026-11-11T15:00:00-08:00",
+              "technician": {
+                "id": "tech_blair",
+                "name": "Blair"
+              }
+            },
+            {
+              "end": "2026-11-12T15:00:00-08:00",
+              "offer_expires_at": "2026-11-06T08:05:00-08:00",
+              "slot_id": "slot_hl_00027",
+              "start": "2026-11-12T13:30:00-08:00",
+              "technician": {
+                "id": "tech_blair",
+                "name": "Blair"
+              }
+            }
+          ],
+          "timezone": "America/Los_Angeles"
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_reschedule_04_002"
+      }
+    },
+    {
+      "args": {
+        "booking_id": "bk_0004",
+        "new_slot_id": "slot_hl_00011",
+        "reason": "Caller requested a new time."
+      },
+      "error_code": null,
+      "latency_ms": 4,
+      "name": "reschedule_appointment",
+      "ok": true,
+      "result": {
+        "data": {
+          "booking": {
+            "booking_id": "bk_0004",
+            "current": {
+              "end": "2026-11-10T08:30:00-08:00",
+              "start": "2026-11-10T07:00:00-08:00",
+              "technician": {
+                "id": "tech_blair",
+                "name": "Blair"
+              }
+            },
+            "previous": {
+              "start": "2026-11-12T11:00:00-08:00"
+            },
+            "status": "booked"
+          },
+          "replayed": false
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_reschedule_04_003"
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help?"
+    },
+    {
+      "role": "caller",
+      "text": "I need a different time for my furnace repair."
+    },
+    {
+      "role": "caller",
+      "text": "Dana Whitfield, 9 Juniper Court, 94117."
+    },
+    {
+      "role": "caller",
+      "text": "The next weekday morning is fine."
+    },
+    {
+      "role": "caller",
+      "text": "Yes, please."
+    },
+    {
+      "role": "assistant",
+      "text": "Just to confirm: move your Furnace repair from Thursday 12 November at 11:00 AM to Tuesday 10 November at 7:00 AM with Blair at 9 Juniper Ct, San Francisco 94117, for Dana Whitfield at +14155550104. Should I move it?"
+    },
+    {
+      "role": "assistant",
+      "text": "Moved. Your appointment is now Tuesday 10 November at 7:00 AM."
+    }
+  ]
+}

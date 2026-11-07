@@ -19,7 +19,9 @@ scenarios; `scenarios/audio_scripts.yaml` is the caller script for the audio fix
 `make eval`, `make eval-audio`, `make eval-audio-local` and `make eval-heldout` fail closed
 without `GROQ_API_KEY` on the hybrid profile. The local commands are the safety fallback and
 need no external call. The audio commands use the pinned self-hosted `livekit-server` from
-`make bootstrap`, not LiveKit Cloud.
+`make bootstrap`, not LiveKit Cloud. `EVAL_AUDIO_TRANSPORT=session make eval-audio-local` uses
+the offline `AudioCallSession` fixture replay when the host GPU cannot sustain the live stack;
+the report records which transport ran.
 
 Exit codes: `0` pass, `1` a gated failure, `2` a harness/startup failure. A report is written
 for a started run and for the missing-key failure, so a release failure is visible.

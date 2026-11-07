@@ -1,0 +1,61 @@
+{
+  "latency": {
+    "tool_path_ms": 0,
+    "wall_ms": 4
+  },
+  "pipeline": "baseline",
+  "profile": "local",
+  "qa_flags": [
+    "baseline_naive",
+    "unconfirmed_write"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_interrupt_01",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "prompt_sha256": "1ea09c7c119e2d6f04bbb2c72e1952efee7aeaa6390bf245f4df3f093696e2b2"
+      },
+      "name": "baseline_single_prompt",
+      "ok": true,
+      "result": {
+        "data": {
+          "intent": "book",
+          "provider": "naive_deterministic"
+        }
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling."
+    },
+    {
+      "role": "caller",
+      "text": "I need a drain cleaning."
+    },
+    {
+      "role": "caller",
+      "text": "12 Alder Street, 94107."
+    },
+    {
+      "role": "caller",
+      "text": "Can you do Tuesday?"
+    },
+    {
+      "role": "caller",
+      "text": "Tuesday at 11 is right."
+    },
+    {
+      "role": "caller",
+      "text": "Yes, that's correct."
+    },
+    {
+      "role": "assistant",
+      "text": "You're booked for drain cleaning on Tuesday at 11:30 AM. No confirmation was sent."
+    }
+  ]
+}

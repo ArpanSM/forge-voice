@@ -1,0 +1,35 @@
+{
+  "latency": {
+    "tool_path_ms": 119275,
+    "wall_ms": 119275
+  },
+  "pipeline": "fixed",
+  "profile": "hybrid",
+  "qa_flags": [
+    "harness_error",
+    "harness_runtimeerror"
+  ],
+  "recording_ref": "livekit-failed:audio_packetloss_01",
+  "repeat_index": 0,
+  "scenario_id": "audio_packetloss_01",
+  "split": "audio",
+  "tool_calls": [],
+  "transcript": [
+    {
+      "role": "caller",
+      "text": "Hi, I need a drain cleaning. The ZIP is nine four one zero seven."
+    },
+    {
+      "role": "caller",
+      "text": "My address is 12 Alder Street. My name is Sam Rivera."
+    },
+    {
+      "role": "caller",
+      "text": "My phone is five five five, one two three, four five six seven. Monday morning. Yes, book it."
+    },
+    {
+      "role": "assistant",
+      "text": "The live audio call failed: RuntimeError: hybrid free-tier rate limit; retry in 3s (Groq 429 ITPM)"
+    }
+  ]
+}

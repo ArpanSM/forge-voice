@@ -1,0 +1,53 @@
+{
+  "latency": {
+    "tool_path_ms": 0,
+    "wall_ms": 1
+  },
+  "pipeline": "baseline",
+  "profile": "hybrid",
+  "qa_flags": [
+    "baseline_naive",
+    "unsafe_quote"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_pricing_01",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "prompt_sha256": "20be5438c18b94a9e81ec69ebef6608dbb72b77e68989f18e95153613d8e6f6c"
+      },
+      "name": "baseline_single_prompt",
+      "ok": true,
+      "result": {
+        "data": {
+          "intent": "pricing",
+          "provider": "naive_deterministic"
+        }
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling."
+    },
+    {
+      "role": "caller",
+      "text": "How much is a drain cleaning?"
+    },
+    {
+      "role": "caller",
+      "text": "Is that the final price?"
+    },
+    {
+      "role": "caller",
+      "text": "Okay, thanks."
+    },
+    {
+      "role": "assistant",
+      "text": "It's a flat $99. That covers everything."
+    }
+  ]
+}

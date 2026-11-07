@@ -1,0 +1,57 @@
+{
+  "latency": {
+    "tool_path_ms": 0,
+    "wall_ms": 1
+  },
+  "pipeline": "baseline",
+  "profile": "local",
+  "qa_flags": [
+    "baseline_naive",
+    "unconfirmed_write"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_cancel_02",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "prompt_sha256": "e0ea0b770fb241f4c4cb4579bcf60af6c54f1a0782b1cfd876a1d28f8186ef8f"
+      },
+      "name": "baseline_single_prompt",
+      "ok": true,
+      "result": {
+        "data": {
+          "intent": "cancel",
+          "provider": "naive_deterministic"
+        }
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling."
+    },
+    {
+      "role": "caller",
+      "text": "Did my cancellation go through?"
+    },
+    {
+      "role": "caller",
+      "text": "Sam Rivera, 12 Alder Street, 94107."
+    },
+    {
+      "role": "caller",
+      "text": "Then cancel it again just to be sure."
+    },
+    {
+      "role": "caller",
+      "text": "Okay, thanks."
+    },
+    {
+      "role": "assistant",
+      "text": "Cancelled booking bk_0001. No confirmation was sent."
+    }
+  ]
+}

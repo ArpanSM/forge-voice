@@ -1,0 +1,57 @@
+{
+  "latency": {
+    "tool_path_ms": 0,
+    "wall_ms": 2
+  },
+  "pipeline": "baseline",
+  "profile": "local",
+  "qa_flags": [
+    "baseline_naive",
+    "unconfirmed_write"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_duplicate_01",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "prompt_sha256": "f600e7de48e4df0ab8229a981b87e7fb27bdca52318f5a0e31b4191386acb0ae"
+      },
+      "name": "baseline_single_prompt",
+      "ok": true,
+      "result": {
+        "data": {
+          "intent": "book",
+          "provider": "naive_deterministic"
+        }
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling."
+    },
+    {
+      "role": "caller",
+      "text": "I booked a drain cleaning but didn't get a text. Can you check?"
+    },
+    {
+      "role": "caller",
+      "text": "Sam Rivera, 12 Alder Street, 94107."
+    },
+    {
+      "role": "caller",
+      "text": "Yes, that's the one. Can you book it again?"
+    },
+    {
+      "role": "caller",
+      "text": "Okay, so it's already booked."
+    },
+    {
+      "role": "assistant",
+      "text": "You're booked for drain cleaning on Monday at 7:00 AM. No confirmation was sent."
+    }
+  ]
+}

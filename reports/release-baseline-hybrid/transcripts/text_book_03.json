@@ -1,0 +1,57 @@
+{
+  "latency": {
+    "tool_path_ms": 0,
+    "wall_ms": 1
+  },
+  "pipeline": "baseline",
+  "profile": "hybrid",
+  "qa_flags": [
+    "baseline_naive",
+    "unconfirmed_write"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_book_03",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "prompt_sha256": "5e00d5161c6c8e158a564f5f5afee0369f97633a351187393637a2bef303c215"
+      },
+      "name": "baseline_single_prompt",
+      "ok": true,
+      "result": {
+        "data": {
+          "intent": "book",
+          "provider": "naive_deterministic"
+        }
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling."
+    },
+    {
+      "role": "caller",
+      "text": "My AC is running but the house is not cooling."
+    },
+    {
+      "role": "caller",
+      "text": "Priya Shah, 88 Meridian Way, 95125."
+    },
+    {
+      "role": "caller",
+      "text": "Wednesday morning works."
+    },
+    {
+      "role": "caller",
+      "text": "Yes, that's right."
+    },
+    {
+      "role": "assistant",
+      "text": "You're booked for ac repair on Wednesday at 12:00 PM. No confirmation was sent."
+    }
+  ]
+}

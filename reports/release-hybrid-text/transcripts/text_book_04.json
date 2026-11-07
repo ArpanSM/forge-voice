@@ -1,0 +1,188 @@
+{
+  "latency": {
+    "tool_path_ms": 10,
+    "wall_ms": 8
+  },
+  "pipeline": "fixed",
+  "profile": "hybrid",
+  "qa_flags": [],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_book_04",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "address": {
+          "city": "San Francisco",
+          "line1": "9 Juniper Ct",
+          "state": "CA",
+          "zip": "94117"
+        },
+        "include_bookings": false,
+        "name": "Dana Whitfield",
+        "phone": "+14155550104"
+      },
+      "error_code": null,
+      "latency_ms": 2,
+      "name": "lookup_customer",
+      "ok": true,
+      "result": {
+        "data": {
+          "bookings": [],
+          "customer": {
+            "address": {
+              "city": "San Francisco",
+              "line1": "9 Juniper Ct",
+              "state": "CA",
+              "zip": "94117"
+            },
+            "customer_id": "cus_0002",
+            "name": "Dana Whitfield",
+            "phone": "+14155550104"
+          },
+          "match": "exact",
+          "verification_required": false
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_book_04_001"
+      }
+    },
+    {
+      "args": {
+        "service_id": "water_heater_repair",
+        "zip": "94117"
+      },
+      "error_code": null,
+      "latency_ms": 1,
+      "name": "get_service_area",
+      "ok": true,
+      "result": {
+        "data": {
+          "dispatch_zone": "north",
+          "in_area": true,
+          "message": "We cover 94117.",
+          "restrictions": [],
+          "technicians": []
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_book_04_002"
+      }
+    },
+    {
+      "args": {
+        "preferred_date": "2026-11-12",
+        "service_id": "water_heater_repair",
+        "window_days": 1,
+        "zip": "94117"
+      },
+      "error_code": null,
+      "latency_ms": 3,
+      "name": "get_availability",
+      "ok": true,
+      "result": {
+        "data": {
+          "reason": "ok",
+          "slots": [
+            {
+              "end": "2026-11-12T12:30:00-08:00",
+              "offer_expires_at": "2026-11-06T08:05:00-08:00",
+              "slot_id": "slot_hl_00024",
+              "start": "2026-11-12T10:30:00-08:00",
+              "technician": {
+                "id": "tech_alex",
+                "name": "Alex"
+              }
+            }
+          ],
+          "timezone": "America/Los_Angeles"
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_book_04_003"
+      }
+    },
+    {
+      "args": {
+        "customer": {
+          "address": {
+            "city": "San Francisco",
+            "line1": "9 Juniper Ct",
+            "state": "CA",
+            "zip": "94117"
+          },
+          "name": "Dana Whitfield",
+          "phone": "+14155550104"
+        },
+        "service_id": "water_heater_repair",
+        "slot_id": "slot_hl_00024"
+      },
+      "error_code": null,
+      "latency_ms": 4,
+      "name": "book_appointment",
+      "ok": true,
+      "result": {
+        "data": {
+          "booking": {
+            "address": {
+              "city": "San Francisco",
+              "line1": "9 Juniper Ct",
+              "state": "CA",
+              "zip": "94117"
+            },
+            "booking_id": "bk_harborlight_0001",
+            "confirmation": {
+              "email": "not_requested",
+              "sms": "queued"
+            },
+            "contact_phone": "+14155550104",
+            "end": "2026-11-12T12:30:00-08:00",
+            "service_id": "water_heater_repair",
+            "start": "2026-11-12T10:30:00-08:00",
+            "status": "booked",
+            "technician": {
+              "id": "tech_alex",
+              "name": "Alex"
+            }
+          },
+          "replayed": false
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_book_04_004"
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help?"
+    },
+    {
+      "role": "caller",
+      "text": "My water heater is leaking from the bottom."
+    },
+    {
+      "role": "caller",
+      "text": "Dana Whitfield, 9 Juniper Court, 94117."
+    },
+    {
+      "role": "caller",
+      "text": "Thursday morning is best."
+    },
+    {
+      "role": "caller",
+      "text": "Yes, please book that."
+    },
+    {
+      "role": "assistant",
+      "text": "Just to confirm: Water heater repair or replacement on Thursday 12 November at 10:30 AM with Alex at 9 Juniper Ct, San Francisco 94117, for Dana Whitfield at +14155550104. Should I book that?"
+    },
+    {
+      "role": "assistant",
+      "text": "Booked. Thursday 12 November at 10:30 AM is confirmed and a text confirmation is queued."
+    }
+  ]
+}

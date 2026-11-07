@@ -1,0 +1,57 @@
+{
+  "latency": {
+    "tool_path_ms": 0,
+    "wall_ms": 2
+  },
+  "pipeline": "baseline",
+  "profile": "hybrid",
+  "qa_flags": [
+    "baseline_naive",
+    "unconfirmed_write"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_noavail_02",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "prompt_sha256": "5a784622a2ebcf26a067ea556a3c6d12b6d7626aae24eb7d48b0b2ab12693aad"
+      },
+      "name": "baseline_single_prompt",
+      "ok": true,
+      "result": {
+        "data": {
+          "intent": "book",
+          "provider": "naive_deterministic"
+        }
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling."
+    },
+    {
+      "role": "caller",
+      "text": "My water heater is out. Can someone come tomorrow?"
+    },
+    {
+      "role": "caller",
+      "text": "21 Harbor Boulevard, 94118."
+    },
+    {
+      "role": "caller",
+      "text": "Tomorrow is the only day."
+    },
+    {
+      "role": "caller",
+      "text": "Okay, have someone call me."
+    },
+    {
+      "role": "assistant",
+      "text": "You're booked for water heater repair on Monday at 10:30 AM. No confirmation was sent."
+    }
+  ]
+}

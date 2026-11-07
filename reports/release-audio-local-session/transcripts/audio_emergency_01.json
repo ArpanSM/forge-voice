@@ -1,0 +1,109 @@
+{
+  "latency": {
+    "tool_path_ms": 62,
+    "wall_ms": 62
+  },
+  "pipeline": "fixed",
+  "profile": "local",
+  "qa_flags": [
+    "emergency_triage"
+  ],
+  "recording_ref": "fixtures/audio/emergency_01.wav",
+  "repeat_index": 0,
+  "scenario_id": "audio_emergency_01",
+  "split": "audio-local",
+  "tool_calls": [
+    {
+      "error_code": null,
+      "name": "create_emergency_ticket",
+      "ok": true,
+      "result": {
+        "data": {
+          "callback_sla_minutes": 15,
+          "category": "no_cooling",
+          "handoff_required": true,
+          "on_call_target": "summit_on_call",
+          "requires_911": false,
+          "safety_script": "no_cooling",
+          "safety_text": "I'll treat this as urgent. If anyone is at risk from the heat, call 911. I'll create an emergency ticket and get our on-call HVAC technician.",
+          "severity": "urgent",
+          "status": "open",
+          "ticket_id": "em_summit_0001",
+          "transfer_id": null,
+          "vulnerable_occupant": true
+        },
+        "error": null
+      }
+    },
+    {
+      "error_code": null,
+      "name": "transfer_to_human",
+      "ok": true,
+      "result": {
+        "data": {
+          "packet": {
+            "address": {
+              "city": "San Jose",
+              "line1": "88 Meridian Way",
+              "state": "CA",
+              "zip": "95125"
+            },
+            "booking_id": null,
+            "call_id": "call_eval_audio_emergency_01",
+            "caller": {
+              "name": "Dana Whitfield",
+              "phone": "+14085550199",
+              "verified": false
+            },
+            "emergency_ticket_id": "em_summit_0001",
+            "intent": "emergency",
+            "reason": "emergency",
+            "requested_at": "2026-11-06T08:00:00-08:00",
+            "service": {
+              "id": "emergency_response",
+              "name": "Emergency response"
+            },
+            "summary": "My name is Dana Whitfield. My phone is four zero eight, five five five, zero one four two. No one is hurt, but please hurry.",
+            "tenant_id": "summit",
+            "urgency": "emergency"
+          },
+          "transfer": {
+            "callback_id": null,
+            "connected_at": "2026-11-06T08:00:00-08:00",
+            "packet_complete": true,
+            "status": "connected",
+            "target": {
+              "id": "summit_on_call",
+              "name": "Summit on-call",
+              "phone": "+14085550188"
+            },
+            "transfer_id": "tr_summit_0001"
+          }
+        },
+        "error": null
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "caller",
+      "text": "Our AC is out and it is ninety-eight degrees upstairs. I have a newborn baby. Yes, 88 Meridian Way, San Jose, 95125."
+    },
+    {
+      "role": "caller",
+      "text": "My name is Dana Whitfield. My phone is four zero eight, five five five, zero one four two. No one is hurt, but please hurry."
+    },
+    {
+      "role": "assistant",
+      "text": "Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help?"
+    },
+    {
+      "role": "assistant",
+      "text": "I'll treat this as urgent. If anyone is at risk from the heat, call 911. I'll create an emergency ticket and get our on-call HVAC technician. To pass this to our on-call technician, please give me your name, service address and callback number."
+    },
+    {
+      "role": "assistant",
+      "text": "A person has answered. I'm transferring you now with your details and what happened."
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "latency": {
+    "tool_path_ms": 0,
+    "wall_ms": 2
+  },
+  "pipeline": "baseline",
+  "profile": "hybrid",
+  "qa_flags": [
+    "baseline_naive",
+    "unconfirmed_write"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_pricing_02",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "prompt_sha256": "2f2f21ccc417fbdadc240f466442e3ee2728cb5a8abfe0c47e17a76cce338402"
+      },
+      "name": "baseline_single_prompt",
+      "ok": true,
+      "result": {
+        "data": {
+          "intent": "book",
+          "provider": "naive_deterministic"
+        }
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling."
+    },
+    {
+      "role": "caller",
+      "text": "How late can I change an appointment?"
+    },
+    {
+      "role": "caller",
+      "text": "So two hours before is fine?"
+    },
+    {
+      "role": "caller",
+      "text": "Great."
+    },
+    {
+      "role": "assistant",
+      "text": "You're booked for drain cleaning on Monday at 7:00 AM. No confirmation was sent."
+    }
+  ]
+}

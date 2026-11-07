@@ -1,0 +1,57 @@
+{
+  "latency": {
+    "tool_path_ms": 0,
+    "wall_ms": 1
+  },
+  "pipeline": "baseline",
+  "profile": "local",
+  "qa_flags": [
+    "baseline_naive",
+    "unconfirmed_write"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_reschedule_02",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "prompt_sha256": "bd367cdf9426b7d24148ec668f5a923fb052049dff76140ed95e05ba2b90f1e3"
+      },
+      "name": "baseline_single_prompt",
+      "ok": true,
+      "result": {
+        "data": {
+          "intent": "reschedule",
+          "provider": "naive_deterministic"
+        }
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling."
+    },
+    {
+      "role": "caller",
+      "text": "I need to move my appointment. It's in an hour and a half."
+    },
+    {
+      "role": "caller",
+      "text": "The booking is bk_0003. The address is 21 Harbor Blvd, 94118."
+    },
+    {
+      "role": "caller",
+      "text": "Can you move it to tomorrow?"
+    },
+    {
+      "role": "caller",
+      "text": "Yes, transfer me."
+    },
+    {
+      "role": "assistant",
+      "text": "Moved booking bk_0003. No confirmation was sent."
+    }
+  ]
+}

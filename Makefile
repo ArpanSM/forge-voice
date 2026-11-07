@@ -75,6 +75,7 @@ demo-smoke: bootstrap
 	FORGE_VOICE_PROFILE=local ./scripts/demo.sh --smoke
 
 EVAL_PYTHON ?= $(PYTHON) -m forge_voice.eval
+EVAL_AUDIO_TRANSPORT ?= livekit
 
 eval:
 	$(EVAL_PYTHON) --profile hybrid --mode text --split release --pipeline fixed --repeat-critical
@@ -83,10 +84,10 @@ eval-local:
 	$(EVAL_PYTHON) --profile local --mode text --split release --pipeline fixed
 
 eval-audio: bootstrap
-	$(EVAL_PYTHON) --profile hybrid --mode audio --split audio --pipeline fixed --transport livekit
+	$(EVAL_PYTHON) --profile hybrid --mode audio --split audio --pipeline fixed --transport $(EVAL_AUDIO_TRANSPORT)
 
 eval-audio-local: bootstrap
-	$(EVAL_PYTHON) --profile local --mode audio --split audio-local --pipeline fixed --transport livekit
+	$(EVAL_PYTHON) --profile local --mode audio --split audio-local --pipeline fixed --transport $(EVAL_AUDIO_TRANSPORT)
 
 eval-heldout: bootstrap
 	$(EVAL_PYTHON) --profile hybrid --mode all --split heldout --pipeline fixed --transport livekit

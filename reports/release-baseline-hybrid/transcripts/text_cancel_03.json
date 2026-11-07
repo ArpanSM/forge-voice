@@ -1,0 +1,58 @@
+{
+  "latency": {
+    "tool_path_ms": 0,
+    "wall_ms": 1
+  },
+  "pipeline": "baseline",
+  "profile": "hybrid",
+  "qa_flags": [
+    "baseline_naive",
+    "unconfirmed_write",
+    "wrote_without_yes"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 0,
+  "scenario_id": "text_cancel_03",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "prompt_sha256": "3a8164fe8228e321764881352ae99c8152991bd43c7d81501d81ab29d6beeeb1"
+      },
+      "name": "baseline_single_prompt",
+      "ok": true,
+      "result": {
+        "data": {
+          "intent": "book",
+          "provider": "naive_deterministic"
+        }
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling."
+    },
+    {
+      "role": "caller",
+      "text": "I need to cancel my AC appointment, booking bk_summit_0002."
+    },
+    {
+      "role": "caller",
+      "text": "Priya Shah, 88 Meridian Way, 95125."
+    },
+    {
+      "role": "caller",
+      "text": "I found another company."
+    },
+    {
+      "role": "caller",
+      "text": "Yes, cancel it."
+    },
+    {
+      "role": "assistant",
+      "text": "You're booked for ac repair on Monday at 7:00 AM. No confirmation was sent."
+    }
+  ]
+}

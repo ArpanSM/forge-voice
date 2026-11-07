@@ -1,0 +1,230 @@
+{
+  "latency": {
+    "tool_path_ms": 35,
+    "wall_ms": 8
+  },
+  "pipeline": "fixed",
+  "profile": "hybrid",
+  "qa_flags": [
+    "tool_timeout",
+    "handoff_packet_incomplete",
+    "handoff_no_answer"
+  ],
+  "recording_ref": "text_only",
+  "repeat_index": 2,
+  "scenario_id": "text_timeout_01",
+  "split": "release",
+  "tool_calls": [
+    {
+      "args": {
+        "include_bookings": false,
+        "phone": "+14155550101"
+      },
+      "error_code": null,
+      "latency_ms": 2,
+      "name": "lookup_customer",
+      "ok": true,
+      "result": {
+        "data": {
+          "bookings": [],
+          "customer": {
+            "address": {
+              "city": "San Francisco",
+              "line1": "12 Alder St",
+              "state": "CA",
+              "zip": "94107"
+            },
+            "customer_id": "cus_0001",
+            "name": "Sam Rivera",
+            "phone": "+14155550101"
+          },
+          "match": "exact",
+          "verification_required": false
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_timeout_01_001"
+      }
+    },
+    {
+      "args": {
+        "service_id": "drain_cleaning",
+        "zip": "94107"
+      },
+      "error_code": null,
+      "latency_ms": 1,
+      "name": "get_service_area",
+      "ok": true,
+      "result": {
+        "data": {
+          "dispatch_zone": "central",
+          "in_area": true,
+          "message": "We cover 94107.",
+          "restrictions": [],
+          "technicians": [
+            "tech_alex"
+          ]
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_timeout_01_002"
+      }
+    },
+    {
+      "args": {
+        "preferred_date": "2026-11-09",
+        "service_id": "drain_cleaning",
+        "window_days": 1,
+        "zip": "94107"
+      },
+      "error_code": null,
+      "latency_ms": 3,
+      "name": "get_availability",
+      "ok": true,
+      "result": {
+        "data": {
+          "reason": "ok",
+          "slots": [
+            {
+              "end": "2026-11-09T08:00:00-08:00",
+              "offer_expires_at": "2026-11-06T08:05:00-08:00",
+              "slot_id": "slot_hl_00001",
+              "start": "2026-11-09T07:00:00-08:00",
+              "technician": {
+                "id": "tech_alex",
+                "name": "Alex"
+              }
+            }
+          ],
+          "timezone": "America/Los_Angeles"
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_timeout_01_003"
+      }
+    },
+    {
+      "args": {
+        "customer": {
+          "address": {
+            "city": "San Francisco",
+            "line1": "12 Alder Street",
+            "state": "CA",
+            "zip": "94107"
+          },
+          "name": "Caller",
+          "phone": "+14155550101"
+        },
+        "service_id": "drain_cleaning",
+        "slot_id": "slot_hl_00001"
+      },
+      "error_code": "timeout",
+      "latency_ms": 4,
+      "name": "book_appointment",
+      "ok": false,
+      "result": {
+        "data": null,
+        "error": {
+          "code": "timeout",
+          "details": {},
+          "message": "The tool did not respond in time.",
+          "retryable": true
+        },
+        "ok": false,
+        "request_id": "req_call_harborlight_text_timeout_01_004"
+      }
+    },
+    {
+      "args": {
+        "callback_window": {
+          "end": "2026-11-09T12:00:00-08:00",
+          "start": "2026-11-09T08:00:00-08:00"
+        },
+        "mode": "callback",
+        "packet": {
+          "address": {
+            "city": "San Francisco",
+            "line1": "12 Alder Street",
+            "state": "CA",
+            "zip": "94107"
+          },
+          "booking_id": null,
+          "call_id": "call_harborlight_text_timeout_01",
+          "caller": {
+            "name": null,
+            "phone": "+14155550101",
+            "verified": false
+          },
+          "emergency_ticket_id": null,
+          "intent": "book",
+          "reason": "tool_failure",
+          "requested_at": "2026-11-06T08:00:00-08:00",
+          "service": {
+            "id": "drain_cleaning",
+            "name": "Drain cleaning"
+          },
+          "summary": "I need a drain cleaning. 12 Alder Street, 94107. Monday morning, yes. Monday morning. Yes, book it.",
+          "tenant_id": "harborlight",
+          "urgency": "normal"
+        },
+        "reason": "tool_failure",
+        "urgency": "normal"
+      },
+      "error_code": null,
+      "latency_ms": 25,
+      "name": "transfer_to_human",
+      "ok": true,
+      "result": {
+        "data": {
+          "callback_id": "cb_harborlight_0001",
+          "connected_at": null,
+          "packet_complete": false,
+          "status": "queued_callback",
+          "target": {
+            "id": "harborlight_front_desk",
+            "name": "Harborlight front desk",
+            "phone": "+14155550100"
+          },
+          "transfer_id": "tr_harborlight_0001"
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_timeout_01_005"
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help?"
+    },
+    {
+      "role": "caller",
+      "text": "I need a drain cleaning."
+    },
+    {
+      "role": "caller",
+      "text": "12 Alder Street, 94107."
+    },
+    {
+      "role": "caller",
+      "text": "Monday morning, yes."
+    },
+    {
+      "role": "caller",
+      "text": "Monday morning."
+    },
+    {
+      "role": "caller",
+      "text": "Yes, book it."
+    },
+    {
+      "role": "assistant",
+      "text": "Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder Street, San Francisco 94107, for Caller at +14155550101. Should I book that?"
+    },
+    {
+      "role": "assistant",
+      "text": "I couldn't complete a live transfer. I've saved your details and someone will call you back."
+    }
+  ]
+}

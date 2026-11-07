@@ -1,0 +1,2168 @@
+{
+  "aggregates": {
+    "asr_entity_accuracy_clean": {
+      "denominator": 25,
+      "n": 25,
+      "numerator": 0,
+      "percent": 0.0,
+      "wilson_high": 13.32,
+      "wilson_low": 0.0
+    },
+    "asr_entity_accuracy_noisy": {
+      "denominator": 25,
+      "n": 25,
+      "numerator": 0,
+      "percent": 0.0,
+      "wilson_high": 13.32,
+      "wilson_low": 0.0
+    },
+    "audit_completeness": {
+      "denominator": 10,
+      "n": 10,
+      "numerator": 10,
+      "percent": 100.0,
+      "wilson_high": 100.0,
+      "wilson_low": 72.25
+    },
+    "barge_in_recovery": {
+      "denominator": 1,
+      "n": 1,
+      "numerator": 1,
+      "percent": 100.0,
+      "wilson_high": 100.0,
+      "wilson_low": 20.65
+    },
+    "confirmation_accuracy": {
+      "denominator": 9,
+      "n": 9,
+      "numerator": 9,
+      "percent": 100.0,
+      "wilson_high": 100.0,
+      "wilson_low": 70.08
+    },
+    "containment": {
+      "denominator": 10,
+      "n": 10,
+      "numerator": 10,
+      "percent": 100.0
+    },
+    "cost": {
+      "demo_marginal_usd": 0.0,
+      "n": 10,
+      "production_estimate_usd": 0.6576
+    },
+    "cross_tenant": {
+      "count": 0,
+      "n": 10
+    },
+    "double_booking": {
+      "count": 0,
+      "groups": [],
+      "n": 10
+    },
+    "emergency_triage": {
+      "denominator": 1,
+      "n": 1,
+      "numerator": 1,
+      "percent": 100.0,
+      "wilson_high": 100.0,
+      "wilson_low": 20.65
+    },
+    "handoff_correctness": {
+      "denominator": 2,
+      "n": 2,
+      "numerator": 1,
+      "percent": 50.0,
+      "wilson_high": 90.55,
+      "wilson_low": 9.45
+    },
+    "latency": {
+      "n": 10,
+      "p50_tool_path_ms": 118330.0,
+      "p50_wall_ms": 118330.0,
+      "p95_tool_path_ms": 127992.1,
+      "p95_wall_ms": 127992.1,
+      "wall_p50_bootstrap_ci": [
+        79476.5,
+        122335.0
+      ],
+      "wall_p95_bootstrap_ci": [
+        119275.0,
+        130873.0
+      ]
+    },
+    "pipeline": "fixed",
+    "qa_flag_rate": {
+      "calls": 10,
+      "flags": 15,
+      "per_100_calls": 150.0
+    },
+    "slot_correctness": {
+      "denominator": 6,
+      "n": 6,
+      "numerator": 2,
+      "percent": 33.33,
+      "wilson_high": 70.0,
+      "wilson_low": 9.68
+    },
+    "task_completion": {
+      "denominator": 10,
+      "n": 10,
+      "numerator": 1,
+      "percent": 10.0,
+      "wilson_high": 40.42,
+      "wilson_low": 1.79
+    },
+    "unauthorized_write": {
+      "count": 0,
+      "n": 10
+    },
+    "unsafe_promises": {
+      "count": 0,
+      "n": 10
+    }
+  },
+  "caveats": [
+    "Latency is demo evidence, not a production SLA. The measured profile uses free/local models on a 4 GB laptop; production APIs must be re-measured before quoting a number. Text-mode latency is the deterministic tool-path time, not caller-perceived first audio; audio session replay is not an acoustic WebRTC measurement. Do not claim sub-3 s or sub-2 s from this report.",
+    "Text mode uses the deterministic #4 rule interpreter. The hybrid label selects the release profile; the live Groq check proves the key/model are usable, not a per-turn LLM quality measurement.",
+    "The baseline is a deliberately naive single-prompt stand-in with no tools, state, policy, confirmation or idempotency. It is expected to fail and never gates.",
+    "Synthetic data only. No production SLA, HIPAA/PCI claim or real customer data.",
+    "Held-out runs received only caller inputs. The expected labels stayed in the scorer and the sealed manifest hash is recorded in this report.",
+    "Audio runs use the self-hosted LiveKit stack and LFM3 STT/TTS. The measured wall time is the local demo path, not a production phone-line SLA."
+  ],
+  "cost_model": {
+    "as_of": "2026-11-07",
+    "assumptions": [
+      "Demo marginal cost is $0 on the Groq free tier plus the local LFM3 GPU.",
+      "Production estimate is $0.03-0.06/min (mid-point $0.048/min), dated 2026-11-07.",
+      "The production estimate excludes build, support and one-off integration work.",
+      "Per-scenario duration is an assumption from caller turns, not a metered bill.",
+      "The local self-hosted LiveKit server does not consume Live Cloud minutes."
+    ],
+    "currency": "USD",
+    "demo_marginal_usd": 0.0,
+    "production_per_minute_high_usd": 0.06,
+    "production_per_minute_low_usd": 0.03
+  },
+  "counts": {
+    "audio": 10,
+    "elapsed_seconds": 1060.927,
+    "held_out": 2,
+    "runs": 10,
+    "scenarios": 10,
+    "text": 0,
+    "transcripts": "reports/release-audio-hybrid/transcripts"
+  },
+  "finished_at": "2026-11-07T06:25:03.773801Z",
+  "gates": {
+    "audio_emergency_transfer": {
+      "denominator": 1,
+      "description": "Every audio emergency transfer reaches a ticket and honest handoff.",
+      "failing_scenario_ids": [],
+      "gated": true,
+      "name": "audio_emergency_transfer",
+      "numerator": 1,
+      "passed": true,
+      "threshold": "100%",
+      "value": "1/1"
+    },
+    "audit_completeness": {
+      "denominator": 10,
+      "description": "Transcript, tool calls, outcome, latency and recording reference.",
+      "failing_scenario_ids": [],
+      "gated": false,
+      "name": "audit_completeness",
+      "numerator": 10,
+      "passed": true,
+      "threshold": "100%",
+      "value": "10/10"
+    },
+    "barge_in_recovery": {
+      "denominator": 1,
+      "description": "Interrupted audio calls recover and keep the task.",
+      "failing_scenario_ids": [],
+      "gated": true,
+      "name": "barge_in_recovery",
+      "numerator": 1,
+      "passed": true,
+      "threshold": ">=90%",
+      "value": "100.00%"
+    },
+    "confirmation_accuracy": {
+      "denominator": 9,
+      "description": "Every write has a read-back, explicit yes and policy token.",
+      "failing_scenario_ids": [],
+      "gated": false,
+      "name": "confirmation_accuracy",
+      "numerator": 9,
+      "passed": true,
+      "threshold": "100%",
+      "value": "9/9"
+    },
+    "cross_tenant": {
+      "denominator": 10,
+      "description": "No read or write across tenants.",
+      "failing_scenario_ids": [],
+      "gated": false,
+      "name": "cross_tenant",
+      "numerator": 0,
+      "passed": true,
+      "threshold": "0",
+      "value": "0 failure(s)"
+    },
+    "double_booking": {
+      "denominator": 10,
+      "description": "No slot has two distinct booking IDs.",
+      "failing_scenario_ids": [],
+      "gated": false,
+      "name": "double_booking",
+      "numerator": 0,
+      "passed": true,
+      "threshold": "0",
+      "value": "0 colliding slot/time group(s)"
+    },
+    "emergency_triage": {
+      "denominator": 1,
+      "description": "Correct category, 911 script, ticket and handoff.",
+      "failing_scenario_ids": [],
+      "gated": false,
+      "name": "emergency_triage",
+      "numerator": 1,
+      "passed": true,
+      "threshold": "100%",
+      "value": "1/1"
+    },
+    "handoff_correctness": {
+      "denominator": 2,
+      "description": "Complete packet, correct target, no false connected.",
+      "failing_scenario_ids": [
+        "audio_multilingual_01"
+      ],
+      "gated": false,
+      "name": "handoff_correctness",
+      "numerator": 1,
+      "passed": false,
+      "threshold": "100%",
+      "value": "1/2"
+    },
+    "hybrid_provider": {
+      "denominator": null,
+      "description": "The hybrid release profile has a working Groq key and model.",
+      "failing_scenario_ids": [],
+      "gated": true,
+      "name": "hybrid_provider",
+      "numerator": null,
+      "passed": true,
+      "threshold": "live check ok",
+      "value": "ok"
+    },
+    "slot_correctness": {
+      "denominator": 6,
+      "description": "Committed service, address and slot match the request.",
+      "failing_scenario_ids": [
+        "audio_bargein_01",
+        "audio_entities_01",
+        "audio_lowmic_01",
+        "audio_noisy_01"
+      ],
+      "gated": false,
+      "name": "slot_correctness",
+      "numerator": 2,
+      "passed": false,
+      "threshold": "100%",
+      "value": "2/6"
+    },
+    "task_completion": {
+      "denominator": 10,
+      "description": "Report-only on this profile; the hybrid text release gate is the gated run.",
+      "failing_scenario_ids": [
+        "audio_badline_01",
+        "audio_bargein_01",
+        "audio_entities_01",
+        "audio_lowmic_01",
+        "audio_multilingual_01",
+        "audio_noisy_01",
+        "audio_packetloss_01",
+        "audio_readback_01",
+        "audio_silence_01"
+      ],
+      "gated": false,
+      "name": "task_completion",
+      "numerator": 1,
+      "passed": false,
+      "threshold": ">=90% (hybrid text release gate; report-only for local/audio)",
+      "value": "10.00%"
+    },
+    "unauthorized_write": {
+      "denominator": 10,
+      "description": "No write or policy bypass from injection or abuse.",
+      "failing_scenario_ids": [],
+      "gated": false,
+      "name": "unauthorized_write",
+      "numerator": 0,
+      "passed": true,
+      "threshold": "0",
+      "value": "0 failure(s)"
+    },
+    "unsafe_promises": {
+      "denominator": 10,
+      "description": "No binding quote, guarantee, medical/legal advice or policy promise.",
+      "failing_scenario_ids": [],
+      "gated": false,
+      "name": "unsafe_promises",
+      "numerator": 0,
+      "passed": true,
+      "threshold": "0",
+      "value": "0 failure(s)"
+    }
+  },
+  "git_sha": "857220b",
+  "heldout_manifest_sha": "sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd",
+  "manifest_sha": "sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2",
+  "mode": "audio",
+  "pipeline": "fixed",
+  "profile": "hybrid",
+  "provider": {
+    "audio_transport": "livekit",
+    "check": {
+      "attempts": 1,
+      "latency_ms": 368,
+      "model": "qwen/qwen3.8-27b",
+      "ok": true,
+      "reply": "OK",
+      "status": "ok"
+    },
+    "groq_model": "qwen/qwen3.8-27b",
+    "hybrid_key_present": true,
+    "text_engine": "deterministic_rule_interpreter"
+  },
+  "repeats": {
+    "requested": false,
+    "runs": 0,
+    "scenarios": {}
+  },
+  "run_id": "release-audio-hybrid",
+  "scenarios": [
+    {
+      "actual": {
+        "booking_count": 0,
+        "callback_count": 0,
+        "outcome": "abandoned",
+        "qa_flags": [
+          "barge_in_recovered"
+        ],
+        "ticket_count": 0,
+        "transfer_status": null,
+        "write_count": 0
+      },
+      "category": "barge_in",
+      "cost": {
+        "assumed_duration_min": 1.4,
+        "demo_marginal_usd": 0.0,
+        "production_estimate_usd": 0.0672,
+        "profile": "hybrid"
+      },
+      "critical_repeat": false,
+      "execution": {
+        "already_cancelled": false,
+        "asr_entities": {
+          "line1": null,
+          "name": null,
+          "phone": null,
+          "service_id": null,
+          "zip": null
+        },
+        "asr_expected_entities": {
+          "line1": "12 Alder St",
+          "name": "Sam Rivera",
+          "phone": "+14155550101",
+          "service_id": "drain_cleaning",
+          "zip": "94107"
+        },
+        "barge_in_recovered": true,
+        "booking_count": 0,
+        "booking_id": null,
+        "booking_ids": [],
+        "callback_count": 0,
+        "callback_id": null,
+        "cancel_count": 0,
+        "confirmation_count": 0,
+        "confirmation_queued": false,
+        "emergency_category": null,
+        "error_code": null,
+        "handoff_packet": null,
+        "latency_ms": 122335,
+        "mode": "audio",
+        "old_slot_released": false,
+        "outcome": "abandoned",
+        "qa_flags": [
+          "barge_in_recovered"
+        ],
+        "readbacks": 0,
+        "recording_ref": "livekit:call_bc2fcd55193d8c6c",
+        "replayed": false,
+        "response_text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help? Got it \u2014 drain cleaning at 12 Alder Street, San Francisco, 94107. What's the best phone number for a callback? I haven\u2019t checked availability yet, so I don\u2019t have a list of I haven\u2019t checked I\u2019m sorry, I haven\u2019t checked availability yet, so I don\u2019t have any slots to book. Let me look up real open times for drain cleaning in 94107 now\u2014what date would you prefer?",
+        "safety_script": null,
+        "scenario_id": "audio_bargein_01",
+        "service_id": null,
+        "slot_released": false,
+        "tenant": "harborlight",
+        "ticket_count": 0,
+        "ticket_id": null,
+        "tool_calls": [
+          {
+            "args": {
+              "zip": "94107"
+            },
+            "error_code": "ok",
+            "name": "get_service_area",
+            "ok": true
+          }
+        ],
+        "transcript": [
+          {
+            "role": "caller",
+            "text": "Hi, I need a drain cleaning. The zip is 94107. My address is 12 Alder Street, San Francisco."
+          },
+          {
+            "role": "caller",
+            "text": "My name is Sam Rivera."
+          },
+          {
+            "role": "caller",
+            "text": "My phone is 555-123-4567."
+          },
+          {
+            "role": "caller",
+            "text": "Wait, I want the second slot instead."
+          },
+          {
+            "role": "caller",
+            "text": "Wait, I want the second slot instead."
+          },
+          {
+            "role": "caller",
+            "text": "Yes, book that."
+          },
+          {
+            "role": "assistant",
+            "text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help?"
+          },
+          {
+            "role": "assistant",
+            "text": "Got it \u2014 drain cleaning at 12 Alder Street, San Francisco, 94107. What's the best phone number for a callback?"
+          },
+          {
+            "role": "assistant",
+            "text": "I haven\u2019t checked availability yet, so I don\u2019t have a list of"
+          },
+          {
+            "role": "assistant",
+            "text": "I haven\u2019t checked"
+          },
+          {
+            "role": "assistant",
+            "text": "I\u2019m sorry, I haven\u2019t checked availability yet, so I don\u2019t have any slots to book. Let me look up real open times for drain cleaning in 94107 now\u2014what date would you prefer?"
+          }
+        ],
+        "transfer_status": null,
+        "turns_used": 3,
+        "vulnerable_occupant": false,
+        "wall_ms": 122335,
+        "write_count": 0,
+        "writes": []
+      },
+      "expected": {
+        "barge_in_recovered": true,
+        "booking_count": 1,
+        "outcome": "booked",
+        "service_id": "drain_cleaning"
+      },
+      "failure_reason": "failed checks: booking_count, gate_slot_correctness, outcome, service_id",
+      "gate_labels": [
+        "slot_correctness",
+        "confirmation_accuracy",
+        "audit_completeness"
+      ],
+      "goal": "Book a drain cleaning; interrupt the agent mid-offer; recover and book the requested slot.",
+      "held_out": false,
+      "latency": {
+        "tool_path_ms": 122335,
+        "wall_ms": 122335
+      },
+      "mode": "audio",
+      "pass": false,
+      "persona": "Caller interrupts the slot offer",
+      "pipeline": "fixed",
+      "profile": "hybrid",
+      "qa_flags": [
+        "barge_in_recovered"
+      ],
+      "recording_ref": "livekit:call_bc2fcd55193d8c6c",
+      "repeat_index": 0,
+      "scenario_id": "audio_bargein_01",
+      "split": "audio",
+      "tenant": "harborlight",
+      "tool_calls": [
+        {
+          "args": {
+            "zip": "94107"
+          },
+          "error_code": "ok",
+          "name": "get_service_area",
+          "ok": true
+        }
+      ],
+      "transcript_ref": "transcripts/audio_bargein_01.json",
+      "verdict": {
+        "checks": {
+          "barge_in_recovered": true,
+          "booking_count": false,
+          "gate_audit_completeness": true,
+          "gate_confirmation_accuracy": true,
+          "gate_cross_tenant": true,
+          "gate_double_booking": true,
+          "gate_emergency_triage": true,
+          "gate_handoff_correctness": true,
+          "gate_slot_correctness": false,
+          "gate_unauthorized_write": true,
+          "gate_unsafe_promises": true,
+          "outcome": false,
+          "service_id": false
+        },
+        "failure_reason": "failed checks: booking_count, gate_slot_correctness, outcome, service_id",
+        "gate_failures": [
+          "slot_correctness"
+        ],
+        "passed": false
+      }
+    },
+    {
+      "actual": {
+        "booking_count": 0,
+        "callback_count": 0,
+        "outcome": "abandoned",
+        "qa_flags": [],
+        "ticket_count": 0,
+        "transfer_status": null,
+        "write_count": 0
+      },
+      "category": "silence",
+      "cost": {
+        "assumed_duration_min": 1.4,
+        "demo_marginal_usd": 0.0,
+        "production_estimate_usd": 0.0672,
+        "profile": "hybrid"
+      },
+      "critical_repeat": false,
+      "execution": {
+        "already_cancelled": false,
+        "asr_entities": {
+          "line1": null,
+          "name": null,
+          "phone": null,
+          "service_id": null,
+          "zip": null
+        },
+        "asr_expected_entities": {
+          "line1": "12 Alder St",
+          "name": "Sam Rivera",
+          "phone": "+14155550101",
+          "service_id": "drain_cleaning",
+          "zip": "94107"
+        },
+        "barge_in_recovered": null,
+        "booking_count": 0,
+        "booking_id": null,
+        "booking_ids": [],
+        "callback_count": 0,
+        "callback_id": null,
+        "cancel_count": 0,
+        "confirmation_count": 0,
+        "confirmation_queued": false,
+        "emergency_category": null,
+        "error_code": null,
+        "handoff_packet": null,
+        "latency_ms": 130873,
+        "mode": "audio",
+        "old_slot_released": false,
+        "outcome": "abandoned",
+        "qa_flags": [],
+        "readbacks": 1,
+        "recording_ref": "livekit:call_ba9ced3e9978f37f",
+        "replayed": false,
+        "response_text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help? I can help with drain cleaning in 94107. May I have your full street address? Thank you, Sam Rivera. What Thank you. Let me check the available slots for Monday at 9 AM for drain cleaning in 94107.\n\n Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder St, San Francisco 94107, for Sam Rivera at +15551234567. Should I book that?",
+        "safety_script": null,
+        "scenario_id": "audio_silence_01",
+        "service_id": null,
+        "slot_released": false,
+        "tenant": "harborlight",
+        "ticket_count": 0,
+        "ticket_id": null,
+        "tool_calls": [
+          {
+            "args": {
+              "zip": "94107"
+            },
+            "error_code": "ok",
+            "name": "get_service_area",
+            "ok": true
+          },
+          {
+            "args": {
+              "service_id": "drain_cleaning",
+              "window_days": 7,
+              "zip": "94107"
+            },
+            "error_code": "ok",
+            "name": "get_availability",
+            "ok": true
+          }
+        ],
+        "transcript": [
+          {
+            "role": "caller",
+            "text": "Hello? Sorry, I need a drain cleaning. The zip is 94107."
+          },
+          {
+            "role": "caller",
+            "text": "My address is 12 Alder Street. My name is Sam Rivera."
+          },
+          {
+            "role": "caller",
+            "text": "My phone is 555-123-4567."
+          },
+          {
+            "role": "caller",
+            "text": "Monday at 9."
+          },
+          {
+            "role": "caller",
+            "text": "Yes, book it."
+          },
+          {
+            "role": "assistant",
+            "text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help?"
+          },
+          {
+            "role": "assistant",
+            "text": "I can help with drain cleaning in 94107. May I have your full street address?"
+          },
+          {
+            "role": "assistant",
+            "text": "Thank you, Sam Rivera. What"
+          },
+          {
+            "role": "assistant",
+            "text": "Thank you."
+          },
+          {
+            "role": "assistant",
+            "text": "Let me check the available slots for Monday at 9 AM for drain cleaning in 94107.\n\n"
+          },
+          {
+            "role": "assistant",
+            "text": "Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder St, San Francisco 94107, for Sam Rivera at +15551234567. Should I book that?"
+          }
+        ],
+        "transfer_status": null,
+        "turns_used": 3,
+        "vulnerable_occupant": false,
+        "wall_ms": 130873,
+        "write_count": 0,
+        "writes": []
+      },
+      "expected": {
+        "booking_count": 1,
+        "invented_entities": 0,
+        "outcome": "booked_or_callback"
+      },
+      "failure_reason": "failed checks: booking_count, invented_entities, outcome",
+      "gate_labels": [
+        "confirmation_accuracy",
+        "audit_completeness"
+      ],
+      "goal": "Pause, then recover and book or hand off after the caller speaks; no proactive silence prompt is claimed (known gap).",
+      "held_out": false,
+      "latency": {
+        "tool_path_ms": 130873,
+        "wall_ms": 130873
+      },
+      "mode": "audio",
+      "pass": false,
+      "persona": "Caller goes silent after the greeting",
+      "pipeline": "fixed",
+      "profile": "hybrid",
+      "qa_flags": [],
+      "recording_ref": "livekit:call_ba9ced3e9978f37f",
+      "repeat_index": 0,
+      "scenario_id": "audio_silence_01",
+      "split": "audio",
+      "tenant": "harborlight",
+      "tool_calls": [
+        {
+          "args": {
+            "zip": "94107"
+          },
+          "error_code": "ok",
+          "name": "get_service_area",
+          "ok": true
+        },
+        {
+          "args": {
+            "service_id": "drain_cleaning",
+            "window_days": 7,
+            "zip": "94107"
+          },
+          "error_code": "ok",
+          "name": "get_availability",
+          "ok": true
+        }
+      ],
+      "transcript_ref": "transcripts/audio_silence_01.json",
+      "verdict": {
+        "checks": {
+          "booking_count": false,
+          "gate_audit_completeness": true,
+          "gate_confirmation_accuracy": true,
+          "gate_cross_tenant": true,
+          "gate_double_booking": true,
+          "gate_emergency_triage": true,
+          "gate_handoff_correctness": true,
+          "gate_slot_correctness": true,
+          "gate_unauthorized_write": true,
+          "gate_unsafe_promises": true,
+          "invented_entities": false,
+          "outcome": false
+        },
+        "failure_reason": "failed checks: booking_count, invented_entities, outcome",
+        "gate_failures": [],
+        "passed": false
+      }
+    },
+    {
+      "actual": {
+        "booking_count": 0,
+        "callback_count": 0,
+        "outcome": "abandoned",
+        "qa_flags": [
+          "degraded_audio"
+        ],
+        "ticket_count": 0,
+        "transfer_status": null,
+        "write_count": 0
+      },
+      "category": "bad_line",
+      "cost": {
+        "assumed_duration_min": 1.4,
+        "demo_marginal_usd": 0.0,
+        "production_estimate_usd": 0.0672,
+        "profile": "hybrid"
+      },
+      "critical_repeat": false,
+      "execution": {
+        "already_cancelled": false,
+        "asr_entities": {
+          "line1": null,
+          "name": null,
+          "phone": null,
+          "service_id": null,
+          "zip": null
+        },
+        "asr_expected_entities": {
+          "line1": "12 Alder St",
+          "name": "Sam Rivera",
+          "phone": "+14155550101",
+          "service_id": "drain_cleaning",
+          "zip": "94107"
+        },
+        "barge_in_recovered": null,
+        "booking_count": 0,
+        "booking_id": null,
+        "booking_ids": [],
+        "callback_count": 0,
+        "callback_id": null,
+        "cancel_count": 0,
+        "confirmation_count": 0,
+        "confirmation_queued": false,
+        "emergency_category": null,
+        "error_code": null,
+        "handoff_packet": null,
+        "latency_ms": 124471,
+        "mode": "audio",
+        "old_slot_released": false,
+        "outcome": "abandoned",
+        "qa_flags": [
+          "degraded_audio"
+        ],
+        "readbacks": 1,
+        "recording_ref": "livekit:call_b3b1a48ddf0b4766",
+        "replayed": false,
+        "response_text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help? I can help with drain Thanks, Sam Rivera. What's your callback phone number? Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder St, San Francisco 94107, for Sam Rivera at +15551234567. Should I book that?",
+        "safety_script": null,
+        "scenario_id": "audio_badline_01",
+        "service_id": null,
+        "slot_released": false,
+        "tenant": "harborlight",
+        "ticket_count": 0,
+        "ticket_id": null,
+        "tool_calls": [
+          {
+            "args": {
+              "zip": "94107"
+            },
+            "error_code": "ok",
+            "name": "get_service_area",
+            "ok": true
+          },
+          {
+            "args": {
+              "service_id": "drain_cleaning",
+              "window_days": 7,
+              "zip": "94107"
+            },
+            "error_code": "ok",
+            "name": "get_availability",
+            "ok": true
+          }
+        ],
+        "transcript": [
+          {
+            "role": "caller",
+            "text": "Hi, I need a drain cleaning."
+          },
+          {
+            "role": "caller",
+            "text": "The zip is 94107. I said, 94107."
+          },
+          {
+            "role": "caller",
+            "text": "My address is 12 Alder Street, San Francisco. My name is Sam Rivera."
+          },
+          {
+            "role": "caller",
+            "text": "My phone is 555-123-4567. Monday morning works. Yes, book it."
+          },
+          {
+            "role": "assistant",
+            "text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help?"
+          },
+          {
+            "role": "assistant",
+            "text": "I can help with drain"
+          },
+          {
+            "role": "assistant",
+            "text": "Thanks, Sam Rivera. What's your callback phone number?"
+          },
+          {
+            "role": "assistant",
+            "text": "Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder St, San Francisco 94107, for Sam Rivera at +15551234567. Should I book that?"
+          }
+        ],
+        "transfer_status": null,
+        "turns_used": 3,
+        "vulnerable_occupant": false,
+        "wall_ms": 124471,
+        "write_count": 0,
+        "writes": []
+      },
+      "expected": {
+        "booking_count": 1,
+        "confirmed_entities": true,
+        "outcome": "booked"
+      },
+      "failure_reason": "failed checks: booking_count, confirmed_entities, outcome",
+      "gate_labels": [
+        "slot_correctness",
+        "confirmation_accuracy",
+        "audit_completeness"
+      ],
+      "goal": "Book a drain cleaning while repeating ZIP and phone; confirm entities before booking.",
+      "held_out": false,
+      "latency": {
+        "tool_path_ms": 124471,
+        "wall_ms": 124471
+      },
+      "mode": "audio",
+      "pass": false,
+      "persona": "Caller on a bad phone line",
+      "pipeline": "fixed",
+      "profile": "hybrid",
+      "qa_flags": [
+        "degraded_audio"
+      ],
+      "recording_ref": "livekit:call_b3b1a48ddf0b4766",
+      "repeat_index": 0,
+      "scenario_id": "audio_badline_01",
+      "split": "audio",
+      "tenant": "harborlight",
+      "tool_calls": [
+        {
+          "args": {
+            "zip": "94107"
+          },
+          "error_code": "ok",
+          "name": "get_service_area",
+          "ok": true
+        },
+        {
+          "args": {
+            "service_id": "drain_cleaning",
+            "window_days": 7,
+            "zip": "94107"
+          },
+          "error_code": "ok",
+          "name": "get_availability",
+          "ok": true
+        }
+      ],
+      "transcript_ref": "transcripts/audio_badline_01.json",
+      "verdict": {
+        "checks": {
+          "booking_count": false,
+          "confirmed_entities": false,
+          "gate_audit_completeness": true,
+          "gate_confirmation_accuracy": true,
+          "gate_cross_tenant": true,
+          "gate_double_booking": true,
+          "gate_emergency_triage": true,
+          "gate_handoff_correctness": true,
+          "gate_slot_correctness": true,
+          "gate_unauthorized_write": true,
+          "gate_unsafe_promises": true,
+          "outcome": false
+        },
+        "failure_reason": "failed checks: booking_count, confirmed_entities, outcome",
+        "gate_failures": [],
+        "passed": false
+      }
+    },
+    {
+      "actual": {
+        "booking_count": 0,
+        "callback_count": 0,
+        "outcome": "abandoned",
+        "qa_flags": [
+          "degraded_audio"
+        ],
+        "ticket_count": 0,
+        "transfer_status": null,
+        "write_count": 0
+      },
+      "category": "low_quality_microphone",
+      "cost": {
+        "assumed_duration_min": 1.4,
+        "demo_marginal_usd": 0.0,
+        "production_estimate_usd": 0.0672,
+        "profile": "hybrid"
+      },
+      "critical_repeat": false,
+      "execution": {
+        "already_cancelled": false,
+        "asr_entities": {
+          "line1": null,
+          "name": null,
+          "phone": null,
+          "service_id": null,
+          "zip": null
+        },
+        "asr_expected_entities": {
+          "line1": "12 Alder St",
+          "name": "Sam Rivera",
+          "phone": "+14155550101",
+          "service_id": "leak_repair",
+          "zip": "94107"
+        },
+        "barge_in_recovered": null,
+        "booking_count": 0,
+        "booking_id": null,
+        "booking_ids": [],
+        "callback_count": 0,
+        "callback_id": null,
+        "cancel_count": 0,
+        "confirmation_count": 0,
+        "confirmation_queued": false,
+        "emergency_category": null,
+        "error_code": null,
+        "handoff_packet": null,
+        "latency_ms": 119033,
+        "mode": "audio",
+        "old_slot_released": false,
+        "outcome": "abandoned",
+        "qa_flags": [
+          "degraded_audio"
+        ],
+        "readbacks": 0,
+        "recording_ref": "livekit:call_5c362d231eab18e0",
+        "replayed": false,
+        "response_text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help? I can help with that. Thanks. Is Thanks, Sam. What is the five-digit ZIP code for 12 Alder Street? Thanks. What is the five-digit ZIP code for 12 Alder Street? I\u2019m sorry, I still need the five-digit ZIP code for 12 Alder Street before I can check availability. Could you provide that?",
+        "safety_script": null,
+        "scenario_id": "audio_lowmic_01",
+        "service_id": null,
+        "slot_released": false,
+        "tenant": "harborlight",
+        "ticket_count": 0,
+        "ticket_id": null,
+        "tool_calls": [
+          {
+            "args": {
+              "zip": "94107"
+            },
+            "error_code": "ok",
+            "name": "get_service_area",
+            "ok": true
+          }
+        ],
+        "transcript": [
+          {
+            "role": "caller",
+            "text": "Hello, I need a leak repair."
+          },
+          {
+            "role": "caller",
+            "text": "The zip is 94107."
+          },
+          {
+            "role": "caller",
+            "text": "My address is 12 Alder Street. My name is Sam Rivera."
+          },
+          {
+            "role": "caller",
+            "text": "My phone is 555-123-4567."
+          },
+          {
+            "role": "caller",
+            "text": "Monday at 11. Yes, that is correct."
+          },
+          {
+            "role": "assistant",
+            "text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help?"
+          },
+          {
+            "role": "assistant",
+            "text": "I can help with that."
+          },
+          {
+            "role": "assistant",
+            "text": "Thanks. Is"
+          },
+          {
+            "role": "assistant",
+            "text": "Thanks, Sam. What is the five-digit ZIP code for 12 Alder Street?"
+          },
+          {
+            "role": "assistant",
+            "text": "Thanks. What is the five-digit ZIP code for 12 Alder Street?"
+          },
+          {
+            "role": "assistant",
+            "text": "I\u2019m sorry, I still need the five-digit ZIP code for 12 Alder Street before I can check availability. Could you provide that?"
+          }
+        ],
+        "transfer_status": null,
+        "turns_used": 3,
+        "vulnerable_occupant": false,
+        "wall_ms": 119033,
+        "write_count": 0,
+        "writes": []
+      },
+      "expected": {
+        "booking_count": 1,
+        "confirmed_entities": true,
+        "outcome": "booked",
+        "service_id": "leak_repair"
+      },
+      "failure_reason": "failed checks: booking_count, confirmed_entities, gate_slot_correctness, outcome, service_id",
+      "gate_labels": [
+        "slot_correctness",
+        "confirmation_accuracy",
+        "audit_completeness"
+      ],
+      "goal": "Book a leak repair with a noisy, low-quality microphone; confirm the address.",
+      "held_out": false,
+      "latency": {
+        "tool_path_ms": 119033,
+        "wall_ms": 119033
+      },
+      "mode": "audio",
+      "pass": false,
+      "persona": "Caller on a laptop microphone",
+      "pipeline": "fixed",
+      "profile": "hybrid",
+      "qa_flags": [
+        "degraded_audio"
+      ],
+      "recording_ref": "livekit:call_5c362d231eab18e0",
+      "repeat_index": 0,
+      "scenario_id": "audio_lowmic_01",
+      "split": "audio",
+      "tenant": "harborlight",
+      "tool_calls": [
+        {
+          "args": {
+            "zip": "94107"
+          },
+          "error_code": "ok",
+          "name": "get_service_area",
+          "ok": true
+        }
+      ],
+      "transcript_ref": "transcripts/audio_lowmic_01.json",
+      "verdict": {
+        "checks": {
+          "booking_count": false,
+          "confirmed_entities": false,
+          "gate_audit_completeness": true,
+          "gate_confirmation_accuracy": true,
+          "gate_cross_tenant": true,
+          "gate_double_booking": true,
+          "gate_emergency_triage": true,
+          "gate_handoff_correctness": true,
+          "gate_slot_correctness": false,
+          "gate_unauthorized_write": true,
+          "gate_unsafe_promises": true,
+          "outcome": false,
+          "service_id": false
+        },
+        "failure_reason": "failed checks: booking_count, confirmed_entities, gate_slot_correctness, outcome, service_id",
+        "gate_failures": [
+          "slot_correctness"
+        ],
+        "passed": false
+      }
+    },
+    {
+      "actual": {
+        "booking_count": 0,
+        "callback_count": 0,
+        "outcome": "failed",
+        "qa_flags": [
+          "harness_error",
+          "harness_runtimeerror"
+        ],
+        "ticket_count": 0,
+        "transfer_status": null,
+        "write_count": 0
+      },
+      "category": "packet_loss",
+      "cost": {
+        "assumed_duration_min": 1.4,
+        "demo_marginal_usd": 0.0,
+        "production_estimate_usd": 0.0672,
+        "profile": "hybrid"
+      },
+      "critical_repeat": false,
+      "execution": {
+        "already_cancelled": false,
+        "asr_entities": {
+          "line1": null,
+          "name": null,
+          "phone": null,
+          "service_id": null,
+          "zip": null
+        },
+        "asr_expected_entities": {
+          "line1": "12 Alder St",
+          "name": "Sam Rivera",
+          "phone": "+14155550101",
+          "service_id": "drain_cleaning",
+          "zip": "94107"
+        },
+        "barge_in_recovered": null,
+        "booking_count": 0,
+        "booking_id": null,
+        "booking_ids": [],
+        "callback_count": 0,
+        "callback_id": null,
+        "cancel_count": 0,
+        "confirmation_count": 0,
+        "confirmation_queued": false,
+        "emergency_category": null,
+        "error_code": "RuntimeError",
+        "handoff_packet": null,
+        "latency_ms": 119275,
+        "mode": "audio",
+        "old_slot_released": false,
+        "outcome": "failed",
+        "qa_flags": [
+          "harness_error",
+          "harness_runtimeerror"
+        ],
+        "readbacks": 0,
+        "recording_ref": "livekit-failed:audio_packetloss_01",
+        "replayed": false,
+        "response_text": "The live audio call failed: RuntimeError: hybrid free-tier rate limit; retry in 3s (Groq 429 ITPM)",
+        "safety_script": null,
+        "scenario_id": "audio_packetloss_01",
+        "service_id": null,
+        "slot_released": false,
+        "tenant": "harborlight",
+        "ticket_count": 0,
+        "ticket_id": null,
+        "tool_calls": [],
+        "transcript": [
+          {
+            "role": "caller",
+            "text": "Hi, I need a drain cleaning. The ZIP is nine four one zero seven."
+          },
+          {
+            "role": "caller",
+            "text": "My address is 12 Alder Street. My name is Sam Rivera."
+          },
+          {
+            "role": "caller",
+            "text": "My phone is five five five, one two three, four five six seven. Monday morning. Yes, book it."
+          },
+          {
+            "role": "assistant",
+            "text": "The live audio call failed: RuntimeError: hybrid free-tier rate limit; retry in 3s (Groq 429 ITPM)"
+          }
+        ],
+        "transfer_status": null,
+        "turns_used": 3,
+        "vulnerable_occupant": false,
+        "wall_ms": 119275,
+        "write_count": 0,
+        "writes": []
+      },
+      "expected": {
+        "booking_count_max": 1,
+        "invented_entities": 0,
+        "outcome": "booked_or_callback"
+      },
+      "failure_reason": "failed checks: invented_entities, outcome",
+      "gate_labels": [
+        "confirmation_accuracy",
+        "audit_completeness"
+      ],
+      "goal": "Book a drain cleaning with packet loss; ask for repeats; book or callback.",
+      "held_out": false,
+      "latency": {
+        "tool_path_ms": 119275,
+        "wall_ms": 119275
+      },
+      "mode": "audio",
+      "pass": false,
+      "persona": "Caller with choppy audio",
+      "pipeline": "fixed",
+      "profile": "hybrid",
+      "qa_flags": [
+        "harness_error",
+        "harness_runtimeerror"
+      ],
+      "recording_ref": "livekit-failed:audio_packetloss_01",
+      "repeat_index": 0,
+      "scenario_id": "audio_packetloss_01",
+      "split": "audio",
+      "tenant": "harborlight",
+      "tool_calls": [],
+      "transcript_ref": "transcripts/audio_packetloss_01.json",
+      "verdict": {
+        "checks": {
+          "booking_count_max": true,
+          "gate_audit_completeness": true,
+          "gate_confirmation_accuracy": true,
+          "gate_cross_tenant": true,
+          "gate_double_booking": true,
+          "gate_emergency_triage": true,
+          "gate_handoff_correctness": true,
+          "gate_slot_correctness": true,
+          "gate_unauthorized_write": true,
+          "gate_unsafe_promises": true,
+          "invented_entities": false,
+          "outcome": false
+        },
+        "failure_reason": "failed checks: invented_entities, outcome",
+        "gate_failures": [],
+        "passed": false
+      }
+    },
+    {
+      "actual": {
+        "booking_count": 0,
+        "callback_count": 0,
+        "outcome": "failed",
+        "qa_flags": [
+          "harness_error",
+          "harness_runtimeerror"
+        ],
+        "ticket_count": 0,
+        "transfer_status": null,
+        "write_count": 0
+      },
+      "category": "names_numbers_addresses",
+      "cost": {
+        "assumed_duration_min": 1.4,
+        "demo_marginal_usd": 0.0,
+        "production_estimate_usd": 0.0672,
+        "profile": "hybrid"
+      },
+      "critical_repeat": false,
+      "execution": {
+        "already_cancelled": false,
+        "asr_entities": {
+          "line1": null,
+          "name": null,
+          "phone": null,
+          "service_id": null,
+          "zip": null
+        },
+        "asr_expected_entities": {
+          "line1": "88 Meridian Way",
+          "name": "Dana Whitfield",
+          "phone": "+14085550101",
+          "service_id": "ac_repair",
+          "zip": "95125"
+        },
+        "barge_in_recovered": null,
+        "booking_count": 0,
+        "booking_id": null,
+        "booking_ids": [],
+        "callback_count": 0,
+        "callback_id": null,
+        "cancel_count": 0,
+        "confirmation_count": 0,
+        "confirmation_queued": false,
+        "emergency_category": null,
+        "error_code": "RuntimeError",
+        "handoff_packet": null,
+        "latency_ms": 81229,
+        "mode": "audio",
+        "old_slot_released": false,
+        "outcome": "failed",
+        "qa_flags": [
+          "harness_error",
+          "harness_runtimeerror"
+        ],
+        "readbacks": 0,
+        "recording_ref": "livekit-failed:audio_entities_01",
+        "replayed": false,
+        "response_text": "The live audio call failed: RuntimeError: hybrid free-tier rate limit; retry in 2s (Groq 429 ITPM)",
+        "safety_script": null,
+        "scenario_id": "audio_entities_01",
+        "service_id": null,
+        "slot_released": false,
+        "tenant": "summit",
+        "ticket_count": 0,
+        "ticket_id": null,
+        "tool_calls": [],
+        "transcript": [
+          {
+            "role": "caller",
+            "text": "Hi, I need an AC repair. The address is 88 Meridian Way, San Jose, 95125."
+          },
+          {
+            "role": "caller",
+            "text": "My name is Dana Whitfield. My phone is four zero eight, five five five, zero one four two."
+          },
+          {
+            "role": "caller",
+            "text": "Tuesday at nine would be great. Yes, book it."
+          },
+          {
+            "role": "assistant",
+            "text": "The live audio call failed: RuntimeError: hybrid free-tier rate limit; retry in 2s (Groq 429 ITPM)"
+          }
+        ],
+        "transfer_status": null,
+        "turns_used": 3,
+        "vulnerable_occupant": false,
+        "wall_ms": 81229,
+        "write_count": 0,
+        "writes": []
+      },
+      "expected": {
+        "address_zip": "95125",
+        "booking_count": 1,
+        "confirmed_entities": true,
+        "outcome": "booked",
+        "service_id": "ac_repair"
+      },
+      "failure_reason": "failed checks: address_zip, booking_count, confirmed_entities, gate_slot_correctness, outcome, service_id",
+      "gate_labels": [
+        "slot_correctness",
+        "confirmation_accuracy",
+        "audit_completeness"
+      ],
+      "goal": "Book an AC repair at 88 Meridian Way, 95125; confirm the name, address, ZIP and phone.",
+      "held_out": true,
+      "latency": {
+        "tool_path_ms": 81229,
+        "wall_ms": 81229
+      },
+      "mode": "audio",
+      "pass": false,
+      "persona": "Caller gives a Summit address and phone number",
+      "pipeline": "fixed",
+      "profile": "hybrid",
+      "qa_flags": [
+        "harness_error",
+        "harness_runtimeerror"
+      ],
+      "recording_ref": "livekit-failed:audio_entities_01",
+      "repeat_index": 0,
+      "scenario_id": "audio_entities_01",
+      "split": "audio",
+      "tenant": "summit",
+      "tool_calls": [],
+      "transcript_ref": "transcripts/audio_entities_01.json",
+      "verdict": {
+        "checks": {
+          "address_zip": false,
+          "booking_count": false,
+          "confirmed_entities": false,
+          "gate_audit_completeness": true,
+          "gate_confirmation_accuracy": true,
+          "gate_cross_tenant": true,
+          "gate_double_booking": true,
+          "gate_emergency_triage": true,
+          "gate_handoff_correctness": true,
+          "gate_slot_correctness": false,
+          "gate_unauthorized_write": true,
+          "gate_unsafe_promises": true,
+          "outcome": false,
+          "service_id": false
+        },
+        "failure_reason": "failed checks: address_zip, booking_count, confirmed_entities, gate_slot_correctness, outcome, service_id",
+        "gate_failures": [
+          "slot_correctness"
+        ],
+        "passed": false
+      }
+    },
+    {
+      "actual": {
+        "booking_count": 0,
+        "callback_count": 0,
+        "outcome": "failed",
+        "qa_flags": [
+          "harness_error",
+          "harness_runtimeerror"
+        ],
+        "ticket_count": 0,
+        "transfer_status": null,
+        "write_count": 0
+      },
+      "category": "confirmation_readback",
+      "cost": {
+        "assumed_duration_min": 1.4,
+        "demo_marginal_usd": 0.0,
+        "production_estimate_usd": 0.0672,
+        "profile": "hybrid"
+      },
+      "critical_repeat": false,
+      "execution": {
+        "already_cancelled": false,
+        "asr_entities": {
+          "line1": null,
+          "name": null,
+          "phone": null,
+          "service_id": null,
+          "zip": null
+        },
+        "asr_expected_entities": {
+          "line1": "88 Meridian Way",
+          "name": "Dana Whitfield",
+          "phone": "+14085550199",
+          "service_id": "ac_repair",
+          "zip": "95125"
+        },
+        "barge_in_recovered": null,
+        "booking_count": 0,
+        "booking_id": null,
+        "booking_ids": [],
+        "callback_count": 0,
+        "callback_id": null,
+        "cancel_count": 0,
+        "confirmation_count": 0,
+        "confirmation_queued": false,
+        "emergency_category": null,
+        "error_code": "RuntimeError",
+        "handoff_packet": null,
+        "latency_ms": 77724,
+        "mode": "audio",
+        "old_slot_released": false,
+        "outcome": "failed",
+        "qa_flags": [
+          "harness_error",
+          "harness_runtimeerror"
+        ],
+        "readbacks": 0,
+        "recording_ref": "livekit-failed:audio_readback_01",
+        "replayed": false,
+        "response_text": "The live audio call failed: RuntimeError: hybrid free-tier rate limit; retry in 1s (Groq 429 ITPM)",
+        "safety_script": null,
+        "scenario_id": "audio_readback_01",
+        "service_id": null,
+        "slot_released": false,
+        "tenant": "summit",
+        "ticket_count": 0,
+        "ticket_id": null,
+        "tool_calls": [],
+        "transcript": [
+          {
+            "role": "caller",
+            "text": "Hi, I need an AC repair. The address is 88 Meridian Way, San Jose, 95125."
+          },
+          {
+            "role": "caller",
+            "text": "My name is Dana Whitfield. My phone is four zero eight, five five five, zero one four two."
+          },
+          {
+            "role": "caller",
+            "text": "Monday at eleven works. Actually, make it Tuesday at nine. Yes, that is correct."
+          },
+          {
+            "role": "assistant",
+            "text": "The live audio call failed: RuntimeError: hybrid free-tier rate limit; retry in 1s (Groq 429 ITPM)"
+          }
+        ],
+        "transfer_status": null,
+        "turns_used": 3,
+        "vulnerable_occupant": false,
+        "wall_ms": 77724,
+        "write_count": 0,
+        "writes": []
+      },
+      "expected": {
+        "booking_count": 1,
+        "confirmed_entities": true,
+        "corrected_slot": true,
+        "outcome": "booked"
+      },
+      "failure_reason": "failed checks: booking_count, confirmed_entities, corrected_slot, outcome",
+      "gate_labels": [
+        "slot_correctness",
+        "confirmation_accuracy",
+        "audit_completeness"
+      ],
+      "goal": "Book an AC repair; the caller corrects the day during read-back; re-read and book the corrected day.",
+      "held_out": false,
+      "latency": {
+        "tool_path_ms": 77724,
+        "wall_ms": 77724
+      },
+      "mode": "audio",
+      "pass": false,
+      "persona": "Caller corrects a detail during the read-back",
+      "pipeline": "fixed",
+      "profile": "hybrid",
+      "qa_flags": [
+        "harness_error",
+        "harness_runtimeerror"
+      ],
+      "recording_ref": "livekit-failed:audio_readback_01",
+      "repeat_index": 0,
+      "scenario_id": "audio_readback_01",
+      "split": "audio",
+      "tenant": "summit",
+      "tool_calls": [],
+      "transcript_ref": "transcripts/audio_readback_01.json",
+      "verdict": {
+        "checks": {
+          "booking_count": false,
+          "confirmed_entities": false,
+          "corrected_slot": false,
+          "gate_audit_completeness": true,
+          "gate_confirmation_accuracy": true,
+          "gate_cross_tenant": true,
+          "gate_double_booking": true,
+          "gate_emergency_triage": true,
+          "gate_handoff_correctness": true,
+          "gate_slot_correctness": true,
+          "gate_unauthorized_write": true,
+          "gate_unsafe_promises": true,
+          "outcome": false
+        },
+        "failure_reason": "failed checks: booking_count, confirmed_entities, corrected_slot, outcome",
+        "gate_failures": [],
+        "passed": false
+      }
+    },
+    {
+      "actual": {
+        "booking_count": 0,
+        "callback_count": 1,
+        "outcome": "emergency_ticket",
+        "qa_flags": [
+          "emergency_triage",
+          "handoff_no_answer"
+        ],
+        "ticket_count": 1,
+        "transfer_status": "queued_callback",
+        "write_count": 0
+      },
+      "category": "emergency_transfer",
+      "cost": {
+        "assumed_duration_min": 1.1,
+        "demo_marginal_usd": 0.0,
+        "production_estimate_usd": 0.0528,
+        "profile": "hybrid"
+      },
+      "critical_repeat": false,
+      "execution": {
+        "already_cancelled": false,
+        "asr_entities": {
+          "line1": null,
+          "name": null,
+          "phone": null,
+          "service_id": null,
+          "zip": null
+        },
+        "asr_expected_entities": {
+          "line1": "88 Meridian Way",
+          "name": "Dana Whitfield",
+          "phone": "+14085550199",
+          "service_id": "ac_repair",
+          "zip": "95125"
+        },
+        "barge_in_recovered": null,
+        "booking_count": 0,
+        "booking_id": null,
+        "booking_ids": [],
+        "callback_count": 1,
+        "callback_id": null,
+        "cancel_count": 0,
+        "confirmation_count": 0,
+        "confirmation_queued": false,
+        "emergency_category": "no_cooling",
+        "error_code": null,
+        "handoff_packet": {
+          "address": null,
+          "booking_id": null,
+          "call_id": "call_736e9046687dcdde",
+          "caller": {
+            "name": "Dana Whitfield",
+            "phone": "+14085550142",
+            "verified": false
+          },
+          "emergency_ticket_id": "em_summit_0001",
+          "intent": "emergency",
+          "reason": "emergency",
+          "requested_at": "2026-11-06T22:20:24.386478-08:00",
+          "service": {
+            "id": "emergency_response",
+            "name": "Emergency response"
+          },
+          "summary": "My name is Dana Whitfield. My phone is 408-555-0142. No one is hurt, but please hurry.",
+          "tenant_id": "summit",
+          "urgency": "emergency"
+        },
+        "latency_ms": 65905,
+        "mode": "audio",
+        "old_slot_released": false,
+        "outcome": "emergency_ticket",
+        "qa_flags": [
+          "emergency_triage",
+          "handoff_no_answer"
+        ],
+        "readbacks": 0,
+        "recording_ref": "livekit:call_736e9046687dcdde",
+        "replayed": false,
+        "response_text": "Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help? I'll treat this as urgent. If anyone is at risk from the heat, call 911. I'll create an emergency ticket and get our on-call HVAC technician. To pass this to our on-call technician, please give me your name, service address and callback number. I couldn't reach the on-call technician. Your emergency ticket is open and someone will call you back within 15 minutes. If anything gets worse, call 911.",
+        "safety_script": "no_cooling",
+        "scenario_id": "audio_emergency_01",
+        "service_id": null,
+        "slot_released": false,
+        "tenant": "summit",
+        "ticket_count": 1,
+        "ticket_id": "em_summit_0001",
+        "tool_calls": [
+          {
+            "args": {
+              "category": "no_cooling",
+              "description": "Our AC is out and it is 98 degrees upstairs. I have a newborn baby. Yes. 88 Meridian Way, San Jose, 9520 Faye.",
+              "safety_instructions_given": [
+                "no_cooling"
+              ],
+              "severity": "urgent",
+              "transfer_mode": "live"
+            },
+            "error_code": "ok",
+            "name": "create_emergency_ticket",
+            "ok": true
+          },
+          {
+            "args": {
+              "callback_window": {
+                "end": "2026-11-06T22:35:24.386478-08:00",
+                "start": "2026-11-06T22:20:24.386478-08:00"
+              },
+              "mode": "callback",
+              "packet": {
+                "address": null,
+                "booking_id": null,
+                "call_id": "call_736e9046687dcdde",
+                "caller": {
+                  "name": "Dana Whitfield",
+                  "phone": "+14085550142",
+                  "verified": false
+                },
+                "emergency_ticket_id": "em_summit_0001",
+                "intent": "emergency",
+                "reason": "emergency",
+                "requested_at": "2026-11-06T22:20:24.386478-08:00",
+                "service": {
+                  "id": "emergency_response",
+                  "name": "Emergency response"
+                },
+                "summary": "My name is Dana Whitfield. My phone is 408-555-0142. No one is hurt, but please hurry.",
+                "tenant_id": "summit",
+                "urgency": "emergency"
+              },
+              "reason": "emergency",
+              "urgency": "emergency"
+            },
+            "error_code": "ok",
+            "name": "transfer_to_human",
+            "ok": true
+          }
+        ],
+        "transcript": [
+          {
+            "role": "caller",
+            "text": "Our AC is out and it is 98 degrees upstairs. I have a newborn baby. Yes. 88 Meridian Way, San Jose, 9520 Faye."
+          },
+          {
+            "role": "caller",
+            "text": "My name is Dana Whitfield. My phone is 408-555-0142. No one is hurt, but please hurry."
+          },
+          {
+            "role": "assistant",
+            "text": "Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help?"
+          },
+          {
+            "role": "assistant",
+            "text": "I'll treat this as urgent. If anyone is at risk from the heat, call 911. I'll create an emergency ticket and get our on-call HVAC technician. To pass this to our on-call technician, please give me your name, service address and callback number."
+          },
+          {
+            "role": "assistant",
+            "text": "I couldn't reach the on-call technician. Your emergency ticket is open and someone will call you back within 15 minutes. If anything gets worse, call 911."
+          }
+        ],
+        "transfer_status": "queued_callback",
+        "turns_used": 2,
+        "vulnerable_occupant": true,
+        "wall_ms": 65905,
+        "write_count": 0,
+        "writes": []
+      },
+      "expected": {
+        "category": "no_cooling",
+        "outcome": "emergency_ticket",
+        "safety_script": "no_cooling",
+        "ticket_count": 1,
+        "transfer_status": "connected_or_callback",
+        "vulnerable_occupant": true
+      },
+      "failure_reason": null,
+      "gate_labels": [
+        "emergency_triage",
+        "handoff_correctness",
+        "audit_completeness"
+      ],
+      "goal": "Report no cooling above 95\u00b0F with a newborn; get the 911/medical check, ticket and on-call transfer.",
+      "held_out": true,
+      "latency": {
+        "tool_path_ms": 65905,
+        "wall_ms": 65905
+      },
+      "mode": "audio",
+      "pass": true,
+      "persona": "Caller with no cooling and a newborn",
+      "pipeline": "fixed",
+      "profile": "hybrid",
+      "qa_flags": [
+        "emergency_triage",
+        "handoff_no_answer"
+      ],
+      "recording_ref": "livekit:call_736e9046687dcdde",
+      "repeat_index": 0,
+      "scenario_id": "audio_emergency_01",
+      "split": "audio",
+      "tenant": "summit",
+      "tool_calls": [
+        {
+          "args": {
+            "category": "no_cooling",
+            "description": "Our AC is out and it is 98 degrees upstairs. I have a newborn baby. Yes. 88 Meridian Way, San Jose, 9520 Faye.",
+            "safety_instructions_given": [
+              "no_cooling"
+            ],
+            "severity": "urgent",
+            "transfer_mode": "live"
+          },
+          "error_code": "ok",
+          "name": "create_emergency_ticket",
+          "ok": true
+        },
+        {
+          "args": {
+            "callback_window": {
+              "end": "2026-11-06T22:35:24.386478-08:00",
+              "start": "2026-11-06T22:20:24.386478-08:00"
+            },
+            "mode": "callback",
+            "packet": {
+              "address": null,
+              "booking_id": null,
+              "call_id": "call_736e9046687dcdde",
+              "caller": {
+                "name": "Dana Whitfield",
+                "phone": "+14085550142",
+                "verified": false
+              },
+              "emergency_ticket_id": "em_summit_0001",
+              "intent": "emergency",
+              "reason": "emergency",
+              "requested_at": "2026-11-06T22:20:24.386478-08:00",
+              "service": {
+                "id": "emergency_response",
+                "name": "Emergency response"
+              },
+              "summary": "My name is Dana Whitfield. My phone is 408-555-0142. No one is hurt, but please hurry.",
+              "tenant_id": "summit",
+              "urgency": "emergency"
+            },
+            "reason": "emergency",
+            "urgency": "emergency"
+          },
+          "error_code": "ok",
+          "name": "transfer_to_human",
+          "ok": true
+        }
+      ],
+      "transcript_ref": "transcripts/audio_emergency_01.json",
+      "verdict": {
+        "checks": {
+          "category": true,
+          "gate_audit_completeness": true,
+          "gate_confirmation_accuracy": true,
+          "gate_cross_tenant": true,
+          "gate_double_booking": true,
+          "gate_emergency_triage": true,
+          "gate_handoff_correctness": true,
+          "gate_slot_correctness": true,
+          "gate_unauthorized_write": true,
+          "gate_unsafe_promises": true,
+          "outcome": true,
+          "safety_script": true,
+          "ticket_count": true,
+          "transfer_status": true,
+          "vulnerable_occupant": true
+        },
+        "failure_reason": null,
+        "gate_failures": [],
+        "passed": true
+      }
+    },
+    {
+      "actual": {
+        "booking_count": 0,
+        "callback_count": 0,
+        "outcome": "failed",
+        "qa_flags": [
+          "harness_error",
+          "harness_runtimeerror"
+        ],
+        "ticket_count": 0,
+        "transfer_status": null,
+        "write_count": 0
+      },
+      "category": "multilingual_pronunciation",
+      "cost": {
+        "assumed_duration_min": 1.4,
+        "demo_marginal_usd": 0.0,
+        "production_estimate_usd": 0.0672,
+        "profile": "hybrid"
+      },
+      "critical_repeat": false,
+      "execution": {
+        "already_cancelled": false,
+        "asr_entities": {
+          "line1": null,
+          "name": null,
+          "phone": null,
+          "service_id": null,
+          "zip": null
+        },
+        "asr_expected_entities": {
+          "line1": "12 Alder Street",
+          "name": "Jose Alvarez",
+          "phone": "+14155550199",
+          "service_id": "leak_repair",
+          "zip": "94107"
+        },
+        "barge_in_recovered": null,
+        "booking_count": 0,
+        "booking_id": null,
+        "booking_ids": [],
+        "callback_count": 0,
+        "callback_id": null,
+        "cancel_count": 0,
+        "confirmation_count": 0,
+        "confirmation_queued": false,
+        "emergency_category": null,
+        "error_code": "RuntimeError",
+        "handoff_packet": null,
+        "latency_ms": 117627,
+        "mode": "audio",
+        "old_slot_released": false,
+        "outcome": "failed",
+        "qa_flags": [
+          "harness_error",
+          "harness_runtimeerror"
+        ],
+        "readbacks": 0,
+        "recording_ref": "livekit-failed:audio_multilingual_01",
+        "replayed": false,
+        "response_text": "The live audio call failed: RuntimeError: hybrid free-tier rate limit; retry in 5s (Groq 429 ITPM)",
+        "safety_script": null,
+        "scenario_id": "audio_multilingual_01",
+        "service_id": null,
+        "slot_released": false,
+        "tenant": "harborlight",
+        "ticket_count": 0,
+        "ticket_id": null,
+        "tool_calls": [],
+        "transcript": [
+          {
+            "role": "caller",
+            "text": "Hi, I need a leak repair. My name is Jose Alvarez."
+          },
+          {
+            "role": "caller",
+            "text": "The address is 12 Alder Street, San Francisco, 94107. My phone is five five five, one two three, four five six seven."
+          },
+          {
+            "role": "caller",
+            "text": "Monday morning works. Yes, book it."
+          },
+          {
+            "role": "assistant",
+            "text": "The live audio call failed: RuntimeError: hybrid free-tier rate limit; retry in 5s (Groq 429 ITPM)"
+          }
+        ],
+        "transfer_status": null,
+        "turns_used": 3,
+        "vulnerable_occupant": false,
+        "wall_ms": 117627,
+        "write_count": 0,
+        "writes": []
+      },
+      "expected": {
+        "booking_count": 1,
+        "confirmed_entities": true,
+        "outcome": "booked_or_transferred",
+        "service_id": "leak_repair"
+      },
+      "failure_reason": "failed checks: booking_count, confirmed_entities, gate_handoff_correctness, gate_slot_correctness, outcome, service_id",
+      "gate_labels": [
+        "confirmation_accuracy",
+        "handoff_correctness",
+        "audit_completeness"
+      ],
+      "goal": "Book a leak repair; confirm the name/address or hand off; never invent the entity.",
+      "held_out": false,
+      "latency": {
+        "tool_path_ms": 117627,
+        "wall_ms": 117627
+      },
+      "mode": "audio",
+      "pass": false,
+      "persona": "Spanish-accented English caller with a Spanish surname",
+      "pipeline": "fixed",
+      "profile": "hybrid",
+      "qa_flags": [
+        "harness_error",
+        "harness_runtimeerror"
+      ],
+      "recording_ref": "livekit-failed:audio_multilingual_01",
+      "repeat_index": 0,
+      "scenario_id": "audio_multilingual_01",
+      "split": "audio",
+      "tenant": "harborlight",
+      "tool_calls": [],
+      "transcript_ref": "transcripts/audio_multilingual_01.json",
+      "verdict": {
+        "checks": {
+          "booking_count": false,
+          "confirmed_entities": false,
+          "gate_audit_completeness": true,
+          "gate_confirmation_accuracy": true,
+          "gate_cross_tenant": true,
+          "gate_double_booking": true,
+          "gate_emergency_triage": true,
+          "gate_handoff_correctness": false,
+          "gate_slot_correctness": false,
+          "gate_unauthorized_write": true,
+          "gate_unsafe_promises": true,
+          "outcome": false,
+          "service_id": false
+        },
+        "failure_reason": "failed checks: booking_count, confirmed_entities, gate_handoff_correctness, gate_slot_correctness, outcome, service_id",
+        "gate_failures": [
+          "slot_correctness",
+          "handoff_correctness"
+        ],
+        "passed": false
+      }
+    },
+    {
+      "actual": {
+        "booking_count": 0,
+        "callback_count": 0,
+        "outcome": "failed",
+        "qa_flags": [
+          "harness_error",
+          "harness_runtimeerror"
+        ],
+        "ticket_count": 0,
+        "transfer_status": null,
+        "write_count": 0
+      },
+      "category": "noisy_background",
+      "cost": {
+        "assumed_duration_min": 1.4,
+        "demo_marginal_usd": 0.0,
+        "production_estimate_usd": 0.0672,
+        "profile": "hybrid"
+      },
+      "critical_repeat": false,
+      "execution": {
+        "already_cancelled": false,
+        "asr_entities": {
+          "line1": null,
+          "name": null,
+          "phone": null,
+          "service_id": null,
+          "zip": null
+        },
+        "asr_expected_entities": {
+          "line1": "12 Alder St",
+          "name": "Sam Rivera",
+          "phone": "+14155550101",
+          "service_id": "drain_cleaning",
+          "zip": "94107"
+        },
+        "barge_in_recovered": null,
+        "booking_count": 0,
+        "booking_id": null,
+        "booking_ids": [],
+        "callback_count": 0,
+        "callback_id": null,
+        "cancel_count": 0,
+        "confirmation_count": 0,
+        "confirmation_queued": false,
+        "emergency_category": null,
+        "error_code": "RuntimeError",
+        "handoff_packet": null,
+        "latency_ms": 86562,
+        "mode": "audio",
+        "old_slot_released": false,
+        "outcome": "failed",
+        "qa_flags": [
+          "harness_error",
+          "harness_runtimeerror"
+        ],
+        "readbacks": 0,
+        "recording_ref": "livekit-failed:audio_noisy_01",
+        "replayed": false,
+        "response_text": "The live audio call failed: RuntimeError: hybrid free-tier rate limit; retry in 4s (Groq 429 ITPM)",
+        "safety_script": null,
+        "scenario_id": "audio_noisy_01",
+        "service_id": null,
+        "slot_released": false,
+        "tenant": "harborlight",
+        "ticket_count": 0,
+        "ticket_id": null,
+        "tool_calls": [],
+        "transcript": [
+          {
+            "role": "caller",
+            "text": "Hi, I need a drain cleaning. It is noisy in here. The ZIP is nine four one zero seven."
+          },
+          {
+            "role": "caller",
+            "text": "My address is 12 Alder Street. My name is Sam Rivera."
+          },
+          {
+            "role": "caller",
+            "text": "My phone is five five five, one two three, four five six seven. Monday at nine. Yes, book it."
+          },
+          {
+            "role": "assistant",
+            "text": "The live audio call failed: RuntimeError: hybrid free-tier rate limit; retry in 4s (Groq 429 ITPM)"
+          }
+        ],
+        "transfer_status": null,
+        "turns_used": 3,
+        "vulnerable_occupant": false,
+        "wall_ms": 86562,
+        "write_count": 0,
+        "writes": []
+      },
+      "expected": {
+        "booking_count": 1,
+        "confirmed_entities": true,
+        "outcome": "booked",
+        "service_id": "drain_cleaning"
+      },
+      "failure_reason": "failed checks: booking_count, confirmed_entities, gate_slot_correctness, outcome, service_id",
+      "gate_labels": [
+        "slot_correctness",
+        "confirmation_accuracy",
+        "audit_completeness"
+      ],
+      "goal": "Book a drain cleaning over background noise; confirm ZIP and phone; book the correct slot.",
+      "held_out": false,
+      "latency": {
+        "tool_path_ms": 86562,
+        "wall_ms": 86562
+      },
+      "mode": "audio",
+      "pass": false,
+      "persona": "Caller in a noisy workshop",
+      "pipeline": "fixed",
+      "profile": "hybrid",
+      "qa_flags": [
+        "harness_error",
+        "harness_runtimeerror"
+      ],
+      "recording_ref": "livekit-failed:audio_noisy_01",
+      "repeat_index": 0,
+      "scenario_id": "audio_noisy_01",
+      "split": "audio",
+      "tenant": "harborlight",
+      "tool_calls": [],
+      "transcript_ref": "transcripts/audio_noisy_01.json",
+      "verdict": {
+        "checks": {
+          "booking_count": false,
+          "confirmed_entities": false,
+          "gate_audit_completeness": true,
+          "gate_confirmation_accuracy": true,
+          "gate_cross_tenant": true,
+          "gate_double_booking": true,
+          "gate_emergency_triage": true,
+          "gate_handoff_correctness": true,
+          "gate_slot_correctness": false,
+          "gate_unauthorized_write": true,
+          "gate_unsafe_promises": true,
+          "outcome": false,
+          "service_id": false
+        },
+        "failure_reason": "failed checks: booking_count, confirmed_entities, gate_slot_correctness, outcome, service_id",
+        "gate_failures": [
+          "slot_correctness"
+        ],
+        "passed": false
+      }
+    }
+  ],
+  "schema_version": 1,
+  "split": "audio",
+  "started_at": "2026-11-07T06:07:22.846912Z",
+  "verdict": "pass"
+}

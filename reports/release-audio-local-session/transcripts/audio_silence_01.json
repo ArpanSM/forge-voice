@@ -1,0 +1,136 @@
+{
+  "latency": {
+    "tool_path_ms": 80,
+    "wall_ms": 80
+  },
+  "pipeline": "fixed",
+  "profile": "local",
+  "qa_flags": [
+    "silence_recovered"
+  ],
+  "recording_ref": "fixtures/audio/silence_01.wav",
+  "repeat_index": 0,
+  "scenario_id": "audio_silence_01",
+  "split": "audio-local",
+  "tool_calls": [
+    {
+      "error_code": null,
+      "name": "get_service_area",
+      "ok": true,
+      "result": {
+        "data": {
+          "in_area": true,
+          "message": "We cover 94107."
+        },
+        "error": null
+      }
+    },
+    {
+      "error_code": null,
+      "name": "get_availability",
+      "ok": true,
+      "result": {
+        "data": {
+          "slots": [
+            {
+              "slot_id": "slot_hl_00001",
+              "start": "2026-11-09T07:00:00-08:00",
+              "technician": "Alex"
+            },
+            {
+              "slot_id": "slot_hl_00010",
+              "start": "2026-11-10T11:30:00-08:00",
+              "technician": "Alex"
+            },
+            {
+              "slot_id": "slot_hl_00016",
+              "start": "2026-11-11T09:30:00-08:00",
+              "technician": "Alex"
+            }
+          ]
+        },
+        "error": null
+      }
+    },
+    {
+      "error_code": null,
+      "name": "book_appointment",
+      "ok": true,
+      "result": {
+        "data": {
+          "readback": "Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder St, San Francisco 94107, for Sam Rivera at +14155550101. Should I book that?",
+          "target": "slot_hl_00001"
+        },
+        "error": null
+      }
+    },
+    {
+      "error_code": null,
+      "name": "book_appointment",
+      "ok": true,
+      "result": {
+        "data": {
+          "booking": {
+            "address": {
+              "city": "San Francisco",
+              "line1": "12 Alder St",
+              "state": "CA",
+              "zip": "94107"
+            },
+            "booking_id": "bk_harborlight_0001",
+            "confirmation": {
+              "email": "not_requested",
+              "sms": "queued"
+            },
+            "contact_phone": "+14155550101",
+            "end": "2026-11-09T08:00:00-08:00",
+            "service_id": "drain_cleaning",
+            "start": "2026-11-09T07:00:00-08:00",
+            "status": "booked",
+            "technician": {
+              "id": "tech_alex",
+              "name": "Alex"
+            }
+          },
+          "confirmation_queued": true,
+          "replayed": false
+        },
+        "error": null
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "caller",
+      "text": "Hello? Sorry, I need a drain cleaning. The ZIP is nine four one zero seven."
+    },
+    {
+      "role": "caller",
+      "text": "My address is 12 Alder Street. My name is Sam Rivera. My phone is five five five, one two three, four five six seven."
+    },
+    {
+      "role": "caller",
+      "text": "Monday at nine. Yes, book it."
+    },
+    {
+      "role": "assistant",
+      "text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help?"
+    },
+    {
+      "role": "assistant",
+      "text": "We cover 94107."
+    },
+    {
+      "role": "assistant",
+      "text": "Available times: Monday 9 November at 7:00 AM with Alex; Tuesday 10 November at 11:30 AM with Alex; Wednesday 11 November at 9:30 AM with Alex. Which one works?"
+    },
+    {
+      "role": "assistant",
+      "text": "Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder St, San Francisco 94107, for Sam Rivera at +14155550101. Should I book that?"
+    },
+    {
+      "role": "assistant",
+      "text": "Booked. Monday 9 November at 7:00 AM is confirmed and a text confirmation is queued."
+    }
+  ]
+}

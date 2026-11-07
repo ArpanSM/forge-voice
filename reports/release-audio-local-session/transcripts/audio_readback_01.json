@@ -1,0 +1,181 @@
+{
+  "latency": {
+    "tool_path_ms": 78,
+    "wall_ms": 78
+  },
+  "pipeline": "fixed",
+  "profile": "local",
+  "qa_flags": [],
+  "recording_ref": "fixtures/audio/readback_01.wav",
+  "repeat_index": 0,
+  "scenario_id": "audio_readback_01",
+  "split": "audio-local",
+  "tool_calls": [
+    {
+      "error_code": null,
+      "name": "get_service_area",
+      "ok": true,
+      "result": {
+        "data": {
+          "in_area": true,
+          "message": "We cover 95125."
+        },
+        "error": null
+      }
+    },
+    {
+      "error_code": null,
+      "name": "get_availability",
+      "ok": true,
+      "result": {
+        "data": {
+          "slots": [
+            {
+              "slot_id": "slot_sm_00001",
+              "start": "2026-11-09T07:00:00-08:00",
+              "technician": "Casey"
+            },
+            {
+              "slot_id": "slot_sm_00004",
+              "start": "2026-11-09T07:00:00-08:00",
+              "technician": "Dana"
+            },
+            {
+              "slot_id": "slot_sm_00010",
+              "start": "2026-11-10T11:30:00-08:00",
+              "technician": "Casey"
+            }
+          ]
+        },
+        "error": null
+      }
+    },
+    {
+      "error_code": null,
+      "name": "book_appointment",
+      "ok": true,
+      "result": {
+        "data": {
+          "readback": "Just to confirm: Air conditioning repair on Monday 9 November at 7:00 AM with Casey at 88 Meridian Way, San Jose 95125, for Dana Whitfield at +14085550199. Should I book that?",
+          "target": "slot_sm_00001"
+        },
+        "error": null
+      }
+    },
+    {
+      "error_code": null,
+      "name": "get_availability",
+      "ok": true,
+      "result": {
+        "data": {
+          "slots": [
+            {
+              "slot_id": "slot_sm_00001",
+              "start": "2026-11-09T07:00:00-08:00",
+              "technician": "Casey"
+            },
+            {
+              "slot_id": "slot_sm_00004",
+              "start": "2026-11-09T07:00:00-08:00",
+              "technician": "Dana"
+            },
+            {
+              "slot_id": "slot_sm_00010",
+              "start": "2026-11-10T11:30:00-08:00",
+              "technician": "Casey"
+            }
+          ]
+        },
+        "error": null
+      }
+    },
+    {
+      "error_code": null,
+      "name": "book_appointment",
+      "ok": true,
+      "result": {
+        "data": {
+          "readback": "Just to confirm: Air conditioning repair on Tuesday 10 November at 11:30 AM with Casey at 88 Meridian Way, San Jose 95125, for Dana Whitfield at +14085550199. Should I book that?",
+          "target": "slot_sm_00010"
+        },
+        "error": null
+      }
+    },
+    {
+      "error_code": null,
+      "name": "book_appointment",
+      "ok": true,
+      "result": {
+        "data": {
+          "booking": {
+            "address": {
+              "city": "San Jose",
+              "line1": "88 Meridian Way",
+              "state": "CA",
+              "zip": "95125"
+            },
+            "booking_id": "bk_summit_0003",
+            "confirmation": {
+              "email": "not_requested",
+              "sms": "queued"
+            },
+            "contact_phone": "+14085550199",
+            "end": "2026-11-10T13:00:00-08:00",
+            "service_id": "ac_repair",
+            "start": "2026-11-10T11:30:00-08:00",
+            "status": "booked",
+            "technician": {
+              "id": "tech_casey",
+              "name": "Casey"
+            }
+          },
+          "confirmation_queued": true,
+          "replayed": false
+        },
+        "error": null
+      }
+    }
+  ],
+  "transcript": [
+    {
+      "role": "caller",
+      "text": "Hi, I need an AC repair. The address is 88 Meridian Way, San Jose, 95125."
+    },
+    {
+      "role": "caller",
+      "text": "My name is Dana Whitfield. My phone is four zero eight, five five five, zero one four two."
+    },
+    {
+      "role": "caller",
+      "text": "Monday at eleven works. Actually, make it Tuesday at nine. Yes, that is correct."
+    },
+    {
+      "role": "assistant",
+      "text": "Thanks for calling Summit Heating and Air. This is Maya, the virtual assistant. This call is recorded for quality. How can I help?"
+    },
+    {
+      "role": "assistant",
+      "text": "We cover 95125."
+    },
+    {
+      "role": "assistant",
+      "text": "Available times: Monday 9 November at 7:00 AM with Casey; Monday 9 November at 7:00 AM with Dana; Tuesday 10 November at 11:30 AM with Casey. Which one works?"
+    },
+    {
+      "role": "assistant",
+      "text": "Just to confirm: Air conditioning repair on Monday 9 November at 7:00 AM with Casey at 88 Meridian Way, San Jose 95125, for Dana Whitfield at +14085550199. Should I book that?"
+    },
+    {
+      "role": "assistant",
+      "text": "Available times: Monday 9 November at 7:00 AM with Casey; Monday 9 November at 7:00 AM with Dana; Tuesday 10 November at 11:30 AM with Casey. Which one works?"
+    },
+    {
+      "role": "assistant",
+      "text": "Just to confirm: Air conditioning repair on Tuesday 10 November at 11:30 AM with Casey at 88 Meridian Way, San Jose 95125, for Dana Whitfield at +14085550199. Should I book that?"
+    },
+    {
+      "role": "assistant",
+      "text": "Booked. Tuesday 10 November at 11:30 AM is confirmed and a text confirmation is queued."
+    }
+  ]
+}
