@@ -27,8 +27,9 @@ these assets, not a release claim.
 | `make eval-baseline` | 0 | **local 0/40** (`00764f7`); hybrid **not_run_provider_quota 0/0** (`81e71cf`, prior evidence); never gates | [local](../reports/release-baseline-local/report.md) · [hybrid](../reports/release-baseline-hybrid/report.md) |
 
 **Evidence commit:** the reports below were regenerated from code commit
-`00764f7d5a0442fe6c218d35b881535b38116f75`; the tag points at the later report-output commit.
-Do not describe a report as generated at the tag unless its `git_sha` matches the tag. The
+`00764f7d5a0442fe6c218d35b881535b38116f75`; the tag points at the final commit after the
+report-output commit. Do not describe a report as generated at the tag unless its `git_sha`
+matches the tag. The
 hybrid baseline report is prior-commit evidence (`81e71cf`) with `not_run_provider_quota` 0/0;
 the local baseline report was regenerated at `00764f7` and is 0/40.
 
