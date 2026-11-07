@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forge Voice static dashboard export</title>
+  <link rel="icon" href="data:,">
+  
+  <style>
+:root { color-scheme: light dark; font-family: system-ui, -apple-system, Segoe UI, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; line-height: 1.5; background: Canvas; color: CanvasText; }
+a { color: #2f7ed8; }
+.site-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline;
+  justify-content: space-between; padding: 18px 28px; border-bottom: 1px solid #8884; }
+.site-head .brand { font-weight: 700; font-size: 1.1rem; text-decoration: none; color: inherit; }
+.site-head nav { display: flex; flex-wrap: wrap; gap: 16px; font-size: .94rem; }
+main, #dashboard-live { display: block; max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+main { padding-bottom: 24px; }
+h1 { margin: 22px 0 4px; font-size: 1.7rem; }
+h2 { font-size: 1.05rem; margin: 0 0 12px; }
+.sub { margin: 0 0 16px; color: #777; }
+.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin: 20px 0;
+  padding: 14px 16px; border: 1px solid #8884; border-radius: 12px; }
+.filters label { display: grid; gap: 4px; font-size: .82rem; font-weight: 600; }
+.filters select, .filters input, .filters button { padding: 8px 10px; font: inherit;
+  border-radius: 7px; border: 1px solid #8886; background: Canvas; color: CanvasText; }
+.filters button, button { cursor: pointer; padding: 8px 12px; font: inherit; border-radius: 7px;
+  border: 1px solid #8886; background: #2f7ed8; color: white; }
+.filters .reset { align-self: center; font-size: .9rem; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px; margin: 14px 0 20px; }
+.card { border: 1px solid #8884; border-radius: 12px; padding: 12px 14px;
+  display: grid; gap: 2px; }
+.card-label { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: #777; }
+.card-value { font-size: 1.35rem; }
+.card-note { font-size: .78rem; color: #777; }
+.banner { margin-top: 18px; padding: 12px 16px; border-radius: 12px; border: 1px solid; }
+.banner.ok { border-color: #2c9a5e66; background: #2c9a5e12; }
+.banner.alert { border-color: #d6454566; background: #d6454512; }
+.banner ul { margin: 8px 0 0; padding-left: 20px; }
+.panel { border: 1px solid #8884; border-radius: 12px; padding: 16px; margin: 16px 0; }
+.panel-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+th, td { text-align: left; padding: 8px 9px; border-bottom: 1px solid #8883; vertical-align: top; }
+th { font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; color: #777; }
+td.flags { max-width: 230px; }
+.muted { color: #777; }
+.footnote { font-size: .82rem; color: #777; margin: 18px 0 28px; }
+.badge { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: .74rem;
+  font-weight: 700; background: #8882; }
+.badge.ok, .badge.success { background: #2c9a5e22; color: #237a4a; }
+.badge.critical, .badge.error { background: #d6454522; color: #b52f2f; }
+.badge.warning { background: #d99a1e22; color: #8a5c00; }
+.badge.neutral { background: #8882; }
+.chip { display: inline-block; margin: 2px 4px 2px 0; padding: 2px 8px; border-radius: 999px;
+  background: #8882; font-size: .8rem; }
+.chip.warn { background: #d99a1e22; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.back { display: inline-block; margin-top: 18px; font-size: .9rem; text-decoration: none; }
+.transcript { max-height: 430px; overflow-y: auto; padding-right: 8px; }
+.transcript p { margin: 6px 0; }
+.transcript .caller strong { color: #2f7ed8; }
+.transcript .agent strong { color: #2c9a5e; }
+.timeline { margin: 0; padding-left: 22px; }
+.timeline li { margin: 10px 0; }
+.tool-name { font-weight: 700; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+pre.args { margin: 4px 0; white-space: pre-wrap; word-break: break-word; font-size: .78rem;
+  color: #666; }
+pre { background: #8881; padding: 10px 12px; border-radius: 8px; overflow-x: auto; }
+.waterfall { display: grid; gap: 8px; margin: 14px 0; }
+.wf-row { display: grid; grid-template-columns: 150px 1fr 90px; gap: 10px; align-items: center;
+  font-size: .86rem; }
+.wf-label { color: #666; }
+.wf-track { height: 16px; background: #8881; border-radius: 999px; overflow: hidden; }
+.wf-bar { height: 100%; }
+.wf-bar.stt { background: #2f7ed8; }
+.wf-bar.llm { background: #7d5bd6; }
+.wf-bar.tool { background: #d99a1e; }
+.wf-bar.tts { background: #2c9a5e; }
+.wf-value { text-align: right; font-variant-numeric: tabular-nums; }
+.total { margin: 10px 0 2px; }
+.callout { padding: 10px 12px; border-radius: 10px; border: 1px solid #8884; }
+.callout.amber { background: #d99a1e12; border-color: #d99a1e66; }
+.excerpt { max-width: 320px; }
+.empty { text-align: center; color: #777; padding: 22px; }
+.site-foot { padding: 20px 28px; border-top: 1px solid #8884; color: #777; font-size: .8rem; }
+form { margin: 0; }
+td form button { padding: 4px 8px; font-size: .78rem; }
+@media (max-width: 640px) {
+  main, #dashboard-live { padding: 0 14px; }
+  .site-head { padding: 14px; }
+  .wf-row { grid-template-columns: 110px 1fr 80px; }
+  .detail-head { display: block; }
+}
+</style>
+</head>
+<body>
+<header class="site-head">
+  <a class="brand" href="/dashboard">Forge Voice monitoring</a>
+  <nav><a href="/dashboard">Dashboard</a><a href="/review">Weekly review</a>
+  <a href="/metrics.json">metrics.json</a><a href="/">Browser demo</a></nav>
+</header>
+
+<main>
+  <h1>Static dashboard export</h1>
+  <p class="sub">Sample synthetic run for handover · generated
+  2026-11-07T12:00:00-08:00 · no secrets, no live services.</p>
+  
+<div id="dashboard-live">
+  <section class="banner alert"><strong>1 active alert</strong><ul><li><span class="badge critical">critical</span> <strong>Tool error rate over 2%</strong> — Tool error rate is 2.08% (1 of 48 tool calls).</li></ul></section>
+  <form class="filters" method="get" action="/dashboard">
+    <label>Tenant
+      <select name="tenant">
+        <option value="">All tenants</option>
+        <option value="harborlight">Harborlight Home Services</option><option value="summit">Summit Heating &amp; Air</option>
+      </select>
+    </label>
+    <label>From
+      <input type="date" name="from" value="">
+    </label>
+    <label>To
+      <input type="date" name="to" value="">
+    </label>
+    <label>Outcome
+      <select name="outcome">
+        <option value="">All outcomes</option>
+        <option value="booked">Booked</option><option value="rescheduled">Rescheduled</option><option value="cancelled">Cancelled</option><option value="emergency_ticket">Emergency ticket</option><option value="transferred">Transferred</option><option value="callback">Callback</option><option value="info_only">Info only</option><option value="abandoned">Abandoned</option><option value="failed">Failed</option>
+      </select>
+    </label>
+    <button type="submit">Apply filters</button>
+    <a class="reset" href="/dashboard">Reset</a>
+  </form>
+  <section class="cards" aria-label="Aggregate metrics"><div class="card"><span class="card-label">Total calls</span><strong class="card-value">32</strong><span class="card-note">local profile · last 30 days</span></div><div class="card"><span class="card-label">Containment</span><strong class="card-value">96.9%</strong><span class="card-note">31 / 32</span></div><div class="card"><span class="card-label">Transfer rate</span><strong class="card-value">3.1%</strong><span class="card-note">1 / 32</span></div><div class="card"><span class="card-label">Booking rate</span><strong class="card-value">9.4%</strong><span class="card-note">3 / 32</span></div><div class="card"><span class="card-label">Slot error rate</span><strong class="card-value">0.0%</strong><span class="card-note">0 / 3</span></div><div class="card"><span class="card-label">p95 first audio</span><strong class="card-value">2,488 ms</strong><span class="card-note">p50 1,992 ms · 72 turns</span></div><div class="card"><span class="card-label">Tool error rate</span><strong class="card-value">2.1%</strong><span class="card-note">1 / 48</span></div><div class="card"><span class="card-label">Emergency triage</span><strong class="card-value">100.0%</strong><span class="card-note">3 / 3</span></div><div class="card"><span class="card-label">Cost per call</span><strong class="card-value">$0.0000</strong><span class="card-note">$0.0000 total · demo $0</span></div></section>
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Recent calls</h2>
+      <span class="muted">32 shown · newest first</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Started</th><th>Tenant</th><th>Call</th><th>Outcome</th>
+            <th>Transfer</th><th>Booking / ticket</th><th>p95 first audio</th>
+            <th>Cost</th><th>QA flags</th>
+          </tr>
+        </thead>
+        <tbody><tr><td>2026-11-06 09:16</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_duplicate_02">call_harborlight_text_duplicate_02</a></td><td><span class="badge neutral">Abandoned</span></td><td>—</td><td>—</td><td>2,324 ms</td><td>$0.0000</td><td class="flags">confirmation_refused</td></tr><tr><td>2026-11-06 09:00</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_book_01">call_harborlight_text_book_01</a></td><td><span class="badge ok">Booked</span></td><td>—</td><td>bk_harborlight_0001</td><td>2,281 ms</td><td>$0.0000</td><td class="flags">—</td></tr><tr><td>2026-11-05 10:23</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_injection_01">call_harborlight_text_injection_01</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>2,212 ms</td><td>$0.0000</td><td class="flags">prompt_injection_blocked, handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-11-05 10:07</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_book_02">call_harborlight_text_book_02</a></td><td><span class="badge ok">Booked</span></td><td>—</td><td>bk_harborlight_0001</td><td>2,420 ms</td><td>$0.0000</td><td class="flags">—</td></tr><tr><td>2026-11-04 20:30</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_afterhours_01">call_harborlight_text_afterhours_01</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>2,178 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-11-04 11:14</td><td>Summit Heating &amp; Air</td><td><a href="/calls/call_summit_text_book_03">call_summit_text_book_03</a></td><td><span class="badge ok">Booked</span></td><td>—</td><td>bk_summit_0003</td><td>2,379 ms</td><td>$0.0000</td><td class="flags">—</td></tr><tr><td>2026-11-03 12:37</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_missing_01">call_harborlight_text_missing_01</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>1,736 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-11-03 12:21</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_reschedule_01">call_harborlight_text_reschedule_01</a></td><td><span class="badge neutral">Callback</span></td><td>queued_callback</td><td>—</td><td>2,454 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_no_answer</td></tr><tr><td>2026-11-02 13:28</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_reschedule_02">call_harborlight_text_reschedule_02</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>2,031 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-11-01 14:35</td><td>Summit Heating &amp; Air</td><td><a href="/calls/call_summit_text_reschedule_03">call_summit_text_reschedule_03</a></td><td><span class="badge neutral">Callback</span></td><td>queued_callback</td><td>—</td><td>2,409 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_no_answer</td></tr><tr><td>2026-10-31 15:42</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_cancel_01">call_harborlight_text_cancel_01</a></td><td><span class="badge neutral">Callback</span></td><td>queued_callback</td><td>—</td><td>2,412 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_no_answer</td></tr><tr><td>2026-10-30 09:49</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_cancel_02">call_harborlight_text_cancel_02</a></td><td><span class="badge neutral">Callback</span></td><td>queued_callback</td><td>—</td><td>2,472 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_no_answer</td></tr><tr><td>2026-10-29 10:56</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_noavail_01">call_harborlight_text_noavail_01</a></td><td><span class="badge neutral">Callback</span></td><td>queued_callback</td><td>—</td><td>2,137 ms</td><td>$0.0000</td><td class="flags">handoff_no_answer</td></tr><tr><td>2026-10-28 11:03</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_noavail_02">call_harborlight_text_noavail_02</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>2,154 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-10-27 12:10</td><td>Summit Heating &amp; Air</td><td><a href="/calls/call_summit_text_noavail_03">call_summit_text_noavail_03</a></td><td><span class="badge neutral">Transferred</span></td><td>connected</td><td>—</td><td>2,409 ms</td><td>$0.0000</td><td class="flags">—</td></tr><tr><td>2026-10-26 13:17</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_emergency_01">call_harborlight_text_emergency_01</a></td><td><span class="badge critical">Emergency ticket</span></td><td>—</td><td>em_harborlight_0001</td><td>2,539 ms</td><td>$0.0000</td><td class="flags">emergency_triage, handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-10-25 14:24</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_emergency_02">call_harborlight_text_emergency_02</a></td><td><span class="badge critical">Emergency ticket</span></td><td>—</td><td>em_harborlight_0001</td><td>1,808 ms</td><td>$0.0000</td><td class="flags">emergency_triage, handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-10-24 15:31</td><td>Summit Heating &amp; Air</td><td><a href="/calls/call_summit_text_emergency_03">call_summit_text_emergency_03</a></td><td><span class="badge critical">Emergency ticket</span></td><td>—</td><td>em_summit_0001</td><td>2,345 ms</td><td>$0.0000</td><td class="flags">emergency_triage, handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-10-23 09:38</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_outofarea_01">call_harborlight_text_outofarea_01</a></td><td><span class="badge neutral">Info only</span></td><td>—</td><td>—</td><td>1,971 ms</td><td>$0.0000</td><td class="flags">—</td></tr><tr><td>2026-10-22 10:45</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_pricing_01">call_harborlight_text_pricing_01</a></td><td><span class="badge neutral">Info only</span></td><td>—</td><td>—</td><td>1,558 ms</td><td>$0.0000</td><td class="flags">—</td></tr><tr><td>2026-10-21 11:52</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_pricing_02">call_harborlight_text_pricing_02</a></td><td><span class="badge neutral">Info only</span></td><td>—</td><td>—</td><td>1,984 ms</td><td>$0.0000</td><td class="flags">—</td></tr><tr><td>2026-10-20 12:59</td><td>Summit Heating &amp; Air</td><td><a href="/calls/call_summit_text_pricing_03">call_summit_text_pricing_03</a></td><td><span class="badge neutral">Info only</span></td><td>—</td><td>—</td><td>2,441 ms</td><td>$0.0000</td><td class="flags">—</td></tr><tr><td>2026-10-19 13:06</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_handoff_01">call_harborlight_text_handoff_01</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>1,959 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-10-18 14:13</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_handoff_02">call_harborlight_text_handoff_02</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>1,768 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-10-17 15:20</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_angry_01">call_harborlight_text_angry_01</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>2,190 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-10-16 09:27</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_noise_01">call_harborlight_text_noise_01</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>2,097 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-10-15 10:34</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_accent_01">call_harborlight_text_accent_01</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>1,927 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-10-14 11:41</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_interrupt_01">call_harborlight_text_interrupt_01</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>2,575 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-10-13 12:48</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_confirm_refusal_01">call_harborlight_text_confirm_refusal_01</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>2,270 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-10-12 13:55</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_confirm_refusal_02">call_harborlight_text_confirm_refusal_02</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>2,586 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-10-11 14:02</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_timeout_01">call_harborlight_text_timeout_01</a></td><td><span class="badge critical">Failed</span></td><td>—</td><td>—</td><td>2,381 ms</td><td>$0.0000</td><td class="flags">handoff_packet_incomplete, handoff_missing_phone</td></tr><tr><td>2026-10-10 15:09</td><td>Harborlight Home Services</td><td><a href="/calls/call_harborlight_text_duplicate_01">call_harborlight_text_duplicate_01</a></td><td><span class="badge neutral">Callback</span></td><td>queued_callback</td><td>—</td><td>1,908 ms</td><td>$0.0000</td><td class="flags">handoff_no_answer</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+  <p class="footnote">
+    Synthetic data only. Retention is 30 days; recording opt-out is respected.
+    Machine-readable aggregate: <a href="/metrics.json">/metrics.json</a>.
+    Metrics use the #26 definitions (containment, transfer, booking, slot error, p50/p95,
+    tool error, cost, emergency triage).
+  </p>
+</div>
+
+  <hr>
+  <h1>Sample call detail</h1>
+  
+<div class="detail">
+  
+  <header class="detail-head">
+    <div>
+      <h1>call_harborlight_text_book_01</h1>
+      <p class="sub">Harborlight Home Services · local profile ·
+        started 2026-11-06 09:00 · 60s</p>
+    </div>
+    <span class="badge ok">Booked</span>
+  </header>
+
+  <section class="cards">
+    <div class="card"><span class="card-label">Intent</span><strong class="card-value">book</strong><span class="card-note">classified intent</span></div>
+    <div class="card"><span class="card-label">Transfer</span><strong class="card-value">—</strong><span class="card-note">human handoff status</span></div>
+    <div class="card"><span class="card-label">Booking ID</span><strong class="card-value">bk_harborlight_0001</strong><span class="card-note">committed write</span></div>
+    <div class="card"><span class="card-label">Ticket ID</span><strong class="card-value">—</strong><span class="card-note">emergency or support</span></div>
+    <div class="card"><span class="card-label">Cost</span><strong class="card-value">$0.0000</strong><span class="card-note">synthetic / demo</span></div>
+    <div class="card"><span class="card-label">Recording</span><strong class="card-value">Opted out</strong><span class="card-note">no audio player</span></div>
+  </section>
+
+  <p class="callout amber"><strong>Recording opt-out.</strong> No audio was retained for this call; the transcript is text-only.</p>
+
+  <section class="panel">
+    <h2>QA flags</h2>
+    <div class="chips"><span class="muted">None recorded.</span></div>
+  </section>
+
+  <section class="panel">
+    <h2>Transcript excerpt</h2>
+    <div class="transcript"><p class="agent"><strong>assistant</strong>: Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help?</p><p class="caller"><strong>caller</strong>: Hi, my kitchen sink is draining slowly.</p><p class="caller"><strong>caller</strong>: It&#x27;s Sam Rivera, 12 Alder Street, 94107.</p><p class="caller"><strong>caller</strong>: Monday morning would be great.</p><p class="caller"><strong>caller</strong>: Yes, that&#x27;s correct.</p><p class="agent"><strong>assistant</strong>: Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder St, San Francisco 94107, for Sam Rivera at +14155550101. Should I book that?</p><p class="agent"><strong>assistant</strong>: Booked. Monday 9 November at 7:00 AM is confirmed and a text confirmation is queued.</p></div>
+  </section>
+
+  <section class="panel">
+    <h2>Tool timeline</h2>
+    <ol class="timeline"><li><span class="tool-name">lookup_customer</span> <span class="badge ok">ok</span> <span class="muted">2 ms · 2026-11-06 09:00</span><pre class="args">{&quot;address&quot;: {&quot;city&quot;: &quot;San Francisco&quot;, &quot;line1&quot;: &quot;12 Alder St&quot;, &quot;state&quot;: &quot;CA&quot;, &quot;zip&quot;: &quot;94107&quot;}, &quot;include_bookings&quot;: false, &quot;name&quot;: &quot;Sam Rivera&quot;, &quot;phone&quot;: &quot;+14155550101&quot;}</pre></li><li><span class="tool-name">get_service_area</span> <span class="badge ok">ok</span> <span class="muted">1 ms · 2026-11-06 09:00</span><pre class="args">{&quot;service_id&quot;: &quot;drain_cleaning&quot;, &quot;zip&quot;: &quot;94107&quot;}</pre></li><li><span class="tool-name">get_availability</span> <span class="badge ok">ok</span> <span class="muted">3 ms · 2026-11-06 09:00</span><pre class="args">{&quot;preferred_date&quot;: &quot;2026-11-09&quot;, &quot;service_id&quot;: &quot;drain_cleaning&quot;, &quot;window_days&quot;: 1, &quot;zip&quot;: &quot;94107&quot;}</pre></li><li><span class="tool-name">book_appointment</span> <span class="badge ok">ok</span> <span class="muted">4 ms · 2026-11-06 09:00</span><pre class="args">{&quot;customer&quot;: {&quot;address&quot;: {&quot;city&quot;: &quot;San Francisco&quot;, &quot;line1&quot;: &quot;12 Alder St&quot;, &quot;state&quot;: &quot;CA&quot;, &quot;zip&quot;: &quot;94107&quot;}, &quot;name&quot;: &quot;Sam Rivera&quot;, &quot;phone&quot;: &quot;+14155550101&quot;}, &quot;service_id&quot;: &quot;drain_cleaning&quot;, &quot;slot_id&quot;: &quot;slot_hl_00001&quot;}</pre></li></ol>
+  </section>
+
+  <section class="panel">
+    <h2>Latency waterfall</h2>
+    
+    <p class="muted">Slowest measured turn. Caller-perceived first audio is the sum of the
+    four stages.</p>
+    <div class="waterfall"><div class="wf-row"><span class="wf-label">STT / endpointing</span><div class="wf-track"><div class="wf-bar stt" style="width:20%"></div></div><span class="wf-value">455 ms</span></div><div class="wf-row"><span class="wf-label">LLM TTFT</span><div class="wf-track"><div class="wf-bar llm" style="width:61%"></div></div><span class="wf-value">1,422 ms</span></div><div class="wf-row"><span class="wf-label">Tool</span><div class="wf-track"><div class="wf-bar tool" style="width:1%"></div></div><span class="wf-value">33 ms</span></div><div class="wf-row"><span class="wf-label">TTS TTFB</span><div class="wf-track"><div class="wf-bar tts" style="width:18%"></div></div><span class="wf-value">407 ms</span></div></div>
+    <p class="total">First audio: <strong>2,317 ms</strong></p>
+    <p class="muted">Turn totals: 1: 1,956 ms, 2: 1,827 ms, 3: 2,317 ms</p>
+
+  </section>
+</div>
+
+</main>
+
+<footer class="site-foot">Local-only, read-only, synthetic data · 30-day retention ·
+recording opt-out respected · no public exposure</footer>
+</body>
+</html>
