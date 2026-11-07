@@ -2,44 +2,44 @@
   "anchor_date": "2026-11-09",
   "artifacts": [
     {
-      "path": "scenarios/audio/audio_badline_01.placeholder.yaml",
-      "sha256": "891a6f16346a1c8f92f19f01dda893cca061355a9a2bb99fee4b71f72cc414b5"
+      "path": "scenarios/audio/audio_badline_01.txt",
+      "sha256": "e161431fe491bf27b78eb029f369eb9f83b682a62a763c4274eb2e1d1185e2b7"
     },
     {
-      "path": "scenarios/audio/audio_bargein_01.placeholder.yaml",
-      "sha256": "1fa687dcfd9bf40be84c9da4c60c203f306d4c0f0cfc760e84efe30c25be61eb"
+      "path": "scenarios/audio/audio_bargein_01.txt",
+      "sha256": "2c4efae44a4fffcdc48f0768697fcf7e08385a6ead87482a4b8ae7e00f4eaaa1"
     },
     {
-      "path": "scenarios/audio/audio_emergency_01.placeholder.yaml",
-      "sha256": "c701cbede82847d3a31f00e03bb198b94b9949f8b0a0a11e1ce52e20fef69b02"
+      "path": "scenarios/audio/audio_emergency_01.txt",
+      "sha256": "517c0ed501a526f210d6bdcbc1593c78cfb55294146760c4c4ba1eeafb46c83d"
     },
     {
-      "path": "scenarios/audio/audio_entities_01.placeholder.yaml",
-      "sha256": "cd881d517dac96a546d93f3c8a3a91ed7e8115e7e4e2452263bc00a935607b8f"
+      "path": "scenarios/audio/audio_entities_01.txt",
+      "sha256": "2fb9ac14cbe7388e15acc62de590b8361b80330f43c8d684f68ba76a6ca609cb"
     },
     {
-      "path": "scenarios/audio/audio_lowmic_01.placeholder.yaml",
-      "sha256": "5bd09dbffb47a961e0f50a74f7775d0fa827cf277ec6077b3cebcd2ff7bad9af"
+      "path": "scenarios/audio/audio_lowmic_01.txt",
+      "sha256": "7e8db484d389f7ff2fd9eb6cd82aef602cb5c64291fce72102c14563c48d566a"
     },
     {
-      "path": "scenarios/audio/audio_multilingual_01.placeholder.yaml",
-      "sha256": "0d0f57d1cf150951a08f027e2e7166f949f9be8b7560aaa17cbc410f863fcfd8"
+      "path": "scenarios/audio/audio_multilingual_01.txt",
+      "sha256": "5d41afca201ff7c9e242a9a0d4864db61caa57d078f518a9452d0dd304eae11a"
     },
     {
-      "path": "scenarios/audio/audio_noisy_01.placeholder.yaml",
-      "sha256": "54dc2ff2c8b57f21d62c05bc54df66f51228b95c1166fefcd5dd69d508943e7f"
+      "path": "scenarios/audio/audio_noisy_01.txt",
+      "sha256": "b1be160ba77aa1d9d9601418f3eda430cc606c3470e820d75606ed03643d0d39"
     },
     {
-      "path": "scenarios/audio/audio_packetloss_01.placeholder.yaml",
-      "sha256": "899f2217eaddc8d279a4cec15b7afc7fad4c96237eabf039f478e05149612826"
+      "path": "scenarios/audio/audio_packetloss_01.txt",
+      "sha256": "9e527425e2f48bc984677ddad26f154280e02f52ea6ee8f9b956e1f94cf629d1"
     },
     {
-      "path": "scenarios/audio/audio_readback_01.placeholder.yaml",
-      "sha256": "9f7fed822e805b767bdd05c20eb0c7304f0bd0dcb50d603855951f59defcf1c7"
+      "path": "scenarios/audio/audio_readback_01.txt",
+      "sha256": "eaa3600f76f5f72817e14c4586785e48c2a1dbbe0cee6ca3da70783e81b82d1f"
     },
     {
-      "path": "scenarios/audio/audio_silence_01.placeholder.yaml",
-      "sha256": "545b99bb71917dfc73fc9043241181101df205bd6df69da884eb057ea367acef"
+      "path": "scenarios/audio/audio_silence_01.txt",
+      "sha256": "d7c284afc6d51f361559ce9d8d723082a4bcbabf7d5c3754b04c39bc1206a88a"
     },
     {
       "path": "scenarios/callers/text_accent_01.txt",
@@ -202,44 +202,48 @@
       "sha256": "86406c115ad9e867dfabb7dc9e8077a1310ee86ffd78bda9830ed9fe7d8c7a16"
     },
     {
-      "path": "scenarios/fixtures/audio/badline_01.wav.placeholder",
-      "sha256": "69923c9f1006131413c989dbb9b9b410079ae8c77afd0606d0fbf31b1c420864"
+      "path": "scenarios/fixtures/audio/badline_01.wav",
+      "sha256": "0bd52faf59467a1fedfbe2182b4ae7b6e5fbb716abf0aa05696e85a7133eaaf8"
     },
     {
-      "path": "scenarios/fixtures/audio/bargein_01.wav.placeholder",
-      "sha256": "f88e70a6fd520a9a9b14fe35853bd59a146e226bc79abba8e41e023f9ad7122e"
+      "path": "scenarios/fixtures/audio/bargein_01.wav",
+      "sha256": "36939a012e7685bee1ecb5e13c36b8ca19f37045b6a865f00e7c74073e44729a"
     },
     {
-      "path": "scenarios/fixtures/audio/emergency_01.wav.placeholder",
-      "sha256": "55d1bb90e3aed12d8ed242687bc3b9ef0ee01474134430d92e3cc12c0fc810aa"
+      "path": "scenarios/fixtures/audio/emergency_01.wav",
+      "sha256": "a55313dc06d186171bab0513797b9704d17c92c8a7e324d83ed2248aaa01783f"
     },
     {
-      "path": "scenarios/fixtures/audio/entities_01.wav.placeholder",
-      "sha256": "52a01accb2ab0819cf6c822248610b39c15d640d56ffc80f949936b83a928442"
+      "path": "scenarios/fixtures/audio/entities_01.wav",
+      "sha256": "de934c53094abff0a88b7cb1142cf1b02a0096a9de05b45720f0950e2d5fbd0e"
     },
     {
-      "path": "scenarios/fixtures/audio/lowmic_01.wav.placeholder",
-      "sha256": "7919f8e2672c7b4308c06432c6182b6bcf1f4db3990b1f2a977503ff9a59173e"
+      "path": "scenarios/fixtures/audio/hashes.json",
+      "sha256": "25e6974cabb369ea97506623baacd0ba2d4639bcb91637763c2fa93925b4cee4"
     },
     {
-      "path": "scenarios/fixtures/audio/multilingual_01.wav.placeholder",
-      "sha256": "da0b81a179b44c6374d562a1b9696ba4a612856b6e5c56e4de53f0fa0c27f7bd"
+      "path": "scenarios/fixtures/audio/lowmic_01.wav",
+      "sha256": "333e3484f267c61af1a5a7a9628c4efdfaeeb5c60da94c14682a8721afb09a60"
     },
     {
-      "path": "scenarios/fixtures/audio/noisy_01.wav.placeholder",
-      "sha256": "57544c2dbed2273b8d90b8071a2c6b176714f4f77e7238c2939acdf17abf1c4f"
+      "path": "scenarios/fixtures/audio/multilingual_01.wav",
+      "sha256": "6d86edc821bc2aa5ab9f976d5d8188b452deb1d844c98989c00bb4e99da80ab7"
     },
     {
-      "path": "scenarios/fixtures/audio/packetloss_01.wav.placeholder",
-      "sha256": "db04dd4f2ace3207a318be74adf408df848d8e6e61bff368f0fe15a2a68b8e8a"
+      "path": "scenarios/fixtures/audio/noisy_01.wav",
+      "sha256": "f5ab416e35304da4aa6342eb2d3227c669769f066bab1195706907c69f2cc6b9"
     },
     {
-      "path": "scenarios/fixtures/audio/readback_01.wav.placeholder",
-      "sha256": "d54c31a6a69902a816fe90f39d27ff8ddd2f3dc9a94d020aba037d8caa4814a7"
+      "path": "scenarios/fixtures/audio/packetloss_01.wav",
+      "sha256": "56c1f114e8e12ccbf6962301b3a952928b68754ec082b534cc5e23cfa58668b5"
     },
     {
-      "path": "scenarios/fixtures/audio/silence_01.wav.placeholder",
-      "sha256": "84686293a36564f7cfb71ae352ab88553557fa7c0f96ff2d75c77c494c21eead"
+      "path": "scenarios/fixtures/audio/readback_01.wav",
+      "sha256": "0d95e51d69f97e9cc6593fa376e818c6ddf07ffed3a74eccfd4eadb267846978"
+    },
+    {
+      "path": "scenarios/fixtures/audio/silence_01.wav",
+      "sha256": "dfcca5f220cb98ef7400f3b0ebbfd00d5015559b09b5e352e9a7ae64384444af"
     },
     {
       "path": "scenarios/manifest.yaml",

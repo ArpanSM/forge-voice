@@ -1,0 +1,24 @@
+# scenario: audio_badline_01
+# tenant: harborlight
+# persona: Caller on a bad phone line
+# goal: Book a drain cleaning while repeating ZIP and phone; confirm entities before booking.
+# degradation: badline
+
+[pause 120 ms]
+Hi, I need a drain cleaning.
+[pause 400 ms]
+[pause 120 ms]
+The ZIP is nine four one zero seven. I said nine four one zero seven.
+[pause 120 ms]
+[pause 120 ms]
+My address is 12 Alder Street, San Francisco.
+[pause 120 ms]
+[pause 120 ms]
+My name is Sam Rivera.
+[pause 120 ms]
+[pause 120 ms]
+My phone is five five five, one two three, four five six seven.
+[pause 120 ms]
+[pause 120 ms]
+Monday morning works. Yes, book it.
+[pause 300 ms]

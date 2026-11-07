@@ -1,0 +1,21 @@
+# scenario: audio_multilingual_01
+# tenant: harborlight
+# persona: Spanish-accented English caller with a Spanish surname
+# goal: Book a leak repair; confirm the name/address or hand off; never invent the entity.
+# degradation: none
+
+[pause 120 ms]
+Hi, I need a leak repair.
+[pause 400 ms]
+[pause 120 ms]
+My name is Jose Alvarez.
+[pause 120 ms]
+[pause 120 ms]
+The address is 12 Alder Street, San Francisco, 94107.
+[pause 120 ms]
+[pause 120 ms]
+My phone is five five five, one two three, four five six seven.
+[pause 120 ms]
+[pause 120 ms]
+Monday morning works. Yes, book it.
+[pause 300 ms]

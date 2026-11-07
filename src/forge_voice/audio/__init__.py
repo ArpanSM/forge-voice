@@ -1,0 +1,39 @@
+"""Audio fixture generation and hash verification for the local demo."""
+
+from forge_voice.audio.fixtures import (
+    AudioScript,
+    AudioScriptSet,
+    AudioTurn,
+    FixtureEntry,
+    FixtureError,
+    FixtureManifest,
+    TtsClient,
+    fixture_hash,
+    generate_fixtures,
+    load_audio_scripts,
+    load_audio_scripts_data,
+    load_fixture_manifest,
+    main,
+    synthesize_fixture,
+    turns_hash,
+    verify_fixtures,
+)
+
+__all__ = [
+    "AudioScript",
+    "AudioScriptSet",
+    "AudioTurn",
+    "FixtureEntry",
+    "FixtureError",
+    "FixtureManifest",
+    "TtsClient",
+    "fixture_hash",
+    "generate_fixtures",
+    "load_audio_scripts",
+    "load_audio_scripts_data",
+    "load_fixture_manifest",
+    "main",
+    "synthesize_fixture",
+    "turns_hash",
+    "verify_fixtures",
+]

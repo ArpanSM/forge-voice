@@ -25,7 +25,7 @@ deployment and handover assets around one booking workflow and eight typed tools
 
 | Term | Meaning |
 |---|---|
-| Tenant | One configured home-services business, resolved from a dialled number or signed browser claim. |
+| Tenant | One configured home-services business, resolved from a dialled number or a signed short-lived browser token claim. |
 | Intent | `book`, `reschedule`, `cancel`, `status`, `emergency`, `pricing_faq`, `human`. |
 | Slot | An offered appointment window; an offer is not a hold. |
 | Confirmation token | Policy-issued, single-use, 120 s token bound to tenant, call, intent, target and payload. |
@@ -39,6 +39,7 @@ deployment and handover assets around one booking workflow and eight typed tools
 ## Decisions
 
 - Workflow, tools and tenant schema: roadmap #5, `research/voice-booking-workflow-2026-11.md`.
+- Transport and local demo: ticket #5, `docs/local-voice-demo.md`, ADR 0003.
 - Evaluation set and gates: roadmap #26, `research/voice-evaluation-2026-11.md`.
 - Latency and cost: roadmap #23, `research/voice-latency-cost-2026-11.md`.
 - Deployment, monitoring and handover: roadmap #27, `research/voice-deployment-monitoring-2026-11.md`.

@@ -1,0 +1,21 @@
+# scenario: audio_entities_01
+# tenant: summit
+# persona: Caller gives a Summit address and phone number
+# goal: Book an AC repair at 88 Meridian Way, 95125; confirm the name, address, ZIP and phone.
+# degradation: none
+
+[pause 120 ms]
+Hi, I need an AC repair.
+[pause 400 ms]
+[pause 120 ms]
+The address is 88 Meridian Way, San Jose, 95125.
+[pause 120 ms]
+[pause 120 ms]
+My name is Dana Whitfield.
+[pause 120 ms]
+[pause 120 ms]
+My phone is four zero eight, five five five, zero one four two.
+[pause 120 ms]
+[pause 120 ms]
+Tuesday at nine would be great. Yes, book it.
+[pause 300 ms]

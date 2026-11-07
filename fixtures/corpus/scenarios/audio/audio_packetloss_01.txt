@@ -1,0 +1,24 @@
+# scenario: audio_packetloss_01
+# tenant: harborlight
+# persona: Caller with choppy audio
+# goal: Book a drain cleaning with packet loss; ask for repeats; book or callback.
+# degradation: packetloss
+
+[pause 120 ms]
+Hi, I need a drain cleaning.
+[pause 400 ms]
+[pause 120 ms]
+The ZIP is nine four one zero seven.
+[pause 120 ms]
+[pause 120 ms]
+My address is 12 Alder Street.
+[pause 120 ms]
+[pause 120 ms]
+My name is Sam Rivera.
+[pause 120 ms]
+[pause 120 ms]
+My phone is five five five, one two three, four five six seven.
+[pause 120 ms]
+[pause 120 ms]
+Monday morning. Yes, book it.
+[pause 300 ms]

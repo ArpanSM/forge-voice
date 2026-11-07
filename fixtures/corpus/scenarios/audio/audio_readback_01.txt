@@ -1,0 +1,24 @@
+# scenario: audio_readback_01
+# tenant: summit
+# persona: Caller corrects a detail during the read-back
+# goal: Book an AC repair; the caller corrects the day during read-back; re-read and book the corrected day.
+# degradation: none
+
+[pause 120 ms]
+Hi, I need an AC repair.
+[pause 400 ms]
+[pause 120 ms]
+The address is 88 Meridian Way, San Jose, 95125.
+[pause 120 ms]
+[pause 120 ms]
+My name is Dana Whitfield.
+[pause 120 ms]
+[pause 120 ms]
+My phone is four zero eight, five five five, zero one four two.
+[pause 120 ms]
+[pause 120 ms]
+Monday at eleven works.
+[pause 500 ms]
+[pause 120 ms]
+Actually, make it Tuesday at nine. Yes, that is correct.
+[pause 300 ms]
