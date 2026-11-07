@@ -186,3 +186,35 @@ def test_entrypoint_rejects_malformed_claim_and_shuts_down(monkeypatch) -> None:
 
     assert context.reason is not None
     assert "tenant claim rejected" in context.reason
+
+
+@requires_livekit
+def test_llm_node_classifies_the_current_chat_turn_not_stale_last_utterance() -> None:
+    from datetime import datetime
+    from types import SimpleNamespace
+    from zoneinfo import ZoneInfo
+
+    from forge_voice.runtime.audio_session import AudioCallSession
+    from forge_voice.runtime.livekit_agent import BookingAgent
+
+    call = AudioCallSession.from_repo(
+        ROOT,
+        "harborlight",
+        "call_stale_emergency",
+        now=datetime(2026, 11, 6, 8, 0, tzinfo=ZoneInfo("America/Los_Angeles")),
+    )
+    call.note_caller_utterance("I need a drain cleaning.")
+    before = len(call.store.list_tickets("harborlight"))
+    agent = BookingAgent("", [], call)
+    context = SimpleNamespace(
+        items=[SimpleNamespace(role="user", content="I smell gas near the furnace.")]
+    )
+
+    async def reply() -> list[str]:
+        return [chunk async for chunk in agent.llm_node(context, [], None)]
+
+    chunks = asyncio.run(reply())
+
+    assert call.emergency_active is True
+    assert len(call.store.list_tickets("harborlight")) == before + 1
+    assert any("911" in str(chunk) for chunk in chunks)

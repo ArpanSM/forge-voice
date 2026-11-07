@@ -259,11 +259,11 @@
     },
     {
       "path": "tenants/harborlight.yaml",
-      "sha256": "62ff2342701f38bd37ac209e27d3b555c67037aba59f59d10881a05cf993cc8e"
+      "sha256": "94d5ff75a955c16831a3306f8700ae6641d9eff9b3929a70c431ef912d83ca18"
     },
     {
       "path": "tenants/summit.yaml",
-      "sha256": "e4512e983a16e47befc03524d09e328a091647ed4af576d95c5e69f7c2eec9b7"
+      "sha256": "6641e65b82d0b3eb9ab891ba416eba7f1ddf880c6ef1e3b2f52c46fbbb40c817"
     }
   ],
   "counts": {

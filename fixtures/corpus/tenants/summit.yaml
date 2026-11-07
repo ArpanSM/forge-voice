@@ -70,6 +70,8 @@ service_area:
     "95128": west
     "95131": north
     "95134": north
+  city: San Jose
+  state: CA
   notes: "Synthetic coverage only; no real dispatch."
 
 dispatch:

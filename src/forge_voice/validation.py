@@ -42,6 +42,12 @@ STREET_ADDRESS_RE = re.compile(
 )
 
 
+_CITY_RE = re.compile(
+    r",\s*([A-Za-z][A-Za-z .'-]{1,40}?)\s*,\s*(?:\d{5}|CA\b|California\b)",
+    re.IGNORECASE,
+)
+
+
 def digits_from_words(value: str) -> str:
     """Replace spoken digit words with their characters, leaving other words intact."""
     return _WORD_RE.sub(lambda match: DIGIT_WORDS[match.group(1).lower()], value)
@@ -70,27 +76,34 @@ def _digit_runs(value: str) -> list[str]:
     return runs
 
 
+def _valid_us_phone(digits: str) -> bool:
+    """Reject the all-zero placeholder; synthetic 555 numbers stay valid."""
+    return len(digits) == 10 and digits != "0000000000"
+
+
+def zip_candidates(text: str) -> list[str]:
+    """Return every distinct ZIP in an utterance, including ZIP+4 first-five forms."""
+    converted = digits_from_words(str(text))
+    found = set(_ZIP_PLUS_FOUR_RE.findall(converted))
+    found.update(run for run in _digit_runs(text) if len(run) == 5)
+    return sorted(found)
+
+
 def find_zip(text: str) -> str | None:
     """Return the single five-digit ZIP in an utterance, accepting digit words."""
-    converted = digits_from_words(str(text))
-    zip_plus_four = _ZIP_PLUS_FOUR_RE.search(converted)
-    if zip_plus_four is not None:
-        return zip_plus_four.group(1)
-    candidates = [run for run in _digit_runs(text) if len(run) == 5]
-    distinct = set(candidates)
-    return distinct.pop() if len(distinct) == 1 else None
+    candidates = zip_candidates(text)
+    return candidates[0] if len(candidates) == 1 else None
 
 
 def find_phone(text: str) -> str | None:
     """Return a normalized US phone from an utterance, accepting digit words."""
-    candidates: list[str] = []
+    candidates: set[str] = set()
     for run in _digit_runs(text):
-        if len(run) == 10:
-            candidates.append(f"+1{run}")
-        elif len(run) == 11 and run.startswith("1"):
-            candidates.append(f"+{run}")
-    distinct = set(candidates)
-    return distinct.pop() if len(distinct) == 1 else None
+        if len(run) == 10 and _valid_us_phone(run):
+            candidates.add(f"+1{run}")
+        elif len(run) == 11 and run.startswith("1") and _valid_us_phone(run[1:]):
+            candidates.add(f"+{run}")
+    return candidates.pop() if len(candidates) == 1 else None
 
 
 def _heard_length(value: str) -> int:
@@ -98,8 +111,13 @@ def _heard_length(value: str) -> int:
     return max((len(run) for run in runs), default=0)
 
 
+def _zip_heard_length(value: str) -> int:
+    runs = [len(run) for run in _digit_runs(value) if 3 <= len(run) <= 6]
+    return max(runs, default=0)
+
+
 def _specific_zip_error(value: str) -> StableError:
-    length = _heard_length(value)
+    length = _zip_heard_length(value)
     if length and length != 5:
         heard = f"I heard {length} digit{'s' if length != 1 else ''}."
     else:
@@ -128,47 +146,71 @@ def _specific_phone_error(value: str) -> StableError:
 def normalize_zip(value: str) -> str:
     """Normalize one ZIP to exactly five digits or reject it with a specific message."""
     text = str(value).strip()
-    candidates = [run for run in _digit_runs(text) if len(run) == 5]
-    distinct = set(candidates)
-    if len(distinct) == 1:
-        return distinct.pop()
-    if len(distinct) > 1:
+    candidates = zip_candidates(text)
+    if len(candidates) == 1:
+        return candidates[0]
+    if len(candidates) > 1:
         raise StableError(
             ErrorCode.invalid_zip,
             "I heard more than one five-digit ZIP. Please say the one ZIP code one "
             "digit at a time.",
-            details={"field": "zip", "candidates": len(distinct)},
+            details={"field": "zip", "candidates": len(candidates)},
         )
-    zip_plus_four = _ZIP_PLUS_FOUR_RE.search(digits_from_words(text))
-    if zip_plus_four is not None:
-        return zip_plus_four.group(1)
     raise _specific_zip_error(text)
 
 
 def normalize_phone(value: str) -> str:
     """Normalize a US phone to ``+1`` followed by exactly ten digits."""
     text = str(value).strip()
-    candidates: list[str] = []
+    candidates: set[str] = set()
     for run in _digit_runs(text):
-        if len(run) == 10:
-            candidates.append(f"+1{run}")
-        elif len(run) == 11 and run.startswith("1"):
-            candidates.append(f"+{run}")
-    distinct = set(candidates)
-    if len(distinct) == 1:
-        return distinct.pop()
-    if len(distinct) > 1:
+        if len(run) == 10 and _valid_us_phone(run):
+            candidates.add(f"+1{run}")
+        elif len(run) == 11 and run.startswith("1") and _valid_us_phone(run[1:]):
+            candidates.add(f"+{run}")
+    if len(candidates) == 1:
+        return candidates.pop()
+    if len(candidates) > 1:
         raise StableError(
             ErrorCode.invalid_phone,
             "I heard more than one phone number. Please say the ten digits one at a time.",
-            details={"field": "phone", "candidates": len(distinct)},
+            details={"field": "phone", "candidates": len(candidates)},
         )
     raise _specific_phone_error(text)
+
+
+def street_key(value: str) -> str:
+    """Canonicalize a street line for equality checks across suffix abbreviations."""
+    aliases = {
+        "st": "street",
+        "str": "street",
+        "ave": "avenue",
+        "av": "avenue",
+        "blvd": "boulevard",
+        "ct": "court",
+        "dr": "drive",
+        "rd": "road",
+        "pkwy": "parkway",
+        "ln": "lane",
+        "pl": "place",
+    }
+    words = []
+    for word in str(value).lower().replace(".", " ").replace(",", " ").split():
+        words.append(aliases.get(word, word))
+    return " ".join(words)
 
 
 def find_street_address(text: str) -> str | None:
     """Return the first street-address line in an utterance, if there is one."""
     match = STREET_ADDRESS_RE.search(str(text))
+    if match is None:
+        return None
+    return " ".join(match.group(1).split())
+
+
+def find_city(text: str) -> str | None:
+    """Return a city written before a ZIP or state, if the caller supplied one."""
+    match = _CITY_RE.search(str(text))
     if match is None:
         return None
     return " ".join(match.group(1).split())
@@ -200,17 +242,37 @@ def validate_service_address(
             "I need the full street address and city.",
             details={"field": "address"},
         )
+    if "address on file" in street.lower() or street.lower() in {"address", "on file"}:
+        raise StableError(
+            ErrorCode.invalid_argument,
+            "I need the actual street address, not a placeholder.",
+            details={"field": "address"},
+        )
     if len(region) != 2:
         raise StableError(
             ErrorCode.invalid_argument,
             "I need a two-letter state for the service address.",
             details={"field": "state"},
         )
+    configured_city = tenant.service_area.city.strip()
+    configured_state = tenant.service_area.state.strip().upper()
     if not tenant.has_zip(normalized_zip):
         raise StableError(
             ErrorCode.out_of_area,
             f"ZIP {normalized_zip} is outside our service area.",
             details={"field": "zip", "zip": normalized_zip},
+        )
+    if configured_city and town.lower() != configured_city.lower():
+        raise StableError(
+            ErrorCode.invalid_argument,
+            f"That city does not match the ZIP service area ({configured_city}).",
+            details={"field": "city", "inconsistent": True},
+        )
+    if configured_state and region != configured_state:
+        raise StableError(
+            ErrorCode.invalid_argument,
+            f"That state does not match the service area ({configured_state}).",
+            details={"field": "state", "inconsistent": True},
         )
     return Address(line1=street, city=town, state=region, zip=normalized_zip)
 
@@ -218,10 +280,13 @@ def validate_service_address(
 __all__ = [
     "DIGIT_WORDS",
     "digits_from_words",
+    "find_city",
     "find_phone",
     "find_street_address",
     "find_zip",
     "normalize_phone",
     "normalize_zip",
+    "street_key",
     "validate_service_address",
+    "zip_candidates",
 ]

@@ -1,8 +1,9 @@
 """Deterministic ZIP/phone/address capture and capped reprompts.
 
 The model may hear grouped digits, spoken digit words, or a partial value. This guard
-keeps the last valid entities the caller actually said, fills gaps from the tenant's
-known service addresses, and rejects ambiguous values instead of writing them.
+keeps the last valid entities the caller actually said, fills only gaps the tenant
+configuration explicitly defines, and rejects ambiguous or inconsistent values instead
+of writing them. It never reads another customer's record to infer an address.
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from forge_voice.domain import Address
 from forge_voice.errors import ErrorCode, StableError
 from forge_voice.tenants.models import TenantConfig
 from forge_voice.validation import (
+    find_city,
     find_phone,
     find_street_address,
     find_zip,
@@ -24,34 +26,13 @@ from forge_voice.validation import (
 
 MAX_ENTITY_REPROMPTS = 2
 
-_SUFFIX_ALIASES = {
-    "st": "street",
-    "str": "street",
-    "ave": "avenue",
-    "av": "avenue",
-    "blvd": "boulevard",
-    "ct": "court",
-    "dr": "drive",
-    "rd": "road",
-    "pkwy": "parkway",
-    "ln": "lane",
-    "pl": "place",
-}
-
 
 class RepromptError(StableError):
     """A safe, specific request to repeat one entity, or the capped handoff message."""
 
 
-def _street_key(value: str) -> str:
-    words = []
-    for word in str(value).lower().replace(".", " ").replace(",", " ").split():
-        words.append(_SUFFIX_ALIASES.get(word, word))
-    return " ".join(words)
-
-
 class EntityGuard:
-    """Capture caller-spoken ZIP, phone and address; never guess a missing value."""
+    """Capture caller-spoken ZIP, phone and address; never infer another customer's data."""
 
     def __init__(
         self,
@@ -67,20 +48,14 @@ class EntityGuard:
         self.zip: str | None = None
         self.phone: str | None = None
         self.line1: str | None = None
-        self.city: str | None = None
-        self.state = "CA"
+        self.city: str | None = tenant.service_area.city.strip() or None
+        self.state = tenant.service_area.state.strip().upper() or "CA"
         self._attempts: dict[str, int] = {}
-        self._cities: set[str] = set()
         if caller_phone:
             try:
                 self.phone = normalize_phone(caller_phone)
             except StableError:
                 self.phone = None
-        if store is not None:
-            for customer in store.list_customers(tenant.tenant_id):
-                self._cities.add(customer.address.city)
-                if customer.address.state:
-                    self.state = customer.address.state
 
     # ----------------------------------------------------------------- capture
     def observe(self, text: str) -> None:
@@ -98,15 +73,9 @@ class EntityGuard:
         street = find_street_address(text)
         if street is not None:
             self.line1 = street
-        lowered = text.lower()
-        for city in sorted(self._cities, key=len, reverse=True):
-            if city.lower() in lowered:
-                self.city = city
-                break
-        if self.city is None and self.zip is not None:
-            self.city = self._known_city_for_zip(self.zip)
-        if self.city is None and self.line1 is not None:
-            self.city = self._known_city_for_street(self.line1)
+        city = find_city(text)
+        if city is not None:
+            self.city = city
 
     def missing(self) -> list[str]:
         missing: list[str] = []
@@ -128,46 +97,44 @@ class EntityGuard:
 
     def best_address(self) -> Address | None:
         """Return the address the caller has given, without prompting or guessing."""
-        zip_code = self.zip
-        if zip_code is None and self.line1 is not None:
-            zip_code = self._known_zip_for_street(self.line1)
-        if zip_code is None or self.line1 is None:
-            return None
-        city = self.city or self._known_city_for_zip(zip_code)
-        if city is None:
+        if self.zip is None or self.line1 is None or self.city is None:
             return None
         try:
             return validate_service_address(
                 self.tenant,
                 line1=self.line1,
-                city=city,
+                city=self.city,
                 state=self.state,
-                zip_code=zip_code,
+                zip_code=self.zip,
             )
         except StableError:
             return None
 
     # ------------------------------------------------------------- resolution
     def resolve_zip(self, value: str | None) -> str:
-        """Return a validated ZIP from the argument, transcript or known address."""
+        """Return a validated ZIP from the argument or transcript."""
         if value:
             try:
-                self.zip = normalize_zip(value)
-                self._attempts.pop("zip", None)
-                return self.zip
+                normalized = normalize_zip(value)
             except StableError as exc:
                 if self.zip is None:
                     self._raise_reprompt("zip", exc)
                 return self.zip
+            if self.zip is not None and normalized != self.zip:
+                self._raise_reprompt(
+                    "zip",
+                    StableError(
+                        ErrorCode.invalid_zip,
+                        "I heard two different ZIP codes. Please say the one ZIP code one "
+                        "digit at a time.",
+                        details={"field": "zip", "inconsistent": True},
+                    ),
+                )
+            self.zip = normalized
+            self._attempts.pop("zip", None)
+            return self.zip
         if self.zip is not None:
             return self.zip
-        if self.line1 is not None:
-            known = self._known_zip_for_street(self.line1)
-            if known is not None:
-                self.zip = known
-                if self.city is None:
-                    self.city = self._known_city_for_zip(known)
-                return known
         self._raise_reprompt(
             "zip",
             StableError(
@@ -182,13 +149,16 @@ class EntityGuard:
         """Return a validated callback number from the argument or transcript."""
         if value:
             try:
-                self.phone = normalize_phone(value)
-                self._attempts.pop("phone", None)
-                return self.phone
+                normalized = normalize_phone(value)
             except StableError as exc:
                 if self.phone is None:
                     self._raise_reprompt("phone", exc)
                 return self.phone
+            if self.phone is not None and normalized != self.phone:
+                return self.phone
+            self.phone = normalized
+            self._attempts.pop("phone", None)
+            return self.phone
         if self.phone is not None:
             return self.phone
         self._raise_reprompt(
@@ -215,10 +185,9 @@ class EntityGuard:
             self.line1 = line1
         resolved_line1 = line1 or self.line1
         resolved_city = city or self.city
+        captured_zip = self.zip
         resolved_zip = self.resolve_zip(zip_code)
-        if resolved_city is None:
-            resolved_city = self._known_city_for_zip(resolved_zip)
-        if resolved_line1 is None or resolved_city is None:
+        if resolved_city is None or resolved_line1 is None:
             self._raise_reprompt(
                 "address",
                 StableError(
@@ -237,7 +206,7 @@ class EntityGuard:
             city=resolved_city,
             state=resolved_state,
             zip_code=resolved_zip,
-            expected_zip=expected_zip,
+            expected_zip=expected_zip or captured_zip,
         )
 
     # ---------------------------------------------------------------- attempts
@@ -336,42 +305,8 @@ class EntityGuard:
         }.get(field, "contact detail")
         return (
             f"I couldn't capture a valid {label} after {self.max_reprompts} tries. I "
-            "won't guess or write it. I can pass what we have to a person or queue a "
-            "callback."
+            "won't guess or write it. I'm passing what we have to a person or callback."
         )
-
-    # ------------------------------------------------------------ known records
-    def _known_zip_for_street(self, line1: str) -> str | None:
-        if self.store is None:
-            return None
-        key = _street_key(line1)
-        zips = {
-            customer.address.zip
-            for customer in self.store.list_customers(self.tenant.tenant_id)
-            if _street_key(customer.address.line1) == key
-        }
-        return zips.pop() if len(zips) == 1 else None
-
-    def _known_city_for_street(self, line1: str) -> str | None:
-        if self.store is None:
-            return None
-        key = _street_key(line1)
-        cities = {
-            customer.address.city
-            for customer in self.store.list_customers(self.tenant.tenant_id)
-            if _street_key(customer.address.line1) == key
-        }
-        return cities.pop() if len(cities) == 1 else None
-
-    def _known_city_for_zip(self, zip_code: str) -> str | None:
-        if self.store is None:
-            return None
-        cities = {
-            customer.address.city
-            for customer in self.store.list_customers(self.tenant.tenant_id)
-            if customer.address.zip == zip_code
-        }
-        return cities.pop() if len(cities) == 1 else None
 
 
 def _number_runs(text: str) -> Iterable[str]:

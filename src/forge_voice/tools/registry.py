@@ -474,7 +474,11 @@ class ToolRegistry:
                 ErrorCode.invalid_argument,
                 "The handoff packet does not match this call.",
             )
-        if args.mode == "callback" and not packet.caller.phone:
+        if (
+            args.mode == "callback"
+            and not packet.caller.phone
+            and args.reason not in {"entity_capture_failed", "emergency"}
+        ):
             raise StableError(
                 ErrorCode.invalid_argument,
                 "A callback number is required for a callback handoff.",
@@ -609,7 +613,7 @@ class ToolRegistry:
                 tenant_id=self.tenant.tenant_id,
                 call_id=self.session.call_id,
                 name=packet.caller.name or "Caller",
-                phone=packet.caller.phone,
+                phone=packet.caller.phone or "",
                 reason=args.reason,
                 window_start=window_start,
                 window_end=window_end,

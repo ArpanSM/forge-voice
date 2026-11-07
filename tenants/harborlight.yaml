@@ -83,6 +83,8 @@ service_area:
     "94123": north
     "94131": south
     "94133": north
+  city: San Francisco
+  state: CA
   notes: "Synthetic coverage only; no real dispatch."
 
 dispatch:

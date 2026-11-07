@@ -53,6 +53,22 @@ def test_normalize_zip_rejects_ambiguous_candidates() -> None:
     assert "one" in exc.value.message.lower()
 
 
+def test_normalize_zip_rejects_multiple_zip_plus_four_candidates() -> None:
+    with pytest.raises(StableError) as exc:
+        normalize_zip("94107-1234 and 95125-6789")
+
+    assert _code(exc) is ErrorCode.invalid_zip
+    assert "more than one" in exc.value.message.lower()
+    assert find_zip("94107-1234 and 95125-6789") is None
+
+
+def test_normalize_phone_rejects_the_all_zero_placeholder() -> None:
+    with pytest.raises(StableError) as exc:
+        normalize_phone("000-000-0000")
+
+    assert _code(exc) is ErrorCode.invalid_phone
+
+
 def test_find_zip_reads_words_inside_a_full_address_utterance() -> None:
     text = "The address is 88 Meridian Way, San Jose, nine five one two five."
 
@@ -95,6 +111,20 @@ def test_extract_facts_reads_a_spoken_phone_the_same_way(harborlight, store) -> 
     assert facts.phone == "+14085550142"
 
 
+def test_extract_facts_never_fabricates_an_address_on_file(harborlight, store) -> None:
+    facts = extract_facts(
+        harborlight,
+        [
+            "The ZIP is nine four one zero seven and my phone is "
+            "four one five five five five zero one two three."
+        ],
+        store,
+        NOW,
+    )
+
+    assert facts.address is None
+
+
 # ------------------------------------------------------------ address validation
 def test_validate_service_address_accepts_a_served_zip(harborlight) -> None:
     address = validate_service_address(
@@ -107,6 +137,40 @@ def test_validate_service_address_accepts_a_served_zip(harborlight) -> None:
 
     assert address.zip == "94107"
     assert address.line1 == "12 Alder Street"
+
+
+def test_validate_service_address_rejects_city_state_and_placeholder(
+    harborlight,
+) -> None:
+    with pytest.raises(StableError) as city:
+        validate_service_address(
+            harborlight,
+            line1="12 Alder Street",
+            city="San Jose",
+            state="CA",
+            zip_code="94107",
+        )
+    assert _code(city) is ErrorCode.invalid_argument
+
+    with pytest.raises(StableError) as state:
+        validate_service_address(
+            harborlight,
+            line1="12 Alder Street",
+            city="San Francisco",
+            state="NY",
+            zip_code="94107",
+        )
+    assert _code(state) is ErrorCode.invalid_argument
+
+    with pytest.raises(StableError) as placeholder:
+        validate_service_address(
+            harborlight,
+            line1="Address on file",
+            city="San Francisco",
+            state="CA",
+            zip_code="94107",
+        )
+    assert _code(placeholder) is ErrorCode.invalid_argument
 
 
 def test_validate_service_address_rejects_out_of_area_and_inconsistent_zip(
@@ -185,12 +249,24 @@ def test_guard_reprompts_once_with_the_heard_digits_then_exhausts(harborlight, s
     )
 
 
-def test_guard_recovers_a_zip_from_the_tenants_known_street_address(summit, store) -> None:
+def test_guard_never_infers_a_zip_from_another_customers_record(summit, store) -> None:
     guard = EntityGuard(summit, store)
     guard.observe("The address is 88 Meridian Way, San Jose, 9520 Faye.")
 
     assert guard.line1 == "88 Meridian Way"
-    assert guard.resolve_zip(None) == "95125"
+    with pytest.raises(RepromptError):
+        guard.resolve_zip(None)
+    assert guard.best_address() is None
+
+
+def test_guard_rejects_two_different_valid_zips(harborlight, store) -> None:
+    guard = EntityGuard(harborlight, store)
+    guard.observe("ZIP 94107.")
+
+    with pytest.raises(RepromptError) as exc:
+        guard.resolve_zip("95125")
+
+    assert "different" in exc.value.message.lower()
 
 
 def test_guard_does_not_override_a_valid_zip_with_a_known_street(harborlight, store) -> None:
