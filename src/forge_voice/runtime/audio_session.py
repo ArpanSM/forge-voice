@@ -1097,6 +1097,7 @@ class AudioCallSession:
             return None
         if YES_PATTERN.search(lowered) and not REFUSAL_PATTERN.search(lowered):
             self._trace("same_turn_yes_deferred", slot_id=slot_id)
+            return f"{readback.message} I will wait for your confirmation on your next turn."
         return readback.message
 
     def _invalidate_readback(self, reason: str) -> None:
