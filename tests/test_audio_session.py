@@ -836,3 +836,13 @@ def test_yes_is_rejected_until_the_readback_finishes_speaking(
     assert committed.ok is True
     assert committed.stage == "booked"
     assert session.store.count_bookings(session.tenant.tenant_id) == before + 1
+
+
+def test_confirmation_defers_a_new_phone_number(session: AudioCallSession) -> None:
+    slot = first_slot(session)
+    session.book_appointment(slot_id=slot["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    session.note_caller_utterance("Yes, use 555-123-4567.")
+
+    assert session.confirmation_step("Yes, use 555-123-4567.") is None
+    assert session.pending is None
+    assert session.store.count_bookings(session.tenant.tenant_id) == 4

@@ -50,6 +50,7 @@ from forge_voice.tools import ToolRegistry, ToolResult, ToolSession
 from forge_voice.tools.envelope import ToolError, sanitize_args
 from forge_voice.transfer import TransferSimulator
 from forge_voice.validation import (
+    find_phone,
     find_street_address,
     find_zip,
     normalize_phone,
@@ -1243,6 +1244,12 @@ class AudioCallSession:
             return False
         zip_code = find_zip(lowered)
         if zip_code is not None and zip_code != pending.payload.address.zip:
+            return False
+        phone = find_phone(lowered)
+        if phone is not None and phone != pending.payload.contact_phone:
+            return False
+        name_match = INTRO_NAME_RE.search(lowered)
+        if name_match is not None and name_match.group(1) != pending.payload.customer_name:
             return False
         service_id = self.resolve_service_id(lowered)
         if service_id is not None and service_id != pending.payload.service_id:
