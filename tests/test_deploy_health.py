@@ -114,3 +114,27 @@ def test_cli_exits_zero_when_all_requested_checks_pass(capsys) -> None:
 
     assert code == 0
     assert "OK   lfm3" in capsys.readouterr().out
+
+
+def test_agent_log_is_stale_when_old_even_if_the_marker_is_present(tmp_path: Path) -> None:
+    import os
+    import time
+
+    log = tmp_path / "agent.log"
+    log.write_text("registered worker\n", encoding="utf-8")
+    old = time.time() - 3600
+    os.utime(log, (old, old))
+
+    check = check_agent_log(log, max_age_seconds=900, now=time.time())
+
+    assert check.ok is False
+    assert "stale log" in check.detail
+
+
+def test_fresh_agent_log_is_ok(tmp_path: Path) -> None:
+    import time
+
+    log = tmp_path / "agent.log"
+    log.write_text("registered worker\n", encoding="utf-8")
+
+    assert check_agent_log(log, max_age_seconds=900, now=time.time()).ok is True

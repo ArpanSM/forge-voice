@@ -125,8 +125,12 @@ change requests, not admin actions.
 ## Retention and privacy
 
 - Synthetic data only; no real customer records, phone numbers or recordings.
-- Calls older than **30 days** are excluded from every read and pruned when the dashboard
-  starts. Expired traces are skipped before import so they cannot reappear on every sync.
+- Dashboard calls older than **30 days** are excluded from every read and pruned when the
+  dashboard starts. Expired traces are skipped before import so they cannot reappear on
+  every sync.
+- The same startup runs `forge_voice.monitoring.retention`, which deletes raw
+  `data/calls/*.jsonl` traces and `recordings/` files older than **30 days**. `make retention`
+  runs that job explicitly; `make reset` deletes synthetic traces and recordings.
 - `recording_opt_out` calls from traces or the seed show a text-only notice; the dashboard
   never renders an audio player or claims a recording exists.
 - **Read-only** for call data: the only writes are the dashboard seed/trace cache, the alert

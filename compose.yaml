@@ -1,27 +1,26 @@
 # One local stack: self-hosted LiveKit + agent + web (browser, token, dashboard, admin).
-# LFM3-Audio-2B stays on the host GPU and is reached at host.docker.internal:8082.
-# Start with `make demo` / `make demo-hybrid`; those targets source .env.local first.
-# No Cloud transport, hosted URL, SIP, TURN or paid provider is configured.
+# LFM3-Audio-2B stays on the host GPU; the agent reaches host.docker.internal:8082.
+# Linux-only host networking keeps browser and agent media on the same loopback as
+# LiveKit; no Cloud transport, hosted URL, SIP, TURN or paid provider is configured.
+# Start with `make demo-compose` / `make demo-hybrid-compose`; those targets source
+# .env.local and the explicit shell environment first.
 
 name: forge-voice
 
 services:
   livekit:
     image: livekit/livekit-server:v1.13.11
+    network_mode: host
     command:
       - --dev
       - --bind
-      - 0.0.0.0
+      - 127.0.0.1
       - --node-ip
       - 127.0.0.1
       - --udp-port
       - "7882"
     environment:
       LIVEKIT_KEYS: "${LIVEKIT_API_KEY:-devkey}: ${LIVEKIT_API_SECRET:?LIVEKIT_API_SECRET is missing; run make demo or set it in .env.local}"
-    ports:
-      - "127.0.0.1:7880:7880"
-      - "127.0.0.1:7881:7881"
-      - "127.0.0.1:7882:7882/udp"
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:7880/ || exit 1"]
       interval: 5s
@@ -30,7 +29,7 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  # Tiny sidecar because LFM3 is a host service: its /health gates the agent.
+  # Tiny bridge sidecar because LFM3 is a host service; its /health gates the agent.
   lfm3-check:
     image: curlimages/curl:8.11.1
     entrypoint: ["sleep", "infinity"]
@@ -47,10 +46,15 @@ services:
 
   web:
     image: forge-voice-web:${FORGE_VOICE_IMAGE_TAG:-local}
+    network_mode: host
+    user: "${FORGE_VOICE_UID:-1000}:${FORGE_VOICE_GID:-1000}"
     build:
       context: .
       dockerfile: docker/Dockerfile
       target: web
+      args:
+        FORGE_UID: "${FORGE_VOICE_UID:-1000}"
+        FORGE_GID: "${FORGE_VOICE_GID:-1000}"
     env_file:
       - .env.local
     environment:
@@ -67,13 +71,11 @@ services:
       - forge_voice.web.app:create_app_from_env
       - --factory
       - --host
-      - 0.0.0.0
+      - 127.0.0.1
       - --port
       - "8000"
       - --log-level
       - info
-    ports:
-      - "127.0.0.1:8000:8000"
     volumes:
       - ./data:/app/data
       - ./recordings:/app/recordings
@@ -92,22 +94,27 @@ services:
 
   agent:
     image: forge-voice-agent:${FORGE_VOICE_IMAGE_TAG:-local}
+    network_mode: host
+    user: "${FORGE_VOICE_UID:-1000}:${FORGE_VOICE_GID:-1000}"
     build:
       context: .
       dockerfile: docker/Dockerfile
       target: agent
+      args:
+        FORGE_UID: "${FORGE_VOICE_UID:-1000}"
+        FORGE_GID: "${FORGE_VOICE_GID:-1000}"
     env_file:
       - .env.local
     environment:
       FORGE_VOICE_PROFILE: ${FORGE_VOICE_PROFILE:-local}
-      LIVEKIT_URL: ws://livekit:7880
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-qwen/qwen3.8-27b}
+      LIVEKIT_URL: ws://127.0.0.1:7880
       LFM3_AUDIO_BASE_URL: http://host.docker.internal:8082
       FORGE_VOICE_DATA_DIR: /app/data
     command: ["python", "-m", "forge_voice.runtime.livekit_agent", "start"]
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    ports:
-      - "127.0.0.1:8081:8081"
     volumes:
       - ./data:/app/data
       - ./recordings:/app/recordings

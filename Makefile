@@ -3,7 +3,7 @@ export PYTHONPATH := src
 
 .PHONY: help install bootstrap corpus corpus-check test lint format text-demo audio-fixtures \
 	audio-check demo demo-local demo-compose demo-hybrid demo-hybrid-local demo-hybrid-compose \
-	demo-smoke demo-hybrid-smoke down reset logs rollback health release \
+	demo-smoke demo-hybrid-smoke down reset logs rollback health release retention \
 	eval eval-local eval-audio eval-audio-local eval-heldout eval-smoke eval-baseline \
 	dashboard dashboard-seed dashboard-export review-smoke
 
@@ -31,6 +31,7 @@ help:
 	  'make rollback      Start the previous image tags; restore ./data/backup on schema change' \
 	  'make health        Probe LFM3, LiveKit, web and agent readiness' \
 	  'make release       Tag local images and snapshot ./data for rollback (TAG=v1)' \
+	  'make retention     Prune raw call traces and recordings older than 30 days' \
 	  'make demo-smoke    Start the local stack and run a scripted WebRTC booking call' \
 	  'make demo-hybrid-smoke  Hybrid stack + scripted booking (needs GROQ_API_KEY)' \
 	  'make eval          Full 40 text hybrid release gate + 10 critical repeats' \
@@ -130,15 +131,20 @@ rollback:
 	./scripts/compose_ops.sh rollback
 
 health:
-	@if [ -f data/demo/agent.log ]; then \
-	  PYTHONPATH=src $(PYTHON) scripts/healthcheck.py --agent-log data/demo/agent.log; \
+	@if docker compose ps -q agent 2>/dev/null | grep -q .; then \
+	  echo "MODE: Docker Compose stack (agent readiness URL)"; \
+	  ./scripts/healthcheck.sh --agent-url http://127.0.0.1:8081/; \
 	else \
-	  PYTHONPATH=src $(PYTHON) scripts/healthcheck.py --agent-url http://127.0.0.1:8081/; \
+	  echo "MODE: host-binary demo (fresh agent log)"; \
+	  ./scripts/healthcheck.sh --agent-log data/demo/agent.log; \
 	fi
 
 release:
 	@test -n "$(TAG)" || { echo "usage: make release TAG=v1" >&2; exit 2; }
 	./scripts/release.sh "$(TAG)"
+
+retention:
+	$(PYTHON) -m forge_voice.monitoring.retention --data-dir data --recordings-dir recordings
 
 EVAL_PYTHON ?= $(PYTHON) -m forge_voice.eval
 EVAL_AUDIO_TRANSPORT ?= livekit

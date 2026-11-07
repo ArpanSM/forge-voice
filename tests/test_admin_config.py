@@ -179,13 +179,14 @@ def test_admin_rejects_non_local_hosts_and_cross_origin_posts(
     assert remote.get("/admin").status_code == 403
 
     before = (tenants_dir / "harborlight.yaml").read_text(encoding="utf-8")
-    response = client.post(
-        "/admin/harborlight",
-        data={"yaml": before},
-        headers={"origin": "http://public.example"},
-    )
-    assert response.status_code == 403
-    assert (tenants_dir / "harborlight.yaml").read_text(encoding="utf-8") == before
+    for origin in ("http://public.example", "http://testserver:3000"):
+        response = client.post(
+            "/admin/harborlight",
+            data={"yaml": before},
+            headers={"origin": origin},
+        )
+        assert response.status_code == 403, origin
+        assert (tenants_dir / "harborlight.yaml").read_text(encoding="utf-8") == before
 
 
 def test_admin_edit_reloads_the_monitoring_tenant_names(tenants_dir: Path) -> None:

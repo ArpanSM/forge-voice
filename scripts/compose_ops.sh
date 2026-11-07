@@ -10,6 +10,9 @@ if [[ "${1:-}" == "--root" ]]; then
   shift 2
 fi
 cd "$ROOT"
+# shellcheck source=scripts/python_bin.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/python_bin.sh"
 
 COMMAND="${1:-}"
 case "$COMMAND" in
@@ -50,15 +53,21 @@ remove_synthetic_state() {
   rm -rf data/monitoring data/calls
   rm -f data/forge_voice.db data/forge_voice.db-shm data/forge_voice.db-wal
   rm -f data/outbox.jsonl
-  mkdir -p data
+  if [[ -d recordings ]]; then
+    find recordings -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+  fi
+  mkdir -p data recordings
 }
 
 seed_dashboard() {
+  local python_bin
   if [[ "$LOCAL_ONLY" == "1" ]]; then
-    PYTHONPATH=src python3.12 -m forge_voice.monitoring.seed --root "$ROOT" --data-dir data
+    python_bin="$(find_python_bin)" || exit 1
+    PYTHONPATH=src "$python_bin" -m forge_voice.monitoring.seed --root "$ROOT" --data-dir data
   elif ! compose run --rm --no-deps --entrypoint python web -m forge_voice.monitoring.seed; then
     echo "Compose image unavailable; reseeding with the host Python instead." >&2
-    PYTHONPATH=src python3.12 -m forge_voice.monitoring.seed --root "$ROOT" --data-dir data
+    python_bin="$(find_python_bin)" || exit 1
+    PYTHONPATH=src "$python_bin" -m forge_voice.monitoring.seed --root "$ROOT" --data-dir data
   fi
 }
 

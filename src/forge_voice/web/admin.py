@@ -148,7 +148,7 @@ def register_admin_routes(app: FastAPI, service: TenantAdminService) -> None:
         return _page(service, slug, saved=bool(saved), error=error)
 
     @app.post("/admin/{slug}", response_model=None)
-    async def admin_save(slug: str, request: Request):
+    async def admin_save(slug: str, request: Request) -> HTMLResponse | RedirectResponse:
         require_safe_post(request)
         try:
             text = await _form_yaml(request)

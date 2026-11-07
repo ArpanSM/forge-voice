@@ -1,4 +1,8 @@
-"""Compose operations are testable without Docker by recording the CLI commands."""
+"""Compose operations are tested at the script level with a fake Docker CLI.
+
+These tests verify command sequencing and file effects, not real image builds, container
+health or a live rollback.
+"""
 
 from __future__ import annotations
 
@@ -97,6 +101,7 @@ def test_reset_deletes_only_synthetic_state_and_reseeds(
         "data/outbox.jsonl",
         "data/backup/keep.txt",
         "data/notes.txt",
+        "recordings/call_1.wav",
     ):
         path = tmp_path / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -112,6 +117,8 @@ def test_reset_deletes_only_synthetic_state_and_reseeds(
     assert not (tmp_path / "data" / "outbox.jsonl").exists()
     assert (tmp_path / "data" / "backup" / "keep.txt").exists()
     assert (tmp_path / "data" / "notes.txt").exists()
+    assert not (tmp_path / "recordings" / "call_1.wav").exists()
+    assert (tmp_path / "recordings").is_dir()
     assert (tmp_path / ".env.local").exists()
     log = _log(fake_docker)
     assert "compose down --remove-orphans" in log

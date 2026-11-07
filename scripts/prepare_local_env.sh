@@ -7,8 +7,13 @@ ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 FILE="$ROOT/.env.local"
 umask 077
 
+# shellcheck source=scripts/python_bin.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/python_bin.sh"
+PYTHON_BIN="$(find_python_bin)" || exit 1
+
 new_secret() {
-  python3.12 -c 'import secrets; print(secrets.token_hex(32))'
+  "$PYTHON_BIN" -c 'import secrets; print(secrets.token_hex(32))'
 }
 
 if [[ ! -f "$FILE" ]]; then
@@ -30,7 +35,7 @@ ensure_line() {
     current="$(grep "^${key}=" "$FILE" | head -1 | cut -d= -f2-)"
     current="${current//[[:space:]]/}"
     if [[ -z "$current" ]]; then
-      FORGE_ENV_KEY="$key" FORGE_ENV_VALUE="$value" python3.12 - "$FILE" <<'PY'
+      FORGE_ENV_KEY="$key" FORGE_ENV_VALUE="$value" "$PYTHON_BIN" - "$FILE" <<'PY'
 import os
 import sys
 from pathlib import Path

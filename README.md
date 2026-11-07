@@ -28,13 +28,17 @@ tenant fails closed.
 ## Quickstart (fully local)
 
 Requires Linux, LFM3-Audio-2B on the host GPU, and either Docker Compose v2.20+ (preferred)
-or Python 3.12 for the host-binary fallback.
+or Python 3.12 for the host-binary fallback. Both paths also use `curl` and Python 3.12+
+for the preflight/health helpers (`python3` is accepted when it is 3.12+). The Compose path
+uses Linux host networking so browser and agent media share the host loopback; it is not a
+Docker Desktop path. Set `FORGE_VOICE_UID`/`FORGE_VOICE_GID` from `id -u`/`id -g` if they
+are not 1000 so `./data`, `./recordings` and `./tenants` stay user-owned.
 
 ```bash
 make install        # Python deps, dev tools and demo extras (host fallback/tests)
 cp .env.example .env.local   # gitignored; fill the local LiveKit key/secret
 lfm3 audio          # separate terminal: LFM3 on 127.0.0.1:8082
-make demo           # Compose when Docker is available, host binaries otherwise
+make demo           # prints MODE: Compose or host-binary, then starts that path
 ```
 
 Open <http://localhost:8000>, choose a business and press **Start call**. The same app serves
@@ -48,10 +52,12 @@ make demo-compose   # one Compose stack: self-hosted LiveKit + agent + web; LFM3
 make demo-hybrid    # Compose/host with LFM3 audio + Groq qwen/qwen3.8-27b as the only external LLM
 ```
 
-`make demo` is fully local: no Cloud transport, paid model, SIP or external call. The first
-run creates a gitignored `.env.local` with a random local LiveKit dev secret; the demo
-key/secret never enters the repo. Compose waits for LiveKit, web `/health`, agent readiness
-and LFM3 `/health`, and fails closed if LFM3 or a port is missing.
+`make demo` is fully local: no Cloud transport, paid model, SIP or external call. It prints
+the selected mode explicitly; it does not claim Compose ran when it used the host binary.
+The first run creates a gitignored `.env.local` with a random local LiveKit dev secret; the
+demo key/secret never enters the repo. Compose waits for LiveKit, web `/health`, agent
+readiness and LFM3 `/health`, and fails closed if LFM3 or a port is missing. `make
+demo-compose` is the one-stack path; `make demo-local` is the no-Docker fallback.
 
 ### Hybrid profile
 
@@ -60,7 +66,8 @@ GROQ_API_KEY=... make demo-hybrid
 ```
 
 Same local transport, audio and tools; the only external call is Groq `qwen/qwen3.8-27b` for
-the LLM. Without a key the command fails closed and `make demo` still works fully local.
+the LLM. The key is passed into the Compose agent environment from `.env.local` or the shell.
+Without a key the command fails closed and `make demo` still works fully local.
 
 ## Demo paths
 
@@ -87,8 +94,10 @@ make down           # stop the Compose stack; ./data and ./recordings stay
 make reset          # delete synthetic call/booking state and reseed
 make logs           # follow LiveKit, web and agent logs
 make rollback       # previous image tags; restore ./data/backup on a schema change
+                     # schema-changing release: FORGE_VOICE_SCHEMA_VERSION=2 make release TAG=v2
 make health         # probe LFM3, LiveKit, web and agent readiness
-make release        # tag local images and snapshot ./data (TAG=v1)
+make release        # stop writers, tag images and snapshot ./data (TAG=v1)
+make retention      # prune raw call traces and recordings older than 30 days
 make eval           # 40 text hybrid release gate + 10 critical repeats (needs GROQ_API_KEY)
 make eval-local     # 40 text local safety-fallback report
 make eval-audio     # 10 audio hybrid on the self-hosted LiveKit server

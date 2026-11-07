@@ -6,6 +6,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILE="${1:-local}"
+# shellcheck source=scripts/python_bin.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/python_bin.sh"
+PYTHON_BIN="$(find_python_bin)" || exit 1
 case "$PROFILE" in
   local|hybrid) ;;
   *) echo "usage: $0 [local|hybrid]" >&2; exit 2 ;;
@@ -31,6 +35,8 @@ if [[ -n "$PRESERVED_GROQ_KEY" ]]; then
 fi
 export FORGE_VOICE_PROFILE="$PROFILE"
 
+command -v curl >/dev/null 2>&1 || die \
+  "curl is required for the local LFM3 /health preflight and health checks."
 command -v docker >/dev/null 2>&1 || die \
   "Docker is not installed. Use 'make demo-local' for the host-binary demo, or install Docker Compose."
 docker compose version >/dev/null 2>&1 || die \
@@ -59,12 +65,18 @@ if ! curl -fsS --max-time 3 "$LFM3_HOST_CHECK/health" >/dev/null 2>&1; then
 fi
 
 # Fail closed before Compose if a local port is already taken (often a stale stack).
-python3.12 - <<'PY'
+"$PYTHON_BIN" - <<'PY'
 import socket
 import sys
 
-for port in (7880, 7881, 8000, 8081):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+for port, kind in (
+    (7880, socket.SOCK_STREAM),
+    (7881, socket.SOCK_STREAM),
+    (7882, socket.SOCK_DGRAM),
+    (8000, socket.SOCK_STREAM),
+    (8081, socket.SOCK_STREAM),
+):
+    sock = socket.socket(socket.AF_INET, kind)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
         sock.bind(("127.0.0.1", port))
@@ -81,6 +93,7 @@ PY
 
 cd "$ROOT"
 mkdir -p data recordings
+echo "MODE: Docker Compose stack (Linux host networking; profile: $PROFILE)."
 echo "Starting the local Compose stack (profile: $PROFILE) …"
 if ! docker compose up -d --build --wait --wait-timeout 300; then
   echo

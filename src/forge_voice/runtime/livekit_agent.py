@@ -404,7 +404,7 @@ def _trace_path(call_id: str) -> Path:
     return DEFAULT_TRACE_DIR / f"{call_id}.jsonl"
 
 
-server = AgentServer()
+server = AgentServer(host="127.0.0.1")
 
 
 @server.rtc_session(agent_name=AGENT_NAME)

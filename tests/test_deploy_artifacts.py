@@ -37,16 +37,47 @@ def test_compose_healthchecks_cover_livekit_web_agent_and_lfm3() -> None:
     assert "host.docker.internal:8082/health" in str(services["lfm3-check"]["healthcheck"])
 
 
-def test_compose_mounts_data_and_recordings_on_localhost_only() -> None:
+def test_compose_uses_linux_host_networking_for_media_and_web() -> None:
+    compose = yaml.safe_load((ROOT / "compose.yaml").read_text(encoding="utf-8"))
+    services = compose["services"]
+
+    for name in ("livekit", "web", "agent"):
+        assert services[name]["network_mode"] == "host", name
+        assert "ports" not in services[name], name
+    assert "127.0.0.1" in services["livekit"]["command"]
+    assert services["agent"]["environment"]["LIVEKIT_URL"] == "ws://127.0.0.1:7880"
+    assert services["web"]["environment"]["LIVEKIT_URL"] == "ws://localhost:7880"
+    assert "127.0.0.1" in services["web"]["command"]
+    # The LFM3 bridge sidecar keeps the host-gateway path for the host GPU service.
+    assert services["agent"]["environment"]["LFM3_AUDIO_BASE_URL"] == (
+        "http://host.docker.internal:8082"
+    )
+    assert services["lfm3-check"]["extra_hosts"] == ["host.docker.internal:host-gateway"]
+
+
+def test_compose_mounts_data_and_recordings_and_fixes_host_ownership() -> None:
     compose = yaml.safe_load((ROOT / "compose.yaml").read_text(encoding="utf-8"))
     services = compose["services"]
     volumes = services["agent"]["volumes"] + services["web"]["volumes"]
 
     assert "./data:/app/data" in volumes
     assert "./recordings:/app/recordings" in volumes
-    for service in ("livekit", "web", "agent"):
-        for mapping in services[service].get("ports", []):
-            assert str(mapping).startswith("127.0.0.1:"), (service, mapping)
+    for name in ("web", "agent"):
+        assert services[name]["user"] == "${FORGE_VOICE_UID:-1000}:${FORGE_VOICE_GID:-1000}"
+        assert services[name]["build"]["args"]["FORGE_UID"] == "${FORGE_VOICE_UID:-1000}"
+        assert services[name]["build"]["args"]["FORGE_GID"] == "${FORGE_VOICE_GID:-1000}"
+
+
+def test_compose_agent_receives_groq_key_and_profile_from_the_shell() -> None:
+    compose = yaml.safe_load((ROOT / "compose.yaml").read_text(encoding="utf-8"))
+    agent_env = compose["services"]["agent"]["environment"]
+
+    assert agent_env["GROQ_API_KEY"] == "${GROQ_API_KEY:-}"
+    assert agent_env["FORGE_VOICE_PROFILE"] == "${FORGE_VOICE_PROFILE:-local}"
+    script = (ROOT / "scripts" / "compose_demo.sh").read_text(encoding="utf-8")
+    assert "PRESERVED_GROQ_KEY" in script
+    assert 'export GROQ_API_KEY="$PRESERVED_GROQ_KEY"' in script
+    assert 'export FORGE_VOICE_PROFILE="$PROFILE"' in script
 
 
 def test_compose_uses_interpolated_image_tags_and_no_baked_secrets() -> None:
@@ -71,6 +102,9 @@ def test_dockerfile_has_web_and_agent_targets() -> None:
     assert "FROM base AS agent" in dockerfile
     assert "forge_voice.web.app" in dockerfile
     assert "forge_voice.runtime.livekit_agent" in dockerfile
+    assert "ARG FORGE_UID" in dockerfile
+    assert "ARG FORGE_GID" in dockerfile
+    assert "USER forge" in dockerfile
 
 
 def test_makefile_keeps_both_demo_paths_and_operations() -> None:
@@ -94,6 +128,12 @@ def test_makefile_keeps_both_demo_paths_and_operations() -> None:
     assert "./scripts/demo.sh" in text
     assert "./scripts/compose_demo.sh" in text
     assert "./scripts/compose_ops.sh" in text
+    assert "using the host-binary demo" in text
+    assert "MODE:" in (ROOT / "scripts" / "demo.sh").read_text(encoding="utf-8")
+    compose_script = (ROOT / "scripts" / "compose_demo.sh").read_text(encoding="utf-8")
+    assert "MODE:" in compose_script
+    assert "python_bin.sh" in compose_script
+    assert "curl is required" in compose_script
 
 
 def test_runbook_is_one_page_and_covers_operations_and_failures() -> None:
@@ -118,6 +158,14 @@ def test_runbook_is_one_page_and_covers_operations_and_failures() -> None:
         "30-day",
         "No Cloud",
         "SIP",
+        "Linux",
+        "host networking",
+        "Python 3.12",
+        "curl",
+        "FORGE_VOICE_UID",
+        "FORGE_VOICE_SCHEMA_VERSION",
+        "raw",
+        "recordings",
     ]
     for needle in required:
         assert needle in runbook, needle
@@ -167,3 +215,24 @@ def test_docs_do_not_claim_cloud_sip_or_paid_paths() -> None:
     assert "sip" in combined
     assert "no paid" in combined or "no paid fallback" in combined
     assert "livekit cloud" not in combined or "no livekit cloud" in combined
+
+
+def _resolve_compose_env(value: str, env: dict[str, str]) -> str:
+    """Resolve the small `${VAR:-default}` forms used by the local Compose file."""
+    import re
+
+    match = re.fullmatch(r"\$\{([A-Z0-9_]+):-(.*)\}", value)
+    if match is None:
+        return value
+    return env.get(match.group(1), match.group(2))
+
+
+def test_compose_agent_env_renders_groq_and_profile_for_hybrid() -> None:
+    compose = yaml.safe_load((ROOT / "compose.yaml").read_text(encoding="utf-8"))
+    agent_env = compose["services"]["agent"]["environment"]
+    shell = {"GROQ_API_KEY": "gsk-test-only", "FORGE_VOICE_PROFILE": "hybrid"}
+
+    assert _resolve_compose_env(agent_env["GROQ_API_KEY"], shell) == "gsk-test-only"
+    assert _resolve_compose_env(agent_env["FORGE_VOICE_PROFILE"], shell) == "hybrid"
+    assert _resolve_compose_env(agent_env["GROQ_API_KEY"], {}) == ""
+    assert _resolve_compose_env(agent_env["FORGE_VOICE_PROFILE"], {}) == "local"

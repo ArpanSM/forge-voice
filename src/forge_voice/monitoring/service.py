@@ -21,6 +21,7 @@ from forge_voice.monitoring.alerts import Alert, append_alerts, evaluate_alerts
 from forge_voice.monitoring.atomic import atomic_write_text
 from forge_voice.monitoring.filters import CallFilters
 from forge_voice.monitoring.metrics import DEFINITIONS, aggregate_metrics
+from forge_voice.monitoring.retention import prune_raw_data
 from forge_voice.monitoring.seed import seed_dashboard_calls
 from forge_voice.policy.state import CallIntent, CallOutcome
 from forge_voice.tenants import TenantConfig, load_all_tenants
@@ -89,6 +90,12 @@ class MonitoringService:
 
     # ------------------------------------------------------------------ reads
     def ensure_seeded(self) -> None:
+        prune_raw_data(
+            self.data_dir,
+            self.root / "recordings",
+            retention_days=self.retention_days,
+            now=self._now(),
+        )
         self.sync_traces()
         self.store.prune()
         if not self.store.records():

@@ -22,6 +22,8 @@ make demo-compose  # explicit one-stack Compose deployment
 make demo-hybrid   # same stack with Groq as the only external LLM
 make down reset logs rollback   # local operations; see docs/runbook.md
 make health        # LFM3, LiveKit, web and agent readiness
+make retention     # prune raw traces/recordings older than 30 days
+make release       # stop writers, tag images and snapshot ./data (TAG=v1)
 make eval          # 40 text hybrid release gate + critical repeats
 make eval-local    # 40 text local safety-fallback report
 make eval-smoke    # 8 text dev subset, under two minutes

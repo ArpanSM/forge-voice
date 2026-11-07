@@ -61,8 +61,10 @@ demo; a live local demo is by appointment only.
 
 ## Data, credentials and retention
 
-- Synthetic data only. Calls and traces older than **30 days** are pruned; `make reset`
-  deletes synthetic call/booking/trace state and reseeds the dashboard.
+- Synthetic data only. Dashboard records, raw `data/calls/*.jsonl` traces and
+  `recordings/` older than **30 days** are pruned by the web startup retention job and by
+  `make retention`; `make reset` deletes synthetic call/booking/trace/recording state and
+  reseeds the dashboard.
 - `./data/backup` is the rollback snapshot; `./recordings` holds only local synthetic audio
   when recording is enabled. Respect the recording opt-out and use `text_only`.
 - Rotate the local LiveKit dev secret, the Groq key and any webhook URL after the demo.
