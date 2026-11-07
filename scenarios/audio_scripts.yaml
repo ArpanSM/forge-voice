@@ -35,7 +35,7 @@ scenarios:
   audio_emergency_01:
     tenant: summit
     turns:
-      - text: "Our AC is out and it is ninety-eight degrees upstairs. I have a newborn baby."
+      - text: "Our AC is out and it is ninety-eight degrees upstairs with a newborn baby."
         pause_after_ms: 500
       - text: "The address is 88 Meridian Way, San Jose."
       - text: "The ZIP is nine five one two five."

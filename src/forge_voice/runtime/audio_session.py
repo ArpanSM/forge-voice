@@ -168,6 +168,7 @@ class AudioCallSession:
         self.emergency_active = False
         self.emergency_handoff_done = False
         self.emergency_ticket_turn: int | None = None
+        self._emergency_detail_prompts = 0
         self.customer_name: str | None = None
         self.customer_phone: str | None = caller_phone
         self.address: Address | None = None
@@ -952,6 +953,20 @@ class AudioCallSession:
                     "address and callback number so I can pass them to the on-call technician."
                 ),
             )
+        if (
+            self._emergency_details_incomplete()
+            and self._emergency_detail_prompts < self.entities.max_reprompts
+        ):
+            self._emergency_detail_prompts += 1
+            return ToolReply(
+                ok=True,
+                stage="ticket",
+                message=(
+                    "I have the emergency ticket open and the 911 guidance stands. Please "
+                    "give me your name, service address and callback number. Say the ZIP "
+                    "and phone one digit at a time."
+                ),
+            )
         guard_note = self._emergency_guard_note(text)
         reply = self.transfer_to_human(
             reason="emergency",
@@ -1518,6 +1533,15 @@ class AudioCallSession:
             if match:
                 return match.group(1)
         return None
+
+    def _emergency_details_incomplete(self) -> bool:
+        facts = self._facts()
+        name = self.customer_name or self._name_from_turns()
+        if not name and facts is not None and facts.name != "Caller":
+            name = facts.name
+        phone = self.entities.phone or self.customer_phone
+        address = self.address or self.entities.best_address()
+        return not (name and phone and address)
 
     def _emergency_customer(
         self,

@@ -28,6 +28,7 @@ from forge_voice.eval.setup import ScenarioSetup
 from forge_voice.runtime.interpreter import extract_facts
 from forge_voice.scenarios import load_manifest
 from forge_voice.tenants import load_all_tenants
+from forge_voice.validation import find_street_address, find_zip
 
 
 class LiveKitStackError(RuntimeError):
@@ -541,11 +542,14 @@ class LiveKitAudioRunner:
             setup.now,
             caller_phone=setup.caller_phone,
         )
+        spoken_text = " ".join(turn.text for turn in script.turns)
+        spoken_line1 = find_street_address(spoken_text)
+        spoken_zip = find_zip(spoken_text)
         return {
             "name": facts.name if facts.name != "Caller" else None,
             "phone": facts.phone,
-            "line1": facts.address.line1 if facts.address else None,
-            "zip": facts.address.zip if facts.address else None,
+            "line1": spoken_line1 or (facts.address.line1 if facts.address else None),
+            "zip": spoken_zip or (facts.address.zip if facts.address else None),
             "service_id": facts.service_id,
         }
 

@@ -521,8 +521,14 @@ def test_emergency_partial_packet_marks_the_missing_address(tmp_path: Path) -> N
     assert first is not None and first.ok
     before = session.store.count_bookings("summit")
     session.note_caller_utterance("My phone is four zero eight, five five five, zero one four two.")
+    first_prompt = session.emergency_step("No one is hurt, but please hurry.")
+    assert first_prompt is not None and first_prompt.stage == "ticket"
+    session.note_caller_utterance("No one is hurt. Please send someone.")
+    second_prompt = session.emergency_step("No one is hurt. Please send someone.")
+    assert second_prompt is not None and second_prompt.stage == "ticket"
+    session.note_caller_utterance("Please send the on-call technician.")
 
-    handoff = session.emergency_step("No one is hurt, but please hurry.")
+    handoff = session.emergency_step("Please send the on-call technician.")
 
     assert handoff is not None
     assert handoff.ok is True
@@ -552,8 +558,12 @@ def test_emergency_handoff_does_not_infer_a_zip_from_another_customer(
     session.note_caller_utterance(
         "My name is Dana Whitfield. My phone is four zero eight, five five five, zero one four two."
     )
+    assert session.emergency_step("No one is hurt.") is not None
+    session.note_caller_utterance("No one is hurt. Please hurry.")
+    assert session.emergency_step("No one is hurt. Please hurry.") is not None
+    session.note_caller_utterance("Please send the on-call technician.")
 
-    handoff = session.emergency_step("No one is hurt, but please hurry.")
+    handoff = session.emergency_step("Please send the on-call technician.")
 
     assert handoff is not None
     assert handoff.ok is True

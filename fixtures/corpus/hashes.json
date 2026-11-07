@@ -11,7 +11,7 @@
     },
     {
       "path": "scenarios/audio/audio_emergency_01.txt",
-      "sha256": "bae5bb9d5bc407777771fbd050d72307c5566bd668bbc15e724deebef1daf603"
+      "sha256": "8fb402421efeda3137b6154bd32f7fc8ea8ee562c235d9ae19fb057b03a44258"
     },
     {
       "path": "scenarios/audio/audio_entities_01.txt",
@@ -211,7 +211,7 @@
     },
     {
       "path": "scenarios/fixtures/audio/emergency_01.wav",
-      "sha256": "8be2f3c48915768e0b34f1b65387ef2ec2b67faa88de69ce10d027b7278e7fb0"
+      "sha256": "42d708147729d53c1cc470fb84b2eed2357725125fb0d29f039d44f05b1d229f"
     },
     {
       "path": "scenarios/fixtures/audio/entities_01.wav",
@@ -219,7 +219,7 @@
     },
     {
       "path": "scenarios/fixtures/audio/hashes.json",
-      "sha256": "e44012a7ff261e1f07a135dbb852c1db12ed63c9f653e3321a68e4334fb4ff90"
+      "sha256": "783ca0e65a5ea4aa6364e275f08e5962bfda19ad4cf29f5c566af5d7dda6d0a8"
     },
     {
       "path": "scenarios/fixtures/audio/lowmic_01.wav",

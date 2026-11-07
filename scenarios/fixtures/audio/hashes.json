@@ -27,17 +27,17 @@
       "turns_sha256": "84ca08bb27182958ec82acad561fb78cdce1c1b5cc9722b88f1727444c15f466"
     },
     {
-      "bytes": 1443884,
+      "bytes": 1382444,
       "channels": 1,
       "degradation": null,
-      "duration_ms": 30080,
+      "duration_ms": 28800,
       "fixture": "fixtures/audio/emergency_01.wav",
       "sample_rate": 24000,
       "scenario_id": "audio_emergency_01",
       "seed": 2503138867,
-      "sha256": "8be2f3c48915768e0b34f1b65387ef2ec2b67faa88de69ce10d027b7278e7fb0",
+      "sha256": "42d708147729d53c1cc470fb84b2eed2357725125fb0d29f039d44f05b1d229f",
       "tenant": "summit",
-      "turns_sha256": "0db068d82c74b7f4bea0c1a517db504464969b1a9b4a488fa4d5b828770dc748"
+      "turns_sha256": "b03d25a0ae8000b65ce371ee5a515796d3d90d851b178f68ba7fd19b807b4bfb"
     },
     {
       "bytes": 1039724,

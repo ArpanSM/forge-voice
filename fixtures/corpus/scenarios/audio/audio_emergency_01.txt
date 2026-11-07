@@ -5,7 +5,7 @@
 # degradation: none
 
 [pause 120 ms]
-Our AC is out and it is ninety-eight degrees upstairs. I have a newborn baby.
+Our AC is out and it is ninety-eight degrees upstairs with a newborn baby.
 [pause 500 ms]
 [pause 120 ms]
 The address is 88 Meridian Way, San Jose.
