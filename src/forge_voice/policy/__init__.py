@@ -17,6 +17,7 @@ from forge_voice.policy.confirmation import (
     payload_digest,
 )
 from forge_voice.policy.conversation import ConfirmationRequiredError, ConversationPolicy
+from forge_voice.policy.entities import EntityGuard, RepromptError
 from forge_voice.policy.state import (
     Address,
     CallIntent,
@@ -47,8 +48,10 @@ __all__ = [
     "ConversationPolicy",
     "CustomerInput",
     "CustomerSnapshot",
+    "EntityGuard",
     "Offer",
     "ReadbackPayload",
+    "RepromptError",
     "SlotOffer",
     "TokenBinding",
     "TokenCheck",

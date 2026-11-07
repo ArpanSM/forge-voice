@@ -283,6 +283,9 @@ class BookingAgent(Agent):
     ) -> Any:
         """Intercept emergencies before the model and speak only the policy script."""
         text = _last_user_text(chat_ctx) or self._call.last_utterance
+        latest = self._call.last_utterance.strip()
+        if latest and latest != text.strip():
+            text = latest
         if self._hybrid:
             deterministic = self._hybrid_booking_turn(text)
             if deterministic is not None:
@@ -297,6 +300,24 @@ class BookingAgent(Agent):
                 error=emergency.error,
             )
             yield emergency.message
+            return
+        reprompt = self._call.entity_reprompt_step(text) if text else None
+        if reprompt is not None:
+            self._call.trace_event(
+                "entity_guard_reply",
+                ok=reprompt.ok,
+                stage=reprompt.stage,
+                error=reprompt.error,
+            )
+            yield reprompt.message
+            return
+        confirmation = self._call.confirmation_step(text) if text else None
+        if confirmation is not None:
+            yield confirmation
+            return
+        booking = self._call.booking_step(text) if text else None
+        if booking is not None:
+            yield booking
             return
 
         selected_tools = tools

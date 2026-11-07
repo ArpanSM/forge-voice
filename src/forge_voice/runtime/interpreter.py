@@ -13,7 +13,9 @@ from datetime import date, datetime, timedelta
 from forge_voice.adapters.sqlite import SQLiteAdapter
 from forge_voice.domain import Address, CustomerRecord
 from forge_voice.tenants.models import TenantConfig
-from forge_voice.validation import digits_from_words, normalize_zip
+from forge_voice.validation import find_phone as find_spoken_phone
+from forge_voice.validation import find_zip as find_spoken_zip
+from forge_voice.validation import normalize_zip
 
 WEEKDAYS = {
     "monday": 0,
@@ -66,7 +68,6 @@ ADDRESS_RE = re.compile(
     r"(?:Street|St|Avenue|Ave|Boulevard|Blvd|Court|Ct|Way|Parkway|Pkwy|Road|Rd|Drive|Dr))\b",
     re.IGNORECASE,
 )
-PHONE_RE = re.compile(r"\+?1?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}")
 AT_HOUR_RE = re.compile(r"\bat\s+(\d{1,2})(?::(\d{2}))?\b", re.IGNORECASE)
 EXPLICIT_YES_RE = re.compile(
     r"\b(yes|yeah|yep|correct|book it|do it|that's the one|that is the one|"
@@ -239,28 +240,11 @@ def _find_name(text: str) -> str:
 
 
 def _find_zip(text: str) -> str | None:
-    match = re.search(r"\b(\d{5})\b", text)
-    if match:
-        return match.group(1)
-    converted = digits_from_words(text)
-    match = re.search(r"(?<!\d)((?:\d[\s-]?){4}\d)(?!\d)", converted)
-    if match:
-        digits = re.sub(r"\D", "", match.group(1))
-        if len(digits) == 5:
-            return digits
-    return None
+    return find_spoken_zip(text)
 
 
 def _find_phone(text: str) -> str | None:
-    match = PHONE_RE.search(text)
-    if not match:
-        return None
-    digits = re.sub(r"\D", "", match.group(0))
-    if len(digits) == 10:
-        return f"+1{digits}"
-    if len(digits) == 11 and digits.startswith("1"):
-        return f"+{digits}"
-    return None
+    return find_spoken_phone(text)
 
 
 def _address_from_text(tenant: TenantConfig, text: str, zip_code: str | None) -> Address | None:
@@ -286,6 +270,11 @@ def _service_id(tenant: TenantConfig, text: str) -> str | None:
         if service_id in configured and any(keyword in lowered for keyword in keywords):
             return service_id
     return None
+
+
+def preferred_date_from_text(text: str, now: datetime) -> date | None:
+    """Resolve a spoken weekday, tomorrow or today to a concrete date."""
+    return _preferred_day(text, now)
 
 
 def _preferred_day(text: str, now: datetime) -> date | None:

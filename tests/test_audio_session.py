@@ -448,3 +448,223 @@ def test_trace_records_the_emergency_script_and_vulnerable_occupant(tmp_path: Pa
     assert ticket["category"] == "no_cooling"
     assert ticket["safety_script"] == "no_cooling"
     assert ticket["vulnerable_occupant"] is True
+
+
+# ------------------------------------------------------------ entity guard
+def test_partial_zip_gets_a_specific_reprompt_and_no_slots(session: AudioCallSession) -> None:
+    reply = session.get_availability(service_id="drain_cleaning", zip="nine five two zero")
+
+    assert reply.ok is False
+    assert reply.error is not None
+    assert reply.error.code.value == "invalid_zip"
+    assert "five" in reply.message.lower()
+    assert "one at a time" in reply.message.lower()
+    assert session.offered_slots == []
+
+
+def test_booking_uses_zip_and_phone_captured_digit_by_digit(session: AudioCallSession) -> None:
+    session.note_caller_utterance(
+        "The address is 12 Alder Street, San Francisco, nine four one zero seven."
+    )
+    session.note_caller_utterance("My phone is five five five, one two three, four five six seven.")
+    availability = session.get_availability(
+        service_id="drain_cleaning", zip="nine four one zero seven"
+    )
+    slot = availability.data["slots"][0]
+    before = session.store.count_bookings(session.tenant.tenant_id)
+
+    readback = session.book_appointment(
+        slot_id=slot["slot_id"], service_id="drain_cleaning", name="Sam Rivera"
+    )
+
+    assert readback.ok
+    assert readback.stage == "readback"
+    assert "94107" in readback.message
+    assert session.pending is not None
+    assert session.pending.args["customer"]["address"]["zip"] == "94107"
+    assert session.pending.args["customer"]["phone"] == "+15551234567"
+    assert session.store.count_bookings(session.tenant.tenant_id) == before
+
+
+def test_reprompt_exhaustion_queues_a_callback_without_a_null_write(
+    session: AudioCallSession,
+) -> None:
+    session.note_caller_utterance("My phone is five five five, one two three, four five six seven.")
+    before = session.store.count_bookings(session.tenant.tenant_id)
+
+    first = session.entity_reprompt_step("The ZIP is 9520 Faye.")
+    second = session.entity_reprompt_step("The ZIP is 9520 Faye.")
+    exhausted = session.entity_reprompt_step("The ZIP is 9520 Faye.")
+
+    assert first.ok is False and first.error is not None
+    assert second.ok is False and second.error is not None
+    assert exhausted.ok is True
+    assert exhausted.stage == "handoff"
+    assert exhausted.data["packet"]["address"] is None
+    assert "address" in exhausted.data["missing_fields"]
+    assert session.store.count_bookings(session.tenant.tenant_id) == before
+    assert len(session.store.list_callbacks(session.tenant.tenant_id)) == 1
+    assert session.state.outcome == "callback"
+
+
+def test_emergency_partial_packet_marks_the_missing_address(tmp_path: Path) -> None:
+    session = AudioCallSession.from_repo(
+        ROOT,
+        "summit",
+        "call_emergency_partial",
+        outbox_path=tmp_path / "outbox.jsonl",
+        now=NOW,
+    )
+    first = session.emergency_step(
+        "Our AC is out and it is ninety-eight degrees upstairs. I have a newborn baby."
+    )
+    assert first is not None and first.ok
+    before = session.store.count_bookings("summit")
+    session.note_caller_utterance("My phone is four zero eight, five five five, zero one four two.")
+
+    handoff = session.emergency_step("No one is hurt, but please hurry.")
+
+    assert handoff is not None
+    assert handoff.ok is True
+    assert handoff.stage == "handoff"
+    assert handoff.data["packet"]["address"] is None
+    assert "address" in handoff.data["missing_fields"]
+    assert len(session.store.list_tickets("summit")) == 1
+    assert len(session.store.list_callbacks("summit")) == 1
+    assert session.store.count_bookings("summit") == before
+
+
+def test_emergency_handoff_recovers_the_zip_from_the_known_street_address(
+    tmp_path: Path,
+) -> None:
+    session = AudioCallSession.from_repo(
+        ROOT,
+        "summit",
+        "call_emergency_recover",
+        outbox_path=tmp_path / "outbox.jsonl",
+        now=NOW,
+    )
+    first = session.emergency_step(
+        "Our AC is out and it is ninety-eight degrees upstairs. I have a newborn baby."
+    )
+    assert first is not None
+    session.note_caller_utterance("Yes, 88 Meridian Way, San Jose, 9520 Faye.")
+    session.note_caller_utterance(
+        "My name is Dana Whitfield. My phone is four zero eight, five five five, zero one four two."
+    )
+
+    handoff = session.emergency_step("No one is hurt, but please hurry.")
+
+    assert handoff is not None
+    assert handoff.ok is True
+    assert handoff.data["packet"]["address"]["zip"] == "95125"
+    assert handoff.data["packet"]["caller"]["name"] == "Dana Whitfield"
+    assert handoff.data["packet"]["caller"]["phone"] == "+14085550142"
+    assert handoff.data["missing_fields"] == []
+
+
+def test_deterministic_confirmation_commits_the_pending_readback(session: AudioCallSession) -> None:
+    slot = first_slot(session)
+    session.book_appointment(slot_id=slot["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    session.note_caller_utterance("Yes, book it.")
+
+    message = session.confirmation_step("Yes, book it.")
+
+    assert message is not None
+    assert "Booked." in message
+    assert session.state.outcome == "booked"
+    assert session.store.count_bookings(session.tenant.tenant_id) == 5
+
+
+def test_deterministic_confirmation_defers_a_day_correction(session: AudioCallSession) -> None:
+    slot = first_slot(session)
+    session.book_appointment(slot_id=slot["slot_id"], service_id="drain_cleaning", **CUSTOMER)
+    session.note_caller_utterance("Actually make it Tuesday. Yes.")
+
+    assert session.confirmation_step("Actually make it Tuesday. Yes.") is None
+    assert session.state.outcome is None
+
+
+def test_booking_without_a_full_address_never_writes(session: AudioCallSession) -> None:
+    slot = first_slot(session)
+    before = session.store.count_bookings(session.tenant.tenant_id)
+
+    reply = session.book_appointment(
+        slot_id=slot["slot_id"],
+        service_id="drain_cleaning",
+        name="Sam Rivera",
+        phone="555-123-4567",
+    )
+
+    assert reply.ok is False
+    assert reply.error is not None
+    assert reply.error.code.value in {"invalid_argument", "invalid_zip"}
+    assert session.pending is None
+    assert session.store.count_bookings(session.tenant.tenant_id) == before
+
+
+def _note_complete_customer(session: AudioCallSession) -> None:
+    session.note_caller_utterance(
+        "My name is Sam Rivera. My address is 12 Alder Street, San Francisco, 94107. "
+        "My phone is 555-123-4567."
+    )
+
+
+def test_booking_step_reads_back_and_commits_a_caller_slot_choice(
+    session: AudioCallSession,
+) -> None:
+    _note_complete_customer(session)
+    session.get_availability(service_id="drain_cleaning", zip="94107")
+    before = session.store.count_bookings(session.tenant.tenant_id)
+
+    message = session.booking_step("Monday at 9. Yes, book it.")
+
+    assert message is not None
+    assert "Booked." in message
+    assert "Just to confirm" in message
+    assert session.state.outcome == "booked"
+    assert session.store.count_bookings(session.tenant.tenant_id) == before + 1
+
+
+def test_booking_step_rebuilds_a_stale_readback_for_a_day_correction(
+    session: AudioCallSession,
+) -> None:
+    _note_complete_customer(session)
+    slots = session.get_availability(service_id="drain_cleaning", zip="94107").data["slots"]
+    session.book_appointment(slot_id=slots[0]["slot_id"], service_id="drain_cleaning")
+
+    message = session.booking_step("Actually, make it Tuesday at 9. Yes, that is correct.")
+
+    assert message is not None
+    assert session.booking_id is not None
+    booking = session.store.get_booking(session.tenant.tenant_id, session.booking_id)
+    assert booking is not None
+    assert booking.start.strftime("%A") == "Tuesday"
+
+
+def test_availability_accepts_a_spoken_preferred_day(session: AudioCallSession) -> None:
+    reply = session.get_availability(
+        service_id="drain_cleaning", zip="94107", preferred_date="Monday morning"
+    )
+
+    assert reply.ok is True
+    assert reply.data["slots"]
+    assert any(
+        datetime.fromisoformat(slot["start"]).strftime("%A") == "Monday"
+        for slot in reply.data["slots"]
+    )
+
+
+def test_booking_step_uses_the_last_spoken_correction(session: AudioCallSession) -> None:
+    _note_complete_customer(session)
+    session.get_availability(service_id="drain_cleaning", zip="94107")
+
+    message = session.booking_step(
+        "Monday at 11 works. Actually, make it Tuesday at 9. Yes, that is correct."
+    )
+
+    assert message is not None
+    assert session.booking_id is not None
+    booking = session.store.get_booking(session.tenant.tenant_id, session.booking_id)
+    assert booking is not None
+    assert booking.start.strftime("%A") == "Tuesday"

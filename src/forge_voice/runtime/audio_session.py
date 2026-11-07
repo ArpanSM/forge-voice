@@ -8,9 +8,11 @@ confirmation token server-side and commits at most one idempotent write.
 from __future__ import annotations
 
 import json
+import re
 import time
+from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
 from zoneinfo import ZoneInfo
@@ -32,15 +34,22 @@ from forge_voice.policy import (
     CustomerInput,
     ReadbackPayload,
 )
+from forge_voice.policy.conversation import REFUSAL_PATTERN, YES_PATTERN
 from forge_voice.policy.emergency import EmergencyTriage, triage_emergency
+from forge_voice.policy.entities import EntityGuard, RepromptError
 from forge_voice.policy.handoff import HandoffCaller, HandoffPacket, HandoffService
-from forge_voice.runtime.interpreter import INTRO_NAME_RE, extract_facts
+from forge_voice.runtime.interpreter import (
+    INTRO_NAME_RE,
+    extract_facts,
+    preferred_date_from_text,
+)
 from forge_voice.runtime.readback import format_readback
 from forge_voice.scheduling import next_business_day_window
 from forge_voice.tenants import TenantConfig, load_all_tenants
 from forge_voice.tools import ToolRegistry, ToolResult, ToolSession
 from forge_voice.tools.envelope import ToolError, sanitize_args
 from forge_voice.transfer import TransferSimulator
+from forge_voice.validation import normalize_phone
 
 Stage = Literal["info", "readback", "booked", "ticket", "handoff", "error"]
 
@@ -124,6 +133,7 @@ class AudioCallSession:
         self.service = BookingService(tenant, store, outbox, clock)
         self.policy = ConversationPolicy(tenant, clock, self.service.tokens)
         self.state = self.policy.start_call(call_id, caller_phone)
+        self.entities = EntityGuard(tenant, store, caller_phone=caller_phone)
         self.tool_session = ToolSession(
             tenant_id=tenant.tenant_id,
             call_id=call_id,
@@ -152,6 +162,8 @@ class AudioCallSession:
         self.customer_name: str | None = None
         self.customer_phone: str | None = caller_phone
         self.address: Address | None = None
+        self._turn_index = 0
+        self._last_guard_turn: int | None = None
         self._trace(
             "call_started",
             tenant=tenant.tenant_id,
@@ -209,7 +221,9 @@ class AudioCallSession:
             f"{self.tenant.display_name}. This call is recorded. Keep replies to one or two "
             "short sentences and ask one question at a time. Collect service, name, full "
             "address, five-digit ZIP and callback phone; ask for ZIP and phone one digit at a "
-            "time and never guess them. "
+            "time and never guess them. Read the ZIP, phone and address back digit by digit; if "
+            "a value is partial or ambiguous, ask once or twice, then hand off or queue a "
+            "callback with the partial packet instead of writing a null or invented value. "
             f"Services: {services}. "
             "Use get_service_area then get_availability before offering any time; never invent "
             "a slot, price, technician or availability. Offer at most three real slots. For a "
@@ -232,6 +246,8 @@ class AudioCallSession:
         self.last_utterance = text.strip()
         if self.last_utterance:
             self.caller_turns.append(self.last_utterance)
+            self._turn_index += 1
+            self.entities.observe(self.last_utterance)
         self._trace("caller_utterance", text=self.last_utterance)
 
     def trace_event(self, event: str, **fields: Any) -> None:
@@ -281,7 +297,13 @@ class AudioCallSession:
         booking_id: str | None = None,
         include_bookings: bool = False,
     ) -> ToolReply:
-        address = self._address(line1, city, state, zip)
+        try:
+            address = self._address(line1, city, state, zip)
+        except RepromptError as exc:
+            self._trace_reprompt(exc)
+            return self._error(exc.code.value, exc.message)
+        except _ArgumentError as exc:
+            return self._error(exc.code, exc.message)
         payload: dict[str, Any] = {"include_bookings": include_bookings}
         if phone:
             payload["phone"] = phone
@@ -324,12 +346,18 @@ class AudioCallSession:
         )
 
     def get_service_area(self, *, zip: str, service_id: str | None = None) -> ToolReply:
-        payload: dict[str, Any] = {"zip": zip}
+        try:
+            zip_code = self.entities.resolve_zip(zip)
+        except RepromptError as exc:
+            self._trace_reprompt(exc)
+            return self._error(exc.code.value, exc.message)
+        payload: dict[str, Any] = {"zip": zip_code}
         if service_id:
             resolved = self.resolve_service_id(service_id)
             if resolved is None:
                 return self._error("service_not_offered", f"We do not offer {service_id!r}.")
             payload["service_id"] = resolved
+            self.state.service_id = resolved
         result = self._tool("get_service_area", payload)
         if not result.ok:
             return self._from_result(result)
@@ -356,15 +384,31 @@ class AudioCallSession:
         resolved_service = self.resolve_service_id(service_id)
         if resolved_service is None:
             return self._error("service_not_offered", f"We do not offer {service_id!r}.")
+        try:
+            zip_code = self.entities.resolve_zip(zip)
+        except RepromptError as exc:
+            self._trace_reprompt(exc)
+            return self._error(exc.code.value, exc.message)
         service_id = resolved_service
         self.pending = None
+        preferred: date | None = None
+        if preferred_date:
+            try:
+                preferred = date.fromisoformat(preferred_date)
+            except ValueError:
+                preferred = preferred_date_from_text(preferred_date, self.clock.now)
+            if preferred is None:
+                return self._error(
+                    "invalid_argument",
+                    "I need the preferred day as a date, a weekday or tomorrow.",
+                )
         payload: dict[str, Any] = {
             "service_id": service_id,
-            "zip": zip,
+            "zip": zip_code,
             "window_days": window_days,
         }
-        if preferred_date:
-            payload["preferred_date"] = preferred_date
+        if preferred is not None:
+            payload["preferred_date"] = preferred.isoformat()
         if exclude_slot_ids:
             payload["exclude_slot_ids"] = exclude_slot_ids
         result = self._tool("get_availability", payload)
@@ -451,6 +495,9 @@ class AudioCallSession:
             )
         try:
             customer = self._customer_input(name, phone, line1, city, state, zip)
+        except RepromptError as exc:
+            self._trace_reprompt(exc)
+            return self._error(exc.code.value, exc.message)
         except _ArgumentError as exc:
             self._trace("tool_rejected", tool="book_appointment", code=exc.code)
             return self._error(exc.code, exc.message)
@@ -598,8 +645,13 @@ class AudioCallSession:
         customer = None
         try:
             customer = self._customer_input(name, phone, line1, city, state, zip)
-        except _ArgumentError:
+        except (RepromptError, _ArgumentError):
             customer = None
+            self._trace(
+                "emergency_partial_packet",
+                missing=self.entities.missing(),
+                note="ticket is created with only the details the caller gave; nothing is invented",
+            )
         payload: dict[str, Any] = {
             "category": triage.category.id,
             "severity": triage.severity,
@@ -615,6 +667,11 @@ class AudioCallSession:
             return self._from_result(result)
         data = result.data or {}
         self.ticket_id = data.get("ticket_id")
+        missing_fields = self.entities.missing()
+        if customer is None:
+            for field in ("name", "phone", "address"):
+                if field not in missing_fields:
+                    missing_fields.append(field)
         self.emergency_active = True
         self.state.intent = CallIntent.emergency
         self.state.urgency = triage.severity
@@ -627,6 +684,7 @@ class AudioCallSession:
             safety_script=triage.safety_script,
             safety_text=triage.safety_text,
             vulnerable_occupant=triage.vulnerable_occupant,
+            missing_fields=missing_fields if customer is None else [],
         )
         return ToolReply(
             ok=True,
@@ -641,6 +699,7 @@ class AudioCallSession:
                 "requires_911": triage.requires_911,
                 "vulnerable_occupant": triage.vulnerable_occupant,
                 "handoff_required": True,
+                "missing_fields": missing_fields if customer is None else [],
             },
             request_id=result.request_id,
         )
@@ -659,11 +718,25 @@ class AudioCallSession:
         zip: str | None = None,
     ) -> ToolReply:
         facts = self._facts()
-        address = (
-            self._address(line1, city, state, zip)
-            or self.address
-            or (facts.address if facts is not None else None)
-        )
+        if facts is not None and facts.address is not None:
+            self.entities.remember_address(facts.address)
+        if facts is not None and facts.phone is not None and self.entities.phone is None:
+            self.entities.phone = facts.phone
+        address = self.address
+        if line1 or city or zip:
+            try:
+                address = self.entities.resolve_address(
+                    line1=line1,
+                    city=city,
+                    state=state,
+                    zip_code=zip,
+                )
+            except StableError:
+                address = self.address
+        if address is None:
+            address = self.entities.best_address()
+        if address is None and facts is not None:
+            address = facts.address
         caller_name = (
             name
             or self.customer_name
@@ -674,7 +747,14 @@ class AudioCallSession:
                 else None
             )
         )
-        caller_phone = self._normalized_phone(phone) if phone else self.customer_phone
+        caller_phone = self.entities.phone
+        if phone:
+            try:
+                caller_phone = self.entities.resolve_phone(phone)
+            except StableError:
+                caller_phone = None
+        if not caller_phone:
+            caller_phone = self.customer_phone
         if not caller_phone and facts is not None:
             caller_phone = facts.phone
         if caller_name:
@@ -720,6 +800,7 @@ class AudioCallSession:
         selected_mode = mode if mode in {"live", "callback"} else "live"
         if selected_mode == "live" and not packet.complete:
             selected_mode = "callback"
+        missing_fields = packet.missing_fields()
         payload: dict[str, Any] = {
             "reason": reason,
             "urgency": urgency,
@@ -748,7 +829,14 @@ class AudioCallSession:
         self.state.outcome = (
             CallOutcome.transferred if status == "connected" else CallOutcome.callback
         )
-        self._trace("handoff", status=status, reason=reason, mode=selected_mode)
+        self._trace(
+            "handoff",
+            status=status,
+            reason=reason,
+            mode=selected_mode,
+            packet_complete=packet.complete,
+            missing_fields=missing_fields,
+        )
         if status == "connected":
             message = (
                 "A person has answered. I'm transferring you now with your details and what "
@@ -770,7 +858,11 @@ class AudioCallSession:
             ok=True,
             stage="handoff",
             message=message,
-            data={"transfer": data, "packet": packet.model_dump(mode="json")},
+            data={
+                "transfer": data,
+                "packet": packet.model_dump(mode="json"),
+                "missing_fields": missing_fields,
+            },
             request_id=result.request_id,
         )
 
@@ -797,7 +889,8 @@ class AudioCallSession:
                 message=(
                     reply.message
                     + " To pass this to our on-call technician, please give me your name, "
-                    "service address and callback number."
+                    "service address and callback number. Please say the ZIP and phone one "
+                    "digit at a time."
                 ),
                 data=reply.data,
             )
@@ -826,6 +919,232 @@ class AudioCallSession:
                 "pass them to the on-call technician."
             ),
             error=reply.error,
+        )
+
+    # --------------------------------------------------------------- entity guard
+    def entity_reprompt_step(self, text: str) -> ToolReply | None:
+        """Deterministically reprompt an invalid spoken ZIP/phone before the model.
+
+        After the capped attempts, the call is handed off with the partial packet
+        instead of writing a null or guessed entity.
+        """
+        if not text.strip() or self.completed:
+            return None
+        self.entities.observe(text)
+        stripped = text.strip()
+        same_turn = (
+            stripped == self.last_utterance.strip() and self._last_guard_turn == self._turn_index
+        )
+        self._last_guard_turn = (
+            self._turn_index if stripped == self.last_utterance.strip() else None
+        )
+        issue = self.entities.reprompt_issue(text, advance=not same_turn)
+        if issue is None:
+            return None
+        self._trace_reprompt(issue)
+        if issue.details.get("exhausted") and self.entities.phone:
+            return self.transfer_to_human(
+                reason="complex_request",
+                mode="callback",
+                summary=self.last_utterance or text,
+            )
+        return ToolReply(
+            ok=False,
+            stage="error",
+            message=issue.message,
+            error=ToolError(code=issue.code, message=issue.message),
+            request_id=f"req_{self.call_id}_entity_guard",
+        )
+
+    def confirmation_step(self, text: str) -> str | None:
+        """Commit one pending read-back after a clear yes, without a model round-trip.
+
+        A correction or a different day defers to the model so the read-back is rebuilt
+        from the corrected request, not from stale state.
+        """
+        if self.pending is None or self.completed:
+            return None
+        lowered = text.lower()
+        if not YES_PATTERN.search(lowered) or REFUSAL_PATTERN.search(lowered):
+            return None
+        if any(word in lowered for word in ("actually", "instead", "change", "different")):
+            return None
+        if any(word in lowered for word in ("first", "second", "third")):
+            return None
+        if not self._confirmation_matches_pending(lowered):
+            return None
+        pending = self.pending
+        if pending.intent is CallIntent.book:
+            reply = self.book_appointment()
+        elif pending.intent is CallIntent.reschedule:
+            reply = self.reschedule_appointment()
+        else:
+            reply = self.cancel_appointment()
+        if reply.ok and reply.stage == "booked":
+            self._trace("deterministic_confirmation", intent=pending.intent.value)
+            return reply.message
+        return None
+
+    def booking_step(self, text: str) -> str | None:
+        """Read back (and optionally commit) a real offered slot chosen by the caller.
+
+        This is the local-profile equivalent of the deterministic booking turn: the
+        model still talks, but the policy owns slot choice, read-back and the write.
+        """
+        if self.completed:
+            return None
+        self.last_utterance = text.strip()
+        lowered = text.lower()
+        if self.pending is not None:
+            correction = any(
+                word in lowered
+                for word in ("actually", "instead", "change", "different", "make it")
+            ) or (
+                self._day_in(lowered) is not None
+                and not self._confirmation_matches_pending(lowered)
+            )
+            if not correction:
+                return None
+            self.pending = None
+            self.policy.clear_confirmation(self.state)
+        if self.entities.best_address() is None:
+            return None
+        if self.state.service_id is None:
+            facts = self._facts()
+            if facts is not None and facts.service_id is not None:
+                self.state.service_id = facts.service_id
+        if self.state.service_id is None:
+            return None
+        if not self.offered_slots:
+            address = self.entities.best_address()
+            if address is None:
+                return None
+            day = self._day_in(lowered)
+            if day is not None:
+                self._refresh_for_day(day)
+            else:
+                self.get_availability(service_id=self.state.service_id, zip=address.zip)
+        selection = self._slot_choice(lowered)
+        if selection is None:
+            return None
+        slot_id = selection if isinstance(selection, str) else selection[0]
+        if slot_id not in self.offered_slots:
+            return None
+        readback = self.book_appointment(slot_id=slot_id, service_id=self.state.service_id)
+        if not readback.ok or readback.stage != "readback":
+            return None
+        if not YES_PATTERN.search(lowered) or REFUSAL_PATTERN.search(lowered):
+            return readback.message
+        committed = self._commit_pending()
+        if committed.ok and committed.stage == "booked":
+            self._trace("deterministic_booking", slot_id=slot_id)
+            return f"{readback.message} {committed.message}"
+        return readback.message
+
+    def _slot_choice(self, lowered: str) -> str | None:
+        for index, word in enumerate(("first", "second", "third")):
+            if word in lowered and index < len(self.offered_slots):
+                return self.offered_slots[index]
+        day = self._day_in(lowered)
+        has_choice = day is not None or any(
+            phrase in lowered for phrase in ("works", "that one", "sounds good", "make it")
+        )
+        if not has_choice:
+            return None
+        candidates = self.offered_slots
+        if day is not None:
+            candidates = [
+                slot_id
+                for slot_id in candidates
+                if (start := self._slot_start(slot_id)) is not None and start.weekday() == day
+            ]
+            if not candidates:
+                candidates = self._refresh_for_day(day)
+            if not candidates:
+                return None
+        hour = self._hour_in(lowered)
+        if hour is not None:
+            matching = [
+                slot_id
+                for slot_id in candidates
+                if (start := self._slot_start(slot_id)) is not None and start.hour == hour
+            ]
+            candidates = matching or candidates
+        return candidates[0] if candidates else None
+
+    @staticmethod
+    def _day_in(lowered: str) -> int | None:
+        matches = re.findall(
+            r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", lowered
+        )
+        if not matches:
+            return None
+        names = (
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        )
+        return names.index(matches[-1])
+
+    def _refresh_for_day(self, weekday: int) -> list[str]:
+        address = self.entities.best_address()
+        if self.state.service_id is None or address is None:
+            return []
+        today = self.clock.now.astimezone(ZoneInfo(self.tenant.timezone)).date()
+        delta = (weekday - today.weekday()) % 7
+        preferred = today + timedelta(days=delta or 7)
+        self.get_availability(
+            service_id=self.state.service_id,
+            zip=address.zip,
+            preferred_date=preferred.isoformat(),
+        )
+        return list(self.offered_slots)
+
+    def _slot_start(self, slot_id: str) -> datetime | None:
+        slot = self.store.get_slot(self.tenant.tenant_id, slot_id)
+        return slot.start if slot is not None else None
+
+    @staticmethod
+    def _hour_in(lowered: str) -> int | None:
+        matches = re.findall(r"\bat\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b", lowered)
+        if not matches:
+            return None
+        hour_text, _minute, suffix = matches[-1]
+        hour = int(hour_text)
+        if suffix == "pm" and hour < 12:
+            hour += 12
+        return hour if 0 <= hour <= 23 else None
+
+    def _confirmation_matches_pending(self, lowered: str) -> bool:
+        if self.pending is None:
+            return False
+        try:
+            start = datetime.fromisoformat(self.pending.payload.start)
+        except ValueError:
+            return True
+        for name, weekday in (
+            ("monday", 0),
+            ("tuesday", 1),
+            ("wednesday", 2),
+            ("thursday", 3),
+            ("friday", 4),
+            ("saturday", 5),
+            ("sunday", 6),
+        ):
+            if name in lowered and start.weekday() != weekday:
+                return False
+        return True
+
+    def _trace_reprompt(self, issue: RepromptError) -> None:
+        self._trace(
+            "entity_reprompt",
+            code=issue.code.value,
+            message=issue.message,
+            **{key: value for key, value in issue.details.items()},
         )
 
     # -------------------------------------------------------------------- internal
@@ -1014,38 +1333,43 @@ class AudioCallSession:
         state: str,
         zip: str | None,
     ) -> CustomerInput:
-        address = self._address(line1, city, state, zip) or self.address
-        resolved_name = name or self.customer_name
-        resolved_phone = self._normalized_phone(phone) if phone else self.customer_phone
-        if not resolved_name or not resolved_phone or address is None:
-            facts = self._facts()
-            if not resolved_name:
-                resolved_name = self._name_from_turns()
-                if (
-                    not resolved_name
-                    and facts is not None
-                    and facts.name != "Caller"
-                    and facts.name.lower() not in {"san jose", "san francisco"}
-                ):
-                    resolved_name = facts.name
-            if not resolved_phone and facts is not None:
-                resolved_phone = facts.phone
-            if address is None and facts is not None:
-                address = facts.address
+        facts = self._facts()
+        if facts is not None and facts.address is not None:
+            self.entities.remember_address(facts.address)
+        if facts is not None and facts.phone is not None and self.entities.phone is None:
+            self.entities.phone = facts.phone
+        resolved_name = name or self.customer_name or self._name_from_turns()
+        if (
+            not resolved_name
+            and facts is not None
+            and facts.name != "Caller"
+            and facts.name.lower() not in {"san jose", "san francisco"}
+        ):
+            resolved_name = facts.name
         if not resolved_name:
             raise _ArgumentError("invalid_argument", "I need the caller's name.")
-        if not resolved_phone:
-            raise _ArgumentError("invalid_phone", "I need a ten-digit callback number.")
+        address = self._address(line1, city, state, zip) or self.address
         if address is None:
-            raise _ArgumentError(
-                "invalid_argument", "I need the full service address and five-digit ZIP."
+            address = self.entities.best_address()
+        if address is None and facts is not None:
+            address = facts.address
+        if address is None:
+            address = self.entities.resolve_address(
+                line1=None,
+                city=None,
+                state=state,
+                zip_code=None,
             )
+        resolved_phone = self.entities.resolve_phone(phone)
         try:
-            return CustomerInput(name=resolved_name, phone=resolved_phone, address=address)
+            customer = CustomerInput(name=resolved_name, phone=resolved_phone, address=address)
         except ValidationError as exc:
             raise _ArgumentError(
                 "invalid_argument", "Some customer details are malformed."
             ) from exc
+        self.entities.remember_address(customer.address)
+        self.entities.phone = customer.phone
+        return customer
 
     def _address(
         self,
@@ -1056,19 +1380,19 @@ class AudioCallSession:
     ) -> Address | None:
         if line1 is None and city is None and zip is None:
             return None
-        if not (line1 and city and zip):
-            return None
-        from forge_voice.validation import normalize_zip
-
         try:
-            return Address(line1=line1, city=city, state=state.upper(), zip=normalize_zip(zip))
-        except (ValidationError, StableError):
-            return None
+            return self.entities.resolve_address(
+                line1=line1,
+                city=city,
+                state=state,
+                zip_code=zip,
+            )
+        except RepromptError:
+            raise
+        except StableError as exc:
+            raise _ArgumentError(exc.code.value, exc.message) from exc
 
-    @staticmethod
-    def _normalized_phone(value: str) -> str | None:
-        from forge_voice.validation import normalize_phone
-
+    def _normalized_phone(self, value: str) -> str | None:
         try:
             return normalize_phone(value)
         except StableError:
@@ -1081,15 +1405,20 @@ class AudioCallSession:
         if isinstance(address, dict):
             try:
                 self.address = Address.model_validate(address)
+                self.entities.remember_address(self.address)
             except ValidationError:
                 self.address = None
         if self.customer_phone:
             self.tool_session.caller_phone = self.customer_phone
+            with suppress(StableError):
+                self.entities.phone = normalize_phone(self.customer_phone)
 
     def _remember_input(self, customer: CustomerInput) -> None:
         self.customer_name = customer.name
         self.customer_phone = customer.phone
         self.address = customer.address
+        self.entities.remember_address(customer.address)
+        self.entities.phone = customer.phone
         self.tool_session.caller_phone = customer.phone
 
     @staticmethod
