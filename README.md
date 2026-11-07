@@ -106,7 +106,8 @@ to fail and is never part of a release decision. The baseline report includes a 
 comparison with n/denominator for every metric.
 
 Each run writes `reports/<run_id>/report.json` (compact source of truth), `report.md`
-(generated), local transcripts and the sealed held-out manifest. The report includes
+(generated), local-only transcripts and the sealed held-out manifest. Full transcripts are
+gitignored and never committed. The report includes
 per-scenario rows, the gate table, failure gallery, held-out and audio sections, repeat
 stability, baseline vs fixed, cost assumptions and the latency caveat. Audio hard gates are
 gated exactly like text hard gates. See [docs/evaluation.md](docs/evaluation.md) for the

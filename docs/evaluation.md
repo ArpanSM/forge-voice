@@ -85,10 +85,11 @@ and local results are never pooled.
 ## Report artifacts
 
 `reports/<run_id>/report.json` is the source of truth; `report.md` is generated from it. The
-directory also holds `transcripts/<scenario>[_rN].json`, the sealed held-out manifest and, for
-live audio, the local stack logs. The Markdown includes the verdict, gate table, per-scenario
-rows, failure gallery, held-out section, audio section, critical-repeat stability, cost
-assumptions and the latency caveat.
+committed report tree contains the summary JSON/Markdown and aggregate tables only. Full
+`transcripts/<scenario>[_rN].json`, local stack logs and raw trace files stay local and are
+gitignored (`reports/**/transcripts/`, `reports/**/stack/`, `reports/**/*.jsonl`). The Markdown
+includes the verdict, gate table, per-scenario rows, failure gallery, held-out section, audio
+section, critical-repeat stability, cost assumptions and the latency caveat.
 
 ## Honest limits
 
