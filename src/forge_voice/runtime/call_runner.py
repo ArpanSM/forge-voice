@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -102,7 +102,13 @@ class CallRunner:
         }
         return cls(tenants, seeds, now=now, outbox_path=outbox_path, transfer=transfer)
 
-    def run_call(self, scenario: TextScenario | CallScenario) -> CallResult:
+    def run_call(
+        self,
+        scenario: TextScenario | CallScenario,
+        *,
+        prepare: Callable[[SQLiteAdapter], None] | None = None,
+        facts: CallerFacts | None = None,
+    ) -> CallResult:
         if isinstance(scenario, TextScenario):
             scenario = CallScenario.from_text_scenario(scenario)
         tenant = self._tenants.get(scenario.tenant)
@@ -114,6 +120,8 @@ class CallRunner:
         store = SQLiteAdapter(":memory:")
         for data in self._seeds.values():
             store.seed(data)
+        if prepare is not None:
+            prepare(store)
         outbox = Outbox(self._outbox_path)
         service = BookingService(tenant, store, outbox, clock)
         policy = ConversationPolicy(tenant, clock, service.tokens)
@@ -135,7 +143,7 @@ class CallRunner:
             policy=policy,
             state=state,
         )
-        facts = extract_facts(
+        run_facts = facts or extract_facts(
             tenant, scenario.turns, store, now, caller_phone=scenario.caller_phone
         )
         before = _Before(
@@ -152,7 +160,7 @@ class CallRunner:
             policy=policy,
             registry=registry,
             state=state,
-            facts=facts,
+            facts=run_facts,
             now=now,
         )
         run.execute(scenario)
@@ -213,7 +221,11 @@ class _Run:
         for turn in scenario.turns:
             self.transcript.append(TranscriptTurn(role="caller", text=turn))
 
-        intent = self.policy.classify_intent(scenario.turns[0])
+        intent = (
+            CallIntent(self.facts.intent)
+            if self.facts.intent is not None
+            else self.policy.classify_intent(scenario.turns[0])
+        )
         self.state.intent = intent
         triage = triage_emergency(self.tenant, self.facts.emergency_text)
 
@@ -829,6 +841,10 @@ class _Run:
             ]
             if matching:
                 bookings = matching
+        if "cancel" in self.facts.text.lower():
+            cancelled = [booking for booking in bookings if booking.status == "cancelled"]
+            if cancelled:
+                bookings = cancelled
         return bookings[0] if bookings else None
 
     def _verify_ownership(self, booking: Any) -> bool:
@@ -867,6 +883,14 @@ class _Run:
         service_id = booking.service_id if booking else self.facts.service_id
         address = booking.address if booking else self.facts.address
         name = self.facts.name if self.facts.name != "Caller" else None
+        known_customer = None
+        if phone:
+            matches = self.store.find_customers(self.tenant.tenant_id, phone=phone)
+            known_customer = matches[0] if matches else None
+        if name is None and known_customer is not None:
+            name = known_customer.name
+        if address is None and known_customer is not None:
+            address = known_customer.address
         if booking is not None and name is None:
             customer = self.store.get_customer(self.tenant.tenant_id, booking.customer_id)
             if customer is not None:
@@ -875,6 +899,13 @@ class _Run:
         if service_id and service_id in {item.id for item in self.tenant.services}:
             configured = self.tenant.require_service(service_id)
             service = HandoffService(id=configured.id, name=configured.name)
+        if service is None and known_customer is not None:
+            customer_bookings = self.store.list_bookings(
+                self.tenant.tenant_id, customer_id=known_customer.customer_id
+            )
+            if customer_bookings:
+                configured = self.tenant.require_service(customer_bookings[0].service_id)
+                service = HandoffService(id=configured.id, name=configured.name)
         if service is None and ticket_id is not None:
             service = HandoffService(id="emergency_response", name="Emergency response")
         return HandoffPacket(

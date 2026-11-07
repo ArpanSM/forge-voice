@@ -1,8 +1,8 @@
 # Forge Voice
 
-**Status:** scaffold and deterministic corpus (#3), booking policy/tools/text runner (#4), and the
-local LiveKit transport, browser demo and LFM3 audio path (#5) complete. Evaluation, dashboard
-and deploy tickets follow.
+**Status:** scaffold and deterministic corpus (#3), booking policy/tools/text runner (#4), the
+local LiveKit transport, browser demo and LFM3 audio path (#5), and the evaluation harness,
+baseline, hard gates and generated report (#6) complete. Dashboard and deploy tickets follow.
 
 A public, local-first voice booking agent delivery kit for two fictional home-services
 tenants: **Harborlight Home Services** (plumbing, HVAC, electrical) and **Summit Heating &
@@ -72,7 +72,46 @@ make audio-fixtures # regenerate the ten WAVs with LFM3 TTS (fixed seed, tempera
 make audio-check    # verify committed WAVs and hashes offline
 make text-demo      # text-mode book/reschedule/emergency/handoff calls
 make demo-smoke     # start the stack and run a scripted WebRTC booking
+make eval           # 40 text hybrid release gate + 10 critical repeats (needs GROQ_API_KEY)
+make eval-local     # 40 text local safety-fallback report
+make eval-audio     # 10 audio hybrid on the self-hosted LiveKit server
+make eval-audio-local  # 6 audio local on the self-hosted LiveKit server
+make eval-heldout   # sealed 8 text + 2 audio held-out release check
+make eval-smoke     # 8 text dev subset, hard gates, under two minutes
+make eval-baseline  # naive baseline, 40 text on both profiles; never gates
 ```
+
+## Evaluation
+
+The harness is the implementation of the #26 decision. `scenarios/manifest.yaml` is the
+source of truth for 40 text + 10 audio scenarios; the loader enforces the dev/held-out/smoke
+splits, the ten critical repeats and the hard-gate labels.
+
+| Command | Runs | Gate |
+|---|---|---|
+| `make eval` | 40 text hybrid + 10 critical × 3 repeats | Release: hard gates + task completion ≥90% |
+| `make eval-local` | 40 text fully local | Safety hard gates; task/latency report-only |
+| `make eval-audio` | 10 audio hybrid, self-hosted LiveKit | Emergency transfer + barge-in |
+| `make eval-audio-local` | 6 audio local, self-hosted LiveKit | Emergency transfer + barge-in |
+| `make eval-heldout` | sealed 8 text + 2 audio | Hard gates |
+| `make eval-smoke` | 8 text dev | Hard gates, under 2 minutes |
+| `make eval-baseline` | 40 text on both profiles | Never gates |
+
+`make eval` fails closed without `GROQ_API_KEY`; the local run is the required safety
+fallback. Release text uses a provider-backed interpreter (Groq for hybrid, LFM3 for local);
+the deterministic policy still owns intent, confirmation, writes, emergency triage and
+handoff. Smoke uses the deterministic interpreter. Audio runs on the self-hosted LiveKit
+server with LFM3 STT/TTS. The baseline is a one-prompt direct-write model path; it is expected
+to fail and is never part of a release decision. The baseline report includes a fixed
+comparison with n/denominator for every metric.
+
+Each run writes `reports/<run_id>/report.json` (compact source of truth), `report.md`
+(generated), local-only transcripts and the sealed held-out manifest. Full transcripts are
+gitignored and never committed. The report includes
+per-scenario rows, the gate table, failure gallery, held-out and audio sections, repeat
+stability, baseline vs fixed, cost assumptions and the latency caveat. Audio hard gates are
+gated exactly like text hard gates. See [docs/evaluation.md](docs/evaluation.md) for the
+metric, isolation and rate-limit contract.
 
 `make demo-smoke` variants:
 

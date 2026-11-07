@@ -41,6 +41,7 @@ deployment and handover assets around one booking workflow and eight typed tools
 - Workflow, tools and tenant schema: roadmap #5, `research/voice-booking-workflow-2026-11.md`.
 - Transport and local demo: ticket #5, `docs/local-voice-demo.md`, ADR 0003.
 - Evaluation set and gates: roadmap #26, `research/voice-evaluation-2026-11.md`.
+- Evaluation harness and report: ticket #6, `docs/evaluation.md`, `reports/`.
 - Latency and cost: roadmap #23, `research/voice-latency-cost-2026-11.md`.
 - Deployment, monitoring and handover: roadmap #27, `research/voice-deployment-monitoring-2026-11.md`.
 - Spec: `ArpanSM/forge-voice` #2.

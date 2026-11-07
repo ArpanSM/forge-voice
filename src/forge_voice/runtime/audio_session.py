@@ -620,6 +620,8 @@ class AudioCallSession:
             ticket_id=self.ticket_id,
             category=triage.category.id,
             severity=triage.severity,
+            safety_script=triage.safety_script,
+            vulnerable_occupant=triage.vulnerable_occupant,
         )
         return ToolReply(
             ok=True,
@@ -881,6 +883,12 @@ class AudioCallSession:
                 booking_id=self.booking_id,
                 replayed=data.get("replayed", False),
                 confirmation_queued=self.confirmation_queued,
+                service_id=booking.get("service_id"),
+                start=booking.get("start"),
+                end=booking.get("end"),
+                address=booking.get("address"),
+                customer_name=self.customer_name,
+                contact_phone=booking.get("contact_phone"),
             )
         elif pending.intent is CallIntent.reschedule:
             booking = data["booking"]
@@ -894,7 +902,13 @@ class AudioCallSession:
             )
             stage = "booked"
             extra = {"booking": booking, "replayed": data.get("replayed", False)}
-            self._trace("rescheduled", booking_id=self.booking_id)
+            self._trace(
+                "rescheduled",
+                booking_id=self.booking_id,
+                service_id=booking.get("service_id"),
+                start=booking["current"]["start"],
+                address=booking.get("address"),
+            )
         else:
             booking = data
             self.booking_id = data["booking_id"]

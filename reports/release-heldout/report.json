@@ -1,0 +1,74 @@
+{
+  "aggregates": {
+    "latency": {
+      "n": 0,
+      "p50_tool_path_ms": 0,
+      "p50_wall_ms": 0,
+      "p95_tool_path_ms": 0,
+      "p95_wall_ms": 0
+    },
+    "task_completion": {
+      "denominator": 0,
+      "n": 0,
+      "numerator": 0,
+      "percent": 0.0,
+      "wilson_high": 0.0,
+      "wilson_low": 0.0
+    }
+  },
+  "caveats": [
+    "The run did not start or did not complete; this report is written so the failure is visible rather than silent.",
+    "{\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01jppc8f0xexvt56hmkh0dj7k6` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199791, Requested 616. Please try again in 2m55.823999999s. Need more tokens? Upgrade to Dev Tier today at https:",
+    "Report metadata refreshed to the current code commit; metrics are from the recorded run. Full transcripts are local-only and not committed."
+  ],
+  "cost_model": {
+    "as_of": "2026-11-07",
+    "assumptions": [
+      "Demo marginal cost is $0 on the Groq free tier plus the local LFM3 GPU.",
+      "Production estimate is $0.03-0.06/min (mid-point $0.048/min), dated 2026-11-07.",
+      "The production estimate excludes build, support and one-off integration work.",
+      "Per-scenario duration is an assumption from caller turns, not a metered bill.",
+      "The local self-hosted LiveKit server does not consume Live Cloud minutes."
+    ],
+    "currency": "USD",
+    "demo_marginal_usd": 0.0,
+    "production_per_minute_high_usd": 0.06,
+    "production_per_minute_low_usd": 0.03
+  },
+  "counts": {
+    "elapsed_seconds": 0,
+    "runs": 0,
+    "scenarios": 0
+  },
+  "finished_at": "2026-11-07T09:25:17.882799+00:00",
+  "gates": {},
+  "git_sha": "81e71cf",
+  "heldout_manifest_sha": "sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd",
+  "manifest_sha": "sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2",
+  "mode": "all",
+  "pipeline": "fixed",
+  "profile": "hybrid",
+  "provider": {
+    "audio_transport": "livekit",
+    "baseline_engine": null,
+    "check": {
+      "attempts": 1,
+      "error": "{\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01jppc8f0xexvt56hmkh0dj7k6` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199791, Requested 616. Please try again in 2m55.823999999s. Need more tokens? Upgrade to Dev Tier today at https:",
+      "model": "qwen/qwen3.8-27b",
+      "ok": false,
+      "retry_after_seconds": 176.0,
+      "status": "insufficient_quota"
+    },
+    "groq_model": "qwen/qwen3.8-27b",
+    "hybrid_key_present": true,
+    "text_engine": "provider:qwen/qwen3.8-27b",
+    "text_profile": "hybrid"
+  },
+  "repeats": {},
+  "run_id": "release-heldout",
+  "scenarios": [],
+  "schema_version": 1,
+  "split": "heldout",
+  "started_at": "2026-11-07T09:25:17.518009+00:00",
+  "verdict": "not_run_provider_quota"
+}

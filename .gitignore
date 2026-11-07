@@ -20,7 +20,15 @@ data/
 .tools/
 recordings/
 
+# Evaluation scratch runs; committed release reports use reports/release-*/
+reports/*
+!reports/release-*/
+reports/**/stack/
+reports/**/transcripts/
+
 # OS / editor
 .DS_Store
 .idea/
 .vscode/
+reports/**/recordings/
+reports/**/*.jsonl
