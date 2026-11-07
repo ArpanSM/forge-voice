@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -26,8 +27,10 @@ from livekit.agents import (
 from livekit.plugins import openai, silero
 
 from forge_voice.config import AGENT_NAME, load_local_env
+from forge_voice.policy.conversation import REFUSAL_PATTERN, YES_PATTERN
 from forge_voice.runtime.audio_session import AudioCallSession
 from forge_voice.runtime.claim_validation import validate_entrypoint
+from forge_voice.runtime.hybrid import HybridRateLimitError, retry_async_chunks
 from forge_voice.runtime.lfm3_audio import LFM3TTS
 from forge_voice.runtime.session import Profile, SessionPlan, plan_session
 from forge_voice.tenants import load_all_tenants
@@ -47,7 +50,7 @@ def build_llm(plan: SessionPlan) -> openai.LLM:
         "timeout": 30.0,
     }
     if plan.llm.provider == "groq":
-        return openai.LLM(api_key=plan.llm.api_key or "", **common)
+        return openai.LLM(api_key=plan.llm.api_key or "", max_retries=1, **common)
     return openai.LLM(
         api_key="local",
         reasoning_effort="none",
@@ -109,7 +112,6 @@ def build_tools(call: AudioCallSession) -> list[Any]:
         name: str | None = None,
         line1: str | None = None,
         city: str | None = None,
-        state: str = "CA",
         zip: str | None = None,
         booking_id: str | None = None,
         include_bookings: bool = False,
@@ -120,7 +122,6 @@ def build_tools(call: AudioCallSession) -> list[Any]:
             name=name,
             line1=line1,
             city=city,
-            state=state,
             zip=zip,
             booking_id=booking_id,
             include_bookings=include_bookings,
@@ -136,14 +137,12 @@ def build_tools(call: AudioCallSession) -> list[Any]:
         service_id: str,
         zip: str,
         preferred_date: str | None = None,
-        window_days: int = 7,
     ) -> str:
-        """Return real open slots. Never offer a time that this tool did not return."""
+        """Return real open slots; never invent a time."""
         return call.get_availability(
             service_id=service_id,
             zip=zip,
             preferred_date=preferred_date,
-            window_days=window_days,
         ).to_json()
 
     @function_tool
@@ -154,14 +153,9 @@ def build_tools(call: AudioCallSession) -> list[Any]:
         phone: str | None = None,
         line1: str | None = None,
         city: str | None = None,
-        state: str = "CA",
         zip: str | None = None,
     ) -> str:
-        """Read back one chosen slot, then commit only after an explicit yes.
-
-        The first call returns stage=readback. Say it and ask for a clear yes. After the yes,
-        call this tool again with no arguments to commit the exact read-back.
-        """
+        """Read back a chosen slot; call again with no arguments after an explicit yes."""
         return call.book_appointment(
             slot_id=slot_id,
             service_id=service_id,
@@ -169,7 +163,6 @@ def build_tools(call: AudioCallSession) -> list[Any]:
             phone=phone,
             line1=line1,
             city=city,
-            state=state,
             zip=zip,
         ).to_json()
 
@@ -177,17 +170,14 @@ def build_tools(call: AudioCallSession) -> list[Any]:
     async def reschedule_appointment(
         booking_id: str | None = None,
         new_slot_id: str | None = None,
-        reason: str | None = None,
     ) -> str:
-        """Read back and then commit one reschedule after an explicit yes."""
-        return call.reschedule_appointment(
-            booking_id=booking_id, new_slot_id=new_slot_id, reason=reason
-        ).to_json()
+        """Read back and commit one reschedule after an explicit yes."""
+        return call.reschedule_appointment(booking_id=booking_id, new_slot_id=new_slot_id).to_json()
 
     @function_tool
-    async def cancel_appointment(booking_id: str | None = None, reason: str | None = None) -> str:
-        """Read back and then commit one cancellation after an explicit yes."""
-        return call.cancel_appointment(booking_id=booking_id, reason=reason).to_json()
+    async def cancel_appointment(booking_id: str | None = None) -> str:
+        """Read back and commit one cancellation after an explicit yes."""
+        return call.cancel_appointment(booking_id=booking_id).to_json()
 
     @function_tool
     async def create_emergency_ticket(
@@ -196,17 +186,15 @@ def build_tools(call: AudioCallSession) -> list[Any]:
         phone: str | None = None,
         line1: str | None = None,
         city: str | None = None,
-        state: str = "CA",
         zip: str | None = None,
     ) -> str:
-        """Triage a reported emergency deterministically and return the 911-first script."""
+        """Triage an emergency deterministically and return the 911-first script."""
         return call.create_emergency_ticket(
             description=description,
             name=name,
             phone=phone,
             line1=line1,
             city=city,
-            state=state,
             zip=zip,
         ).to_json()
 
@@ -214,24 +202,20 @@ def build_tools(call: AudioCallSession) -> list[Any]:
     async def transfer_to_human(
         reason: str = "caller_request",
         mode: str = "live",
-        summary: str | None = None,
         name: str | None = None,
         phone: str | None = None,
         line1: str | None = None,
         city: str | None = None,
-        state: str = "CA",
         zip: str | None = None,
     ) -> str:
-        """Transfer or queue a callback with a complete packet. Never claim success early."""
+        """Transfer or queue a callback; never claim success early."""
         return call.transfer_to_human(
             reason=reason,
             mode=mode,
-            summary=summary,
             name=name,
             phone=phone,
             line1=line1,
             city=city,
-            state=state,
             zip=zip,
         ).to_json()
 
@@ -258,10 +242,38 @@ def _last_user_text(chat_ctx: Any) -> str:
     return ""
 
 
+HYBRID_BOOKING_TOOL_NAMES = (
+    "get_service_area",
+    "get_availability",
+    "transfer_to_human",
+)
+
+
+def _hybrid_selected_slot(text: str) -> int | None:
+    lowered = text.lower()
+    if re.search(r"\bfirst\b", lowered):
+        return 0
+    if re.search(r"\bsecond\b", lowered):
+        return 1
+    if re.search(r"\bthird\b", lowered):
+        return 2
+    if any(word in lowered for word in ("works", "that one", "book it", "sounds good")):
+        return 0
+    return None
+
+
 class BookingAgent(Agent):
-    def __init__(self, instructions: str, tools: list[Any], call: AudioCallSession) -> None:
+    def __init__(
+        self,
+        instructions: str,
+        tools: list[Any],
+        call: AudioCallSession,
+        *,
+        hybrid: bool = False,
+    ) -> None:
         super().__init__(instructions=instructions, tools=tools)
         self._call = call
+        self._hybrid = hybrid
 
     async def llm_node(
         self,
@@ -271,6 +283,11 @@ class BookingAgent(Agent):
     ) -> Any:
         """Intercept emergencies before the model and speak only the policy script."""
         text = _last_user_text(chat_ctx) or self._call.last_utterance
+        if self._hybrid:
+            deterministic = self._hybrid_booking_turn(text)
+            if deterministic is not None:
+                yield deterministic
+                return
         emergency = self._call.emergency_step(text) if text else None
         if emergency is not None:
             self._call.trace_event(
@@ -281,8 +298,71 @@ class BookingAgent(Agent):
             )
             yield emergency.message
             return
-        async for chunk in Agent.default.llm_node(self, chat_ctx, tools, model_settings):
-            yield chunk
+
+        selected_tools = tools
+        if self._hybrid:
+            intent = self._call.policy.classify_intent(text) if text else None
+            if intent is not None and intent.value in {"book", "emergency"}:
+                by_name = {tool.info.name: tool for tool in tools}
+                selected_tools = [
+                    by_name[name] for name in HYBRID_BOOKING_TOOL_NAMES if name in by_name
+                ]
+
+        async def _stream():
+            async for chunk in Agent.default.llm_node(
+                self, chat_ctx, selected_tools, model_settings
+            ):
+                yield chunk
+
+        def _on_retry(attempt: int, delay: float) -> None:
+            self._call.trace_event("hybrid_retry", attempt=attempt, delay_seconds=delay)
+
+        try:
+            chunks = retry_async_chunks(_stream, on_retry=_on_retry) if self._hybrid else _stream()
+            async for chunk in chunks:
+                usage = getattr(chunk, "usage", None)
+                if usage is not None:
+                    self._call.trace_event(
+                        "llm_usage",
+                        prompt_tokens=getattr(usage, "prompt_tokens", None),
+                        completion_tokens=getattr(usage, "completion_tokens", None),
+                        total_tokens=getattr(usage, "total_tokens", None),
+                    )
+                yield chunk
+        except HybridRateLimitError as exc:
+            self._call.trace_event(
+                "hybrid_rate_limited",
+                retry_after=exc.retry_after,
+                message=str(exc),
+            )
+            raise
+
+    def _hybrid_booking_turn(self, text: str) -> str | None:
+        """Use the policy directly for the two write turns, avoiding extra LLM calls."""
+        call = self._call
+        if not text:
+            return None
+        if call.pending is not None:
+            lowered = text.lower()
+            if YES_PATTERN.search(lowered) and not REFUSAL_PATTERN.search(lowered):
+                reply = call.book_appointment()
+                if reply.ok and reply.stage == "booked":
+                    call.trace_event("hybrid_deterministic_booking", stage="booked")
+                    return reply.message
+            return None
+        if not call.offered_slots or not call.state.service_id:
+            return None
+        index = _hybrid_selected_slot(text)
+        if index is None or index >= len(call.offered_slots):
+            return None
+        reply = call.book_appointment(
+            slot_id=call.offered_slots[index],
+            service_id=call.state.service_id,
+        )
+        if reply.ok and reply.stage == "readback":
+            call.trace_event("hybrid_deterministic_booking", stage="readback")
+            return reply.message
+        return None
 
 
 def _event_summary(event: object) -> dict[str, object]:
@@ -384,7 +464,12 @@ async def entrypoint(ctx: JobContext) -> None:
         call.close()
 
     ctx.add_shutdown_callback(on_shutdown)
-    agent = BookingAgent(call.instructions, build_tools(call), call)
+    agent = BookingAgent(
+        call.instructions,
+        build_tools(call),
+        call,
+        hybrid=plan.llm.provider == "groq",
+    )
     await session.start(agent=agent, room=ctx.room)
     await session.say(call.greeting, allow_interruptions=True)
 

@@ -200,36 +200,28 @@ class AudioCallSession:
     @property
     def instructions(self) -> str:
         services = ", ".join(f"{service.name} ({service.id})" for service in self.tenant.services)
-        zips = ", ".join(self.tenant.service_area.zip_allowlist)
         return (
             f"You are {self.tenant.persona.name}, the virtual assistant for "
-            f"{self.tenant.display_name}. This call is recorded. Tell the caller they are "
-            "speaking with an AI and can ask for a person at any time. Keep every reply to "
-            "one or two short sentences. Ask one question at a time. Collect the service, "
-            "the caller's name, the full service address, the five-digit ZIP and a callback "
-            "phone. Ask for the ZIP and phone one digit at a time and never guess them. "
-            f"Services: {services}. Service-area ZIPs: {zips}. "
-            "Use get_service_area and then get_availability before offering any time. Never "
-            "invent a slot, price, technician or availability. Offer at most three real slots "
-            "from the tool result. For a new booking, do not call lookup_customer; it is only "
-            "for an existing booking, reschedule, cancel or status check, and a new caller is "
-            "normally not found. A not_found lookup is not a reason to stop. "
-            "Once you have a real offered slot and the caller's name, full address, ZIP and "
-            "phone, immediately call book_appointment with the slot_id, service_id and those "
-            "details. It returns the exact read-back. Say that read-back and ask for an "
-            "explicit yes. Only after the caller says yes, call book_appointment again with "
-            "no arguments to commit. You can always book with book_appointment; never say you "
-            "cannot book or transfer just because the caller is new. Never ask again for a "
-            "detail the caller already provided. Never call the write before the explicit yes "
-            "and never claim a booking before the tool says booked. "
-            "If the caller reports gas, fire, smoke, flooding, a downed line, no heat, no "
-            "cooling or anyone at risk, say the 911-first safety instruction returned by "
-            "create_emergency_ticket, then call transfer_to_human with reason emergency. "
-            "If the caller asks for a human or the request is outside the policy, call "
+            f"{self.tenant.display_name}. This call is recorded. Keep replies to one or two "
+            "short sentences and ask one question at a time. Collect service, name, full "
+            "address, five-digit ZIP and callback phone; ask for ZIP and phone one digit at a "
+            "time and never guess them. "
+            f"Services: {services}. "
+            "Use get_service_area then get_availability before offering any time; never invent "
+            "a slot, price, technician or availability. Offer at most three real slots. For a "
+            "new booking do not call lookup_customer; a not_found lookup is normal. When you "
+            "have a slot and the caller's name, address, ZIP and phone, call book_appointment "
+            "with slot_id, service_id and those details; it returns the exact read-back. Say it "
+            "and ask for an explicit yes. After the yes, call book_appointment with no "
+            "arguments to commit. Never write before the explicit yes or claim a booking before "
+            "the tool says booked. Never ask again for a detail already given. "
+            "For gas, fire, smoke, flooding, a downed line, no heat, no cooling or anyone at "
+            "risk, say the 911-first instruction from create_emergency_ticket, then call "
+            "transfer_to_human with reason emergency. For a human or outside policy, call "
             "transfer_to_human. Never say transferred unless the tool returns connected; "
-            "otherwise say a callback was queued. If no slot works, offer a callback or a "
-            "human. Do not quote a price beyond a configured range and always add that the "
-            "final price follows an on-site assessment."
+            "otherwise say a callback was queued. If no slot works, offer a callback or human. "
+            "Quote a price only as a configured range and say the final price follows an "
+            "on-site assessment."
         )
 
     def note_caller_utterance(self, text: str) -> None:
@@ -334,7 +326,17 @@ class AudioCallSession:
             if resolved is None:
                 return self._error("service_not_offered", f"We do not offer {service_id!r}.")
             payload["service_id"] = resolved
-        return self._from_result(self._tool("get_service_area", payload))
+        result = self._tool("get_service_area", payload)
+        if not result.ok:
+            return self._from_result(result)
+        data = result.data or {}
+        return ToolReply(
+            ok=True,
+            stage="info",
+            message=str(data.get("message") or "Service-area check complete."),
+            data={"in_area": bool(data.get("in_area")), "message": data.get("message")},
+            request_id=result.request_id,
+        )
 
     def get_availability(
         self,
@@ -378,11 +380,19 @@ class AudioCallSession:
             message = f"Available times: {description}. Which one works?"
         else:
             message = "I don't have a real slot for that service and ZIP in that window."
+        compact_slots = [
+            {
+                "slot_id": slot["slot_id"],
+                "start": slot["start"],
+                "technician": slot["technician"]["name"],
+            }
+            for slot in slots
+        ]
         return ToolReply(
             ok=True,
             stage="info",
             message=message,
-            data=data,
+            data={"slots": compact_slots},
             request_id=result.request_id,
         )
 

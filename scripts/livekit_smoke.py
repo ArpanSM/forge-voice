@@ -104,9 +104,18 @@ class Trace:
                 continue
         return out
 
+    def raise_if_rate_limited(self) -> None:
+        for event in self.events():
+            if event.get("event") == "hybrid_rate_limited":
+                raise RuntimeError(
+                    event.get("message")
+                    or f"hybrid free-tier rate limit; retry in {event.get('retry_after')}s"
+                )
+
     async def wait(self, predicate, timeout: float, since: float = 0.0) -> dict:
         deadline = time.time() + timeout
         while time.time() < deadline:
+            self.raise_if_rate_limited()
             for event in self.events():
                 if event.get("ts", 0) >= since and predicate(event):
                     return event

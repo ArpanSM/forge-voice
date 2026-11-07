@@ -2,7 +2,7 @@ PYTHON ?= python3.12
 export PYTHONPATH := src
 
 .PHONY: help install bootstrap corpus corpus-check test lint format text-demo audio-fixtures \
-	audio-check demo demo-hybrid demo-smoke
+	audio-check demo demo-hybrid demo-smoke demo-hybrid-smoke
 
 help:
 	@printf '%s\n' \
@@ -18,6 +18,7 @@ help:
 	  'make demo          Fully local stack: LiveKit + browser + LFM3 (no external calls)' \
 	  'make demo-hybrid   Same stack with Groq qwen/qwen3.8-27b as the only external LLM' \
 	  'make demo-smoke    Start the local stack and run a scripted WebRTC booking call' \
+	  'make demo-hybrid-smoke  Hybrid stack + scripted booking (needs GROQ_API_KEY)' \
 	  'make format        Apply ruff formatting'
 
 install:
@@ -58,6 +59,9 @@ demo: bootstrap
 
 demo-hybrid: bootstrap
 	FORGE_VOICE_PROFILE=hybrid ./scripts/demo.sh
+
+demo-hybrid-smoke: bootstrap
+	FORGE_VOICE_PROFILE=hybrid ./scripts/demo.sh --smoke
 
 demo-smoke: bootstrap
 	FORGE_VOICE_PROFILE=local ./scripts/demo.sh --smoke

@@ -64,6 +64,17 @@ host processes and uses `127.0.0.1`, so the container hostname is covered by a p
 but is not exercised by the #5 demo.
 
 `make demo-hybrid` fails closed with a clear message when `GROQ_API_KEY` is missing.
+The scripted hybrid check is `GROQ_API_KEY=... make demo-hybrid-smoke`; run it after a
+rate-limit window resets if Groq returns 429 ITPM. Hybrid requests retry twice using the
+server's `retry-after` within a 90 s budget, then fail with
+`hybrid free-tier rate limit; retry in Ns` instead of a generic smoke timeout.
+
+Measured on the live hybrid path (Groq usage payload): before trimming, the booking turn
+requested 5,531 + 2,244 input tokens and hit the 7,000 ITPM limit. After trimming the
+system prompt/tool schemas, compacting tool results and handing the two booking writes to
+deterministic policy on the hybrid profile, the largest LLM request observed was 1,605
+input tokens; the read-back and commit turns use no Groq call. The live smoke booked
+`bk_harborlight_0001` with `outcome=booked`.
 
 ## 5. Tenant claim and token flow
 

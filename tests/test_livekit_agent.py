@@ -88,6 +88,40 @@ def test_build_agent_session_turn_taking_is_barge_in_first() -> None:
 
 
 @requires_livekit
+def test_hybrid_booking_turn_uses_policy_directly_and_commits() -> None:
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from forge_voice.runtime.audio_session import AudioCallSession
+    from forge_voice.runtime.livekit_agent import BookingAgent
+
+    call = AudioCallSession.from_repo(
+        ROOT,
+        "harborlight",
+        "call_hybrid_direct",
+        now=datetime(2026, 11, 6, 8, 0, tzinfo=ZoneInfo("America/Los_Angeles")),
+    )
+    call.note_caller_utterance("My name is Sam Rivera.")
+    call.note_caller_utterance("My address is 12 Alder Street, San Francisco, 94107.")
+    call.note_caller_utterance("My phone is 555-123-4567.")
+    call.get_availability(service_id="drain_cleaning", zip="94107")
+    agent = BookingAgent("", [], call, hybrid=True)
+
+    readback = agent._hybrid_booking_turn("The first slot works.")
+
+    assert readback is not None
+    assert "Should I book that?" in readback
+    assert call.pending is not None
+
+    call.note_caller_utterance("Yes, book it.")
+    booked = agent._hybrid_booking_turn("Yes, book it.")
+
+    assert booked is not None
+    assert "Booked." in booked
+    assert call.state.outcome == "booked"
+
+
+@requires_livekit
 def test_build_tools_exposes_exactly_the_eight_product_tools() -> None:
     from datetime import datetime
     from zoneinfo import ZoneInfo

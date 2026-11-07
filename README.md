@@ -82,6 +82,10 @@ SMOKE_MODE=barge-in make demo-smoke
 SMOKE_MODE=barge-in-booking make demo-smoke   # interrupt mid-booking, then commit
 ```
 
+The hybrid equivalent is `GROQ_API_KEY=... make demo-hybrid-smoke`. It uses the same
+scripted booking call and surfaces a clear `hybrid free-tier rate limit; retry in Ns`
+message if Groq's 7,000 ITPM window is exhausted.
+
 An optional Playwright/Chrome fake-microphone check of the real page is documented in
 `docs/local-voice-demo.md`. The scripted WebRTC caller remains the repeatable automated
 proof; the human browser check is manual.
