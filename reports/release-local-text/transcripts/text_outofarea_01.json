@@ -1,7 +1,7 @@
 {
   "latency": {
     "tool_path_ms": 3,
-    "wall_ms": 6
+    "wall_ms": 6748
   },
   "pipeline": "fixed",
   "profile": "local",
@@ -13,7 +13,14 @@
   "tool_calls": [
     {
       "args": {
+        "address": {
+          "city": "San Francisco",
+          "line1": "300 East 42nd Street",
+          "state": "CA",
+          "zip": "10001"
+        },
         "include_bookings": false,
+        "name": "I need a drain cleaning.",
         "phone": "+14155550199"
       },
       "error_code": "not_found",

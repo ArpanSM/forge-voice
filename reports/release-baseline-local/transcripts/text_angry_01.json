@@ -1,7 +1,7 @@
 {
   "latency": {
     "tool_path_ms": 0,
-    "wall_ms": 1
+    "wall_ms": 6352
   },
   "pipeline": "baseline",
   "profile": "local",

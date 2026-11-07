@@ -51,6 +51,10 @@ class TextProviderError(RuntimeError):
     """The configured text provider was unavailable or returned unusable output."""
 
 
+class TextProviderQuotaError(TextProviderError):
+    """The provider's daily token budget is exhausted; retrying cannot help."""
+
+
 class _RateLimitedProviderError(ProviderError):
     def __init__(self, retry_after: float | None, response: httpx.Response) -> None:
         self.retry_after = retry_after
@@ -387,6 +391,11 @@ class ProviderTextInterpreter:
             except ProviderError as exc:
                 if not is_rate_limit_error(exc):
                     raise TextProviderError(f"text provider failed: {exc}") from exc
+                body = _exception_body(exc)
+                if "tokens per day" in body or "tpd" in body:
+                    raise TextProviderQuotaError(
+                        "the provider daily token budget is exhausted"
+                    ) from exc
                 delay = retry_after_seconds(exc) or 20.0
                 if attempt >= MAX_RATE_LIMIT_RETRIES or spent + delay > RATE_LIMIT_BUDGET_SECONDS:
                     raise TextProviderError(
@@ -395,6 +404,22 @@ class ProviderTextInterpreter:
                 spent += delay
                 time.sleep(delay)
         raise TextProviderError("text provider did not return a response")
+
+
+def _exception_body(exc: BaseException) -> str:
+    current: BaseException | None = exc
+    seen: set[int] = set()
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        response = getattr(current, "response", None)
+        text = getattr(response, "text", None)
+        if isinstance(text, str):
+            return text.lower()
+        body = getattr(current, "body", None)
+        if isinstance(body, dict):
+            return str(body).lower()
+        current = current.__cause__ or current.__context__
+    return str(exc).lower()
 
 
 def build_text_interpreter(
@@ -448,5 +473,6 @@ __all__ = [
     "ProviderTextInterpreter",
     "TextExtraction",
     "TextProviderError",
+    "TextProviderQuotaError",
     "build_text_interpreter",
 ]

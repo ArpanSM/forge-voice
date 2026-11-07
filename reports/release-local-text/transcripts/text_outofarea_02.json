@@ -1,7 +1,7 @@
 {
   "latency": {
     "tool_path_ms": 3,
-    "wall_ms": 5
+    "wall_ms": 6044
   },
   "pipeline": "fixed",
   "profile": "local",
@@ -13,7 +13,14 @@
   "tool_calls": [
     {
       "args": {
+        "address": {
+          "city": "Unknown",
+          "line1": "94107",
+          "state": "CA",
+          "zip": "94107"
+        },
         "include_bookings": false,
+        "name": "Can Summit",
         "phone": "+14085550199"
       },
       "error_code": "not_found",
@@ -34,7 +41,7 @@
     },
     {
       "args": {
-        "service_id": null,
+        "service_id": "ac_repair",
         "zip": "94107"
       },
       "error_code": null,

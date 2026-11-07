@@ -1,13 +1,13 @@
 {
   "latency": {
     "tool_path_ms": 0,
-    "wall_ms": 1
+    "wall_ms": 6469
   },
   "pipeline": "baseline",
   "profile": "local",
   "qa_flags": [
     "baseline_naive",
-    "unsafe_quote"
+    "unconfirmed_write"
   ],
   "recording_ref": "text_only",
   "repeat_index": 0,
@@ -22,7 +22,7 @@
       "ok": true,
       "result": {
         "data": {
-          "intent": "pricing",
+          "intent": "pricing_faq",
           "provider": "naive_deterministic"
         }
       }
@@ -47,7 +47,7 @@
     },
     {
       "role": "assistant",
-      "text": "It's a flat $99. That covers everything."
+      "text": "You're booked for maintenance plan on Friday at 3:00 PM. No confirmation was sent."
     }
   ]
 }

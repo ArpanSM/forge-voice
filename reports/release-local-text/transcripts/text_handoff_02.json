@@ -1,14 +1,11 @@
 {
   "latency": {
     "tool_path_ms": 25,
-    "wall_ms": 6
+    "wall_ms": 6844
   },
   "pipeline": "fixed",
   "profile": "local",
-  "qa_flags": [
-    "handoff_packet_incomplete",
-    "handoff_no_answer"
-  ],
+  "qa_flags": [],
   "recording_ref": "text_only",
   "repeat_index": 0,
   "scenario_id": "text_handoff_02",
@@ -16,14 +13,10 @@
   "tool_calls": [
     {
       "args": {
-        "callback_window": {
-          "end": "2026-11-09T12:00:00-08:00",
-          "start": "2026-11-09T08:00:00-08:00"
-        },
-        "mode": "callback",
+        "mode": "live",
         "packet": {
           "address": {
-            "city": "San Francisco",
+            "city": "Unknown",
             "line1": "21 Harbor Boulevard",
             "state": "CA",
             "zip": "94118"
@@ -31,8 +24,8 @@
           "booking_id": null,
           "call_id": "call_harborlight_text_handoff_02",
           "caller": {
-            "name": null,
-            "phone": "+14155550199",
+            "name": "I",
+            "phone": "+14155550112",
             "verified": false
           },
           "emergency_ticket_id": null,
@@ -56,10 +49,10 @@
       "ok": true,
       "result": {
         "data": {
-          "callback_id": "cb_harborlight_0001",
-          "connected_at": null,
-          "packet_complete": false,
-          "status": "queued_callback",
+          "callback_id": null,
+          "connected_at": "2026-11-06T08:00:00-08:00",
+          "packet_complete": true,
+          "status": "connected",
           "target": {
             "id": "harborlight_front_desk",
             "name": "Harborlight front desk",
@@ -96,7 +89,7 @@
     },
     {
       "role": "assistant",
-      "text": "I couldn't complete a live transfer. I've saved your details and someone will call you back."
+      "text": "I'm transferring you now and passing along your details and what happened."
     }
   ]
 }

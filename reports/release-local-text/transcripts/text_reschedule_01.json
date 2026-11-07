@@ -1,11 +1,14 @@
 {
   "latency": {
-    "tool_path_ms": 9,
-    "wall_ms": 9
+    "tool_path_ms": 27,
+    "wall_ms": 5889
   },
   "pipeline": "fixed",
   "profile": "local",
-  "qa_flags": [],
+  "qa_flags": [
+    "handoff_packet_incomplete",
+    "handoff_no_answer"
+  ],
   "recording_ref": "text_only",
   "repeat_index": 0,
   "scenario_id": "text_reschedule_01",
@@ -15,7 +18,7 @@
       "args": {
         "address": {
           "city": "San Francisco",
-          "line1": "12 Alder St",
+          "line1": "94107",
           "state": "CA",
           "zip": "94107"
         },
@@ -23,110 +26,78 @@
         "name": "Sam Rivera",
         "phone": "+14155550101"
       },
-      "error_code": null,
+      "error_code": "not_found",
       "latency_ms": 2,
       "name": "lookup_customer",
-      "ok": true,
+      "ok": false,
       "result": {
-        "data": {
-          "bookings": [
-            {
-              "booking_id": "bk_0001",
-              "service_id": "drain_cleaning",
-              "start": "2026-11-09T09:00:00-08:00",
-              "status": "booked"
-            },
-            {
-              "booking_id": "bk_0002",
-              "service_id": "leak_repair",
-              "start": "2026-11-10T13:00:00-08:00",
-              "status": "booked"
-            }
-          ],
-          "customer": {
-            "address": {
-              "city": "San Francisco",
-              "line1": "12 Alder St",
-              "state": "CA",
-              "zip": "94107"
-            },
-            "customer_id": "cus_0001",
-            "name": "Sam Rivera",
-            "phone": "+14155550101"
-          },
-          "match": "exact",
-          "verification_required": false
+        "data": null,
+        "error": {
+          "code": "not_found",
+          "details": {},
+          "message": "No matching customer.",
+          "retryable": false
         },
-        "error": null,
-        "ok": true,
+        "ok": false,
         "request_id": "req_call_harborlight_text_reschedule_01_001"
       }
     },
     {
       "args": {
-        "preferred_date": "2026-11-10",
-        "service_id": "drain_cleaning",
-        "window_days": 1,
-        "zip": "94107"
+        "callback_window": {
+          "end": "2026-11-09T12:00:00-08:00",
+          "start": "2026-11-09T08:00:00-08:00"
+        },
+        "mode": "callback",
+        "packet": {
+          "address": {
+            "city": "San Francisco",
+            "line1": "94107",
+            "state": "CA",
+            "zip": "94107"
+          },
+          "booking_id": null,
+          "call_id": "call_harborlight_text_reschedule_01",
+          "caller": {
+            "name": "Sam Rivera",
+            "phone": "+14155550101",
+            "verified": false
+          },
+          "emergency_ticket_id": null,
+          "intent": "reschedule",
+          "reason": "caller_request",
+          "requested_at": "2026-11-06T08:00:00-08:00",
+          "service": {
+            "id": "drain_cleaning",
+            "name": "Drain cleaning"
+          },
+          "summary": "I need to move my appointment. Sam Rivera, 12 Alder Street, 94107. Tuesday at 11 would be better. Yes, that's the one.",
+          "tenant_id": "harborlight",
+          "urgency": "normal"
+        },
+        "reason": "caller_request",
+        "urgency": "normal"
       },
       "error_code": null,
-      "latency_ms": 3,
-      "name": "get_availability",
+      "latency_ms": 25,
+      "name": "transfer_to_human",
       "ok": true,
       "result": {
         "data": {
-          "reason": "ok",
-          "slots": [
-            {
-              "end": "2026-11-10T12:30:00-08:00",
-              "offer_expires_at": "2026-11-06T08:05:00-08:00",
-              "slot_id": "slot_hl_00010",
-              "start": "2026-11-10T11:30:00-08:00",
-              "technician": {
-                "id": "tech_alex",
-                "name": "Alex"
-              }
-            }
-          ],
-          "timezone": "America/Los_Angeles"
+          "callback_id": "cb_harborlight_0001",
+          "connected_at": null,
+          "packet_complete": false,
+          "status": "queued_callback",
+          "target": {
+            "id": "harborlight_front_desk",
+            "name": "Harborlight front desk",
+            "phone": "+14155550100"
+          },
+          "transfer_id": "tr_harborlight_0001"
         },
         "error": null,
         "ok": true,
         "request_id": "req_call_harborlight_text_reschedule_01_002"
-      }
-    },
-    {
-      "args": {
-        "booking_id": "bk_0001",
-        "new_slot_id": "slot_hl_00010",
-        "reason": "Caller requested a new time."
-      },
-      "error_code": null,
-      "latency_ms": 4,
-      "name": "reschedule_appointment",
-      "ok": true,
-      "result": {
-        "data": {
-          "booking": {
-            "booking_id": "bk_0001",
-            "current": {
-              "end": "2026-11-10T12:30:00-08:00",
-              "start": "2026-11-10T11:30:00-08:00",
-              "technician": {
-                "id": "tech_alex",
-                "name": "Alex"
-              }
-            },
-            "previous": {
-              "start": "2026-11-09T09:00:00-08:00"
-            },
-            "status": "booked"
-          },
-          "replayed": false
-        },
-        "error": null,
-        "ok": true,
-        "request_id": "req_call_harborlight_text_reschedule_01_003"
       }
     }
   ],
@@ -153,11 +124,7 @@
     },
     {
       "role": "assistant",
-      "text": "Just to confirm: move your Drain cleaning from Monday 9 November at 9:00 AM to Tuesday 10 November at 11:30 AM with Alex at 12 Alder St, San Francisco 94107, for Sam Rivera at +14155550101. Should I move it?"
-    },
-    {
-      "role": "assistant",
-      "text": "Moved. Your appointment is now Tuesday 10 November at 11:30 AM."
+      "text": "I couldn't complete a live transfer. I've saved your details and someone will call you back."
     }
   ]
 }

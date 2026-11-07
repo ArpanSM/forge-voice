@@ -1,16 +1,70 @@
 {
   "latency": {
-    "tool_path_ms": 0,
-    "wall_ms": 5
+    "tool_path_ms": 25,
+    "wall_ms": 6411
   },
   "pipeline": "fixed",
   "profile": "local",
-  "qa_flags": [],
+  "qa_flags": [
+    "handoff_packet_incomplete",
+    "handoff_no_answer"
+  ],
   "recording_ref": "text_only",
   "repeat_index": 0,
   "scenario_id": "text_pricing_02",
   "split": "release",
-  "tool_calls": [],
+  "tool_calls": [
+    {
+      "args": {
+        "callback_window": {
+          "end": "2026-11-09T12:00:00-08:00",
+          "start": "2026-11-09T08:00:00-08:00"
+        },
+        "mode": "callback",
+        "packet": {
+          "address": null,
+          "booking_id": null,
+          "call_id": "call_harborlight_text_pricing_02",
+          "caller": {
+            "name": "How late can I change an appointment?",
+            "phone": "+14155550199",
+            "verified": false
+          },
+          "emergency_ticket_id": null,
+          "intent": "pricing_faq",
+          "reason": "caller_request",
+          "requested_at": "2026-11-06T08:00:00-08:00",
+          "service": null,
+          "summary": "How late can I change an appointment? So two hours before is fine? Great.",
+          "tenant_id": "harborlight",
+          "urgency": "normal"
+        },
+        "reason": "caller_request",
+        "urgency": "normal"
+      },
+      "error_code": null,
+      "latency_ms": 25,
+      "name": "transfer_to_human",
+      "ok": true,
+      "result": {
+        "data": {
+          "callback_id": "cb_harborlight_0001",
+          "connected_at": null,
+          "packet_complete": false,
+          "status": "queued_callback",
+          "target": {
+            "id": "harborlight_front_desk",
+            "name": "Harborlight front desk",
+            "phone": "+14155550100"
+          },
+          "transfer_id": "tr_harborlight_0001"
+        },
+        "error": null,
+        "ok": true,
+        "request_id": "req_call_harborlight_text_pricing_02_001"
+      }
+    }
+  ],
   "transcript": [
     {
       "role": "assistant",
@@ -30,7 +84,7 @@
     },
     {
       "role": "assistant",
-      "text": "You can change or cancel up to two hours before the appointment at no charge."
+      "text": "I couldn't complete a live transfer. I've saved your details and someone will call you back."
     }
   ]
 }

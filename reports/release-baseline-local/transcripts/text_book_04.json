@@ -1,7 +1,7 @@
 {
   "latency": {
     "tool_path_ms": 0,
-    "wall_ms": 1
+    "wall_ms": 6596
   },
   "pipeline": "baseline",
   "profile": "local",
@@ -51,7 +51,7 @@
     },
     {
       "role": "assistant",
-      "text": "You're booked for water heater repair on Thursday at 10:30 AM. No confirmation was sent."
+      "text": "You're booked for water heater repair on Friday at 9:00 AM. No confirmation was sent."
     }
   ]
 }

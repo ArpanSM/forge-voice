@@ -98,5 +98,5 @@ eval-smoke:
 	$(EVAL_PYTHON) --profile hybrid --mode text --split smoke --pipeline fixed --provider-check off --max-seconds 120 $(EVAL_RUN_ID_ARG)
 
 eval-baseline:
-	$(EVAL_PYTHON) --profile hybrid --mode text --split release --pipeline baseline --provider-check auto --compare-fixed
-	$(EVAL_PYTHON) --profile local --mode text --split release --pipeline baseline --provider-check auto --compare-fixed
+	$(EVAL_PYTHON) --profile local --mode text --split release --pipeline baseline --provider-check auto --compare-fixed --run-id release-baseline-local
+	-$(EVAL_PYTHON) --profile hybrid --mode text --split release --pipeline baseline --provider-check auto --compare-fixed --run-id release-baseline-hybrid

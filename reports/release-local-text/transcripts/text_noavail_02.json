@@ -1,12 +1,11 @@
 {
   "latency": {
-    "tool_path_ms": 31,
-    "wall_ms": 7
+    "tool_path_ms": 25,
+    "wall_ms": 6568
   },
   "pipeline": "fixed",
   "profile": "local",
   "qa_flags": [
-    "handoff_packet_incomplete",
     "handoff_no_answer"
   ],
   "recording_ref": "text_only",
@@ -14,71 +13,6 @@
   "scenario_id": "text_noavail_02",
   "split": "release",
   "tool_calls": [
-    {
-      "args": {
-        "include_bookings": false,
-        "phone": "+14155550199"
-      },
-      "error_code": "not_found",
-      "latency_ms": 2,
-      "name": "lookup_customer",
-      "ok": false,
-      "result": {
-        "data": null,
-        "error": {
-          "code": "not_found",
-          "details": {},
-          "message": "No matching customer.",
-          "retryable": false
-        },
-        "ok": false,
-        "request_id": "req_call_harborlight_text_noavail_02_001"
-      }
-    },
-    {
-      "args": {
-        "service_id": "water_heater_repair",
-        "zip": "94118"
-      },
-      "error_code": null,
-      "latency_ms": 1,
-      "name": "get_service_area",
-      "ok": true,
-      "result": {
-        "data": {
-          "dispatch_zone": "north",
-          "in_area": true,
-          "message": "We cover 94118.",
-          "restrictions": [],
-          "technicians": []
-        },
-        "error": null,
-        "ok": true,
-        "request_id": "req_call_harborlight_text_noavail_02_002"
-      }
-    },
-    {
-      "args": {
-        "preferred_date": "2026-11-07",
-        "service_id": "water_heater_repair",
-        "window_days": 1,
-        "zip": "94118"
-      },
-      "error_code": null,
-      "latency_ms": 3,
-      "name": "get_availability",
-      "ok": true,
-      "result": {
-        "data": {
-          "reason": "no_slots",
-          "slots": [],
-          "timezone": "America/Los_Angeles"
-        },
-        "error": null,
-        "ok": true,
-        "request_id": "req_call_harborlight_text_noavail_02_003"
-      }
-    },
     {
       "args": {
         "callback_window": {
@@ -89,15 +23,15 @@
         "packet": {
           "address": {
             "city": "San Francisco",
-            "line1": "21 Harbor Boulevard",
+            "line1": "94118",
             "state": "CA",
             "zip": "94118"
           },
           "booking_id": null,
           "call_id": "call_harborlight_text_noavail_02",
           "caller": {
-            "name": null,
-            "phone": "+14155550199",
+            "name": "My water heater is out",
+            "phone": "+14155550112",
             "verified": false
           },
           "emergency_ticket_id": null,
@@ -123,7 +57,7 @@
         "data": {
           "callback_id": "cb_harborlight_0001",
           "connected_at": null,
-          "packet_complete": false,
+          "packet_complete": true,
           "status": "queued_callback",
           "target": {
             "id": "harborlight_front_desk",
@@ -134,7 +68,7 @@
         },
         "error": null,
         "ok": true,
-        "request_id": "req_call_harborlight_text_noavail_02_004"
+        "request_id": "req_call_harborlight_text_noavail_02_001"
       }
     }
   ],

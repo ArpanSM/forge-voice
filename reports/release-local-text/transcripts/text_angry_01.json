@@ -1,12 +1,11 @@
 {
   "latency": {
     "tool_path_ms": 25,
-    "wall_ms": 6
+    "wall_ms": 6519
   },
   "pipeline": "fixed",
   "profile": "local",
   "qa_flags": [
-    "handoff_packet_incomplete",
     "handoff_no_answer"
   ],
   "recording_ref": "text_only",
@@ -22,19 +21,27 @@
         },
         "mode": "callback",
         "packet": {
-          "address": null,
+          "address": {
+            "city": "San Francisco",
+            "line1": "12 Alder St",
+            "state": "CA",
+            "zip": "94107"
+          },
           "booking_id": null,
           "call_id": "call_harborlight_text_angry_01",
           "caller": {
-            "name": null,
-            "phone": "+14155550199",
+            "name": "Your technician",
+            "phone": "+14155550101",
             "verified": false
           },
           "emergency_ticket_id": null,
           "intent": "book",
           "reason": "caller_request",
           "requested_at": "2026-11-06T08:00:00-08:00",
-          "service": null,
+          "service": {
+            "id": "drain_cleaning",
+            "name": "Drain cleaning"
+          },
           "summary": "Your technician never showed up. I waited all day. I want someone to fix this now. Fine, have a manager call me.",
           "tenant_id": "harborlight",
           "urgency": "normal"
@@ -50,7 +57,7 @@
         "data": {
           "callback_id": "cb_harborlight_0001",
           "connected_at": null,
-          "packet_complete": false,
+          "packet_complete": true,
           "status": "queued_callback",
           "target": {
             "id": "harborlight_front_desk",

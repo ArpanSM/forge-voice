@@ -1,13 +1,12 @@
 {
   "latency": {
     "tool_path_ms": 31,
-    "wall_ms": 6
+    "wall_ms": 6803
   },
   "pipeline": "fixed",
   "profile": "local",
   "qa_flags": [
     "tool_timeout",
-    "handoff_packet_incomplete",
     "handoff_no_answer"
   ],
   "recording_ref": "text_only",
@@ -17,32 +16,29 @@
   "tool_calls": [
     {
       "args": {
+        "address": {
+          "city": "94107",
+          "line1": "12 Alder Street",
+          "state": "CA",
+          "zip": "94107"
+        },
         "include_bookings": false,
+        "name": "drain cleaning",
         "phone": "+14155550101"
       },
-      "error_code": null,
+      "error_code": "not_found",
       "latency_ms": 2,
       "name": "lookup_customer",
-      "ok": true,
+      "ok": false,
       "result": {
-        "data": {
-          "bookings": [],
-          "customer": {
-            "address": {
-              "city": "San Francisco",
-              "line1": "12 Alder St",
-              "state": "CA",
-              "zip": "94107"
-            },
-            "customer_id": "cus_0001",
-            "name": "Sam Rivera",
-            "phone": "+14155550101"
-          },
-          "match": "exact",
-          "verification_required": false
+        "data": null,
+        "error": {
+          "code": "not_found",
+          "details": {},
+          "message": "No matching customer.",
+          "retryable": false
         },
-        "error": null,
-        "ok": true,
+        "ok": false,
         "request_id": "req_call_harborlight_text_timeout_02_001"
       }
     },
@@ -72,6 +68,7 @@
     },
     {
       "args": {
+        "preferred_date": "2026-11-12",
         "service_id": "drain_cleaning",
         "window_days": 7,
         "zip": "94107"
@@ -101,7 +98,7 @@
         "mode": "callback",
         "packet": {
           "address": {
-            "city": "San Francisco",
+            "city": "94107",
             "line1": "12 Alder Street",
             "state": "CA",
             "zip": "94107"
@@ -109,7 +106,7 @@
           "booking_id": null,
           "call_id": "call_harborlight_text_timeout_02",
           "caller": {
-            "name": null,
+            "name": "drain cleaning",
             "phone": "+14155550101",
             "verified": false
           },
@@ -136,7 +133,7 @@
         "data": {
           "callback_id": "cb_harborlight_0001",
           "connected_at": null,
-          "packet_complete": false,
+          "packet_complete": true,
           "status": "queued_callback",
           "target": {
             "id": "harborlight_front_desk",

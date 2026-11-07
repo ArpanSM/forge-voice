@@ -335,6 +335,45 @@ def test_live_audio_error_retries_then_fails_the_run(tmp_path: Path) -> None:
     assert execution.asr_source == "not_measured"
 
 
+def test_provider_check_reports_tpd_exhaustion(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_post(*args, **kwargs):
+        return httpx.Response(
+            429,
+            json={
+                "error": {"message": "Rate limit reached ... on tokens per day (TPD): Limit 200000"}
+            },
+            headers={"retry-after": "0"},
+            request=httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions"),
+        )
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+
+    result = check_groq("test-key", long_prompt=True, sleep=lambda _: None)
+
+    assert result["ok"] is False
+    assert result["status"] == "insufficient_quota"
+
+
+def test_provider_check_reports_insufficient_quota_from_headers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_post(*args, **kwargs):
+        return httpx.Response(
+            200,
+            headers={"x-ratelimit-remaining-tokens": "120"},
+            json={"choices": [{"message": {"content": "OK"}}]},
+            request=httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions"),
+        )
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+
+    result = check_groq("test-key")
+
+    assert result["ok"] is False
+    assert result["status"] == "insufficient_quota"
+    assert result["remaining_tokens"] == 120
+
+
 def test_provider_check_retries_then_reports_a_rate_limit(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[int] = []
 

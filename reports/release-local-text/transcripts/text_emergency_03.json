@@ -1,14 +1,12 @@
 {
   "latency": {
     "tool_path_ms": 28,
-    "wall_ms": 7
+    "wall_ms": 6291
   },
   "pipeline": "fixed",
   "profile": "local",
   "qa_flags": [
-    "emergency_triage",
-    "handoff_packet_incomplete",
-    "handoff_no_answer"
+    "emergency_triage"
   ],
   "recording_ref": "text_only",
   "repeat_index": 0,
@@ -20,12 +18,12 @@
         "category": "no_heat",
         "customer": {
           "address": {
-            "city": "San Jose",
-            "line1": "88 Meridian Way",
+            "city": "Unknown",
+            "line1": "95125",
             "state": "CA",
             "zip": "95125"
           },
-          "name": "Caller",
+          "name": "My heat stopped and it's freezing in here.",
           "phone": "+14085550101"
         },
         "description": "My heat stopped and it's freezing in here. I'm 78 and I live alone. The thermostat says 38. 88 Meridian Way, 95125. Yes, please send the on-call tech.",
@@ -56,22 +54,18 @@
     },
     {
       "args": {
-        "callback_window": {
-          "end": "2026-11-06T08:15:00-08:00",
-          "start": "2026-11-06T08:00:00-08:00"
-        },
-        "mode": "callback",
+        "mode": "live",
         "packet": {
           "address": {
-            "city": "San Jose",
-            "line1": "88 Meridian Way",
+            "city": "Unknown",
+            "line1": "95125",
             "state": "CA",
             "zip": "95125"
           },
           "booking_id": null,
           "call_id": "call_summit_text_emergency_03",
           "caller": {
-            "name": null,
+            "name": "My heat stopped and it's freezing in here.",
             "phone": "+14085550101",
             "verified": false
           },
@@ -80,8 +74,8 @@
           "reason": "emergency",
           "requested_at": "2026-11-06T08:00:00-08:00",
           "service": {
-            "id": "emergency_response",
-            "name": "Emergency response"
+            "id": "heat_pump_service",
+            "name": "Heat pump service"
           },
           "summary": "Emergency triage: No heat in cold weather. My heat stopped and it's freezing in here. I'm 78 and I live alone. The thermostat says 38. 88 Meridian Way, 95125. Yes, please send the on-call tech.",
           "tenant_id": "summit",
@@ -96,10 +90,10 @@
       "ok": true,
       "result": {
         "data": {
-          "callback_id": "cb_summit_0001",
-          "connected_at": null,
-          "packet_complete": false,
-          "status": "queued_callback",
+          "callback_id": null,
+          "connected_at": "2026-11-06T08:00:00-08:00",
+          "packet_complete": true,
+          "status": "connected",
           "target": {
             "id": "summit_on_call",
             "name": "Summit on-call",
@@ -140,7 +134,7 @@
     },
     {
       "role": "assistant",
-      "text": "I couldn't reach the on-call technician. I've created an emergency ticket and someone will call you back within 15 minutes. If anything gets worse, call 911."
+      "text": "I'm transferring you now and passing along your details and what happened."
     }
   ]
 }

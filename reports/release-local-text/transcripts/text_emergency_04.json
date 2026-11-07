@@ -1,14 +1,12 @@
 {
   "latency": {
     "tool_path_ms": 28,
-    "wall_ms": 6
+    "wall_ms": 6545
   },
   "pipeline": "fixed",
   "profile": "local",
   "qa_flags": [
-    "emergency_triage",
-    "handoff_packet_incomplete",
-    "handoff_no_answer"
+    "emergency_triage"
   ],
   "recording_ref": "text_only",
   "repeat_index": 0,
@@ -20,13 +18,13 @@
         "category": "fire_or_smoke",
         "customer": {
           "address": {
-            "city": "San Francisco",
-            "line1": "9 Juniper Court",
+            "city": "Unknown",
+            "line1": "94117",
             "state": "CA",
             "zip": "94117"
           },
-          "name": "Caller",
-          "phone": "+14155550199"
+          "name": "There's smoke coming from an outlet in the hallway. No flames yet, but it smells like burning plastic.",
+          "phone": "+14155550104"
         },
         "description": "There's smoke coming from an outlet in the hallway. No flames yet, but it smells like burning plastic. 9 Juniper Court, 94117. I'm leaving now.",
         "safety_instructions_given": [
@@ -56,23 +54,19 @@
     },
     {
       "args": {
-        "callback_window": {
-          "end": "2026-11-06T08:15:00-08:00",
-          "start": "2026-11-06T08:00:00-08:00"
-        },
-        "mode": "callback",
+        "mode": "live",
         "packet": {
           "address": {
-            "city": "San Francisco",
-            "line1": "9 Juniper Court",
+            "city": "Unknown",
+            "line1": "94117",
             "state": "CA",
             "zip": "94117"
           },
           "booking_id": null,
           "call_id": "call_harborlight_text_emergency_04",
           "caller": {
-            "name": null,
-            "phone": "+14155550199",
+            "name": "There's smoke coming from an outlet in the hallway. No flames yet, but it smells like burning plastic.",
+            "phone": "+14155550104",
             "verified": false
           },
           "emergency_ticket_id": "em_harborlight_0001",
@@ -96,10 +90,10 @@
       "ok": true,
       "result": {
         "data": {
-          "callback_id": "cb_harborlight_0001",
-          "connected_at": null,
-          "packet_complete": false,
-          "status": "queued_callback",
+          "callback_id": null,
+          "connected_at": "2026-11-06T08:00:00-08:00",
+          "packet_complete": true,
+          "status": "connected",
           "target": {
             "id": "harborlight_on_call",
             "name": "Harborlight on-call",
@@ -140,7 +134,7 @@
     },
     {
       "role": "assistant",
-      "text": "I couldn't reach the on-call technician. I've created an emergency ticket and someone will call you back within 15 minutes. If anything gets worse, call 911."
+      "text": "I'm transferring you now and passing along your details and what happened."
     }
   ]
 }

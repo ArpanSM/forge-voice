@@ -1,7 +1,7 @@
 {
   "latency": {
     "tool_path_ms": 0,
-    "wall_ms": 1
+    "wall_ms": 7241
   },
   "pipeline": "baseline",
   "profile": "local",
@@ -51,7 +51,7 @@
     },
     {
       "role": "assistant",
-      "text": "Moved booking bk_summit_0001. No confirmation was sent."
+      "text": "Moved booking bk_summit_0003. No confirmation was sent."
     }
   ]
 }

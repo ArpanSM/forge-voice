@@ -1,7 +1,7 @@
 {
   "latency": {
     "tool_path_ms": 25,
-    "wall_ms": 5
+    "wall_ms": 6027
   },
   "pipeline": "fixed",
   "profile": "local",
@@ -16,8 +16,8 @@
         "mode": "live",
         "packet": {
           "address": {
-            "city": "San Jose",
-            "line1": "88 Meridian Way",
+            "city": "Unknown",
+            "line1": "95125",
             "state": "CA",
             "zip": "95125"
           },
@@ -33,8 +33,8 @@
           "reason": "caller_request",
           "requested_at": "2026-11-06T08:00:00-08:00",
           "service": {
-            "id": "ac_repair",
-            "name": "Air conditioning repair"
+            "id": "furnace_repair",
+            "name": "Furnace repair"
           },
           "summary": "I need my AC looked at this week. Priya Shah, 88 Meridian Way, 95125. Nothing works. Can I talk to someone? Yes, transfer me.",
           "tenant_id": "summit",

@@ -1,14 +1,12 @@
 {
   "latency": {
     "tool_path_ms": 28,
-    "wall_ms": 7
+    "wall_ms": 6473
   },
   "pipeline": "fixed",
   "profile": "local",
   "qa_flags": [
-    "emergency_triage",
-    "handoff_packet_incomplete",
-    "handoff_no_answer"
+    "emergency_triage"
   ],
   "recording_ref": "text_only",
   "repeat_index": 0,
@@ -21,11 +19,11 @@
         "customer": {
           "address": {
             "city": "San Francisco",
-            "line1": "44 Cypress Avenue",
+            "line1": "94110",
             "state": "CA",
             "zip": "94110"
           },
-          "name": "Caller",
+          "name": "A pipe burst and water is everywhere. It's under the kitchen sink. I can't reach the shut-off.",
           "phone": "+14155550113"
         },
         "description": "A pipe burst and water is everywhere. It's under the kitchen sink. I can't reach the shut-off. 44 Cypress Avenue, 94110. Okay, please send someone.",
@@ -56,22 +54,18 @@
     },
     {
       "args": {
-        "callback_window": {
-          "end": "2026-11-06T08:15:00-08:00",
-          "start": "2026-11-06T08:00:00-08:00"
-        },
-        "mode": "callback",
+        "mode": "live",
         "packet": {
           "address": {
             "city": "San Francisco",
-            "line1": "44 Cypress Avenue",
+            "line1": "94110",
             "state": "CA",
             "zip": "94110"
           },
           "booking_id": null,
           "call_id": "call_harborlight_text_emergency_02",
           "caller": {
-            "name": null,
+            "name": "A pipe burst and water is everywhere. It's under the kitchen sink. I can't reach the shut-off.",
             "phone": "+14155550113",
             "verified": false
           },
@@ -80,8 +74,8 @@
           "reason": "emergency",
           "requested_at": "2026-11-06T08:00:00-08:00",
           "service": {
-            "id": "emergency_response",
-            "name": "Emergency response"
+            "id": "drain_cleaning",
+            "name": "Drain cleaning"
           },
           "summary": "Emergency triage: Active flooding or burst pipe. A pipe burst and water is everywhere. It's under the kitchen sink. I can't reach the shut-off. 44 Cypress Avenue, 94110. Okay, please send someone.",
           "tenant_id": "harborlight",
@@ -96,10 +90,10 @@
       "ok": true,
       "result": {
         "data": {
-          "callback_id": "cb_harborlight_0001",
-          "connected_at": null,
-          "packet_complete": false,
-          "status": "queued_callback",
+          "callback_id": null,
+          "connected_at": "2026-11-06T08:00:00-08:00",
+          "packet_complete": true,
+          "status": "connected",
           "target": {
             "id": "harborlight_on_call",
             "name": "Harborlight on-call",
@@ -140,7 +134,7 @@
     },
     {
       "role": "assistant",
-      "text": "I couldn't reach the on-call technician. I've created an emergency ticket and someone will call you back within 15 minutes. If anything gets worse, call 911."
+      "text": "I'm transferring you now and passing along your details and what happened."
     }
   ]
 }

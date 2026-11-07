@@ -1,12 +1,11 @@
 {
   "latency": {
     "tool_path_ms": 25,
-    "wall_ms": 6
+    "wall_ms": 7022
   },
   "pipeline": "fixed",
   "profile": "local",
   "qa_flags": [
-    "handoff_packet_incomplete",
     "handoff_no_answer"
   ],
   "recording_ref": "text_only",
@@ -31,7 +30,7 @@
           "booking_id": null,
           "call_id": "call_harborlight_text_afterhours_01",
           "caller": {
-            "name": null,
+            "name": "sink",
             "phone": "+14155550101",
             "verified": false
           },
@@ -39,7 +38,10 @@
           "intent": "book",
           "reason": "after_hours",
           "requested_at": "2026-11-08T20:00:00-08:00",
-          "service": null,
+          "service": {
+            "id": "drain_cleaning",
+            "name": "Drain cleaning"
+          },
           "summary": "I know it's late, but my sink is slow. 12 Alder Street, 94107. Tomorrow morning is fine. Yes, call me then.",
           "tenant_id": "harborlight",
           "urgency": "normal"
@@ -55,7 +57,7 @@
         "data": {
           "callback_id": "cb_harborlight_0001",
           "connected_at": null,
-          "packet_complete": false,
+          "packet_complete": true,
           "status": "queued_callback",
           "target": {
             "id": "harborlight_front_desk",

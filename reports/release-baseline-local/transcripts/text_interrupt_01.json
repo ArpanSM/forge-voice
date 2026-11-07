@@ -1,7 +1,7 @@
 {
   "latency": {
     "tool_path_ms": 0,
-    "wall_ms": 4
+    "wall_ms": 7037
   },
   "pipeline": "baseline",
   "profile": "local",
@@ -55,7 +55,7 @@
     },
     {
       "role": "assistant",
-      "text": "You're booked for drain cleaning on Tuesday at 11:30 AM. No confirmation was sent."
+      "text": "You're booked for drain cleaning on Friday at 11:30 AM. No confirmation was sent."
     }
   ]
 }

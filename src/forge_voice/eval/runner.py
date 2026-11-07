@@ -21,7 +21,11 @@ from forge_voice.eval.loader import (
 )
 from forge_voice.eval.models import CostModel, EvalReport, GateResult, ScenarioResult
 from forge_voice.eval.provider_check import check_groq
-from forge_voice.eval.provider_text import TextProviderError, build_text_interpreter
+from forge_voice.eval.provider_text import (
+    TextProviderError,
+    TextProviderQuotaError,
+    build_text_interpreter,
+)
 from forge_voice.eval.report import LATENCY_CAVEAT, render_markdown
 from forge_voice.eval.scoring import (
     build_aggregates,
@@ -139,6 +143,10 @@ def _run_one(
             execution = text_runner.run_view(view, setup)
         except TextProviderError as exc:
             execution = _failed_text_execution(view, setup, exc)
+            if isinstance(exc, TextProviderQuotaError):
+                execution = execution.model_copy(
+                    update={"qa_flags": [*execution.qa_flags, "provider_quota"]}
+                )
     else:
         execution = audio_runner.run_view(view, setup)
     verdict = score_scenario(scenario, execution, pipeline=selected_pipeline)
@@ -286,7 +294,7 @@ def run_eval(config: RunConfig) -> int:
             ),
         }
     elif hybrid_required:
-        provider["check"] = check_groq(api_key)
+        provider["check"] = check_groq(api_key, long_prompt=hybrid_release)
     else:
         provider["check"] = {"ok": True, "status": "not_required", "model": GROQ_MODEL}
 
@@ -327,6 +335,22 @@ def run_eval(config: RunConfig) -> int:
                 "status": "local_lfm3",
                 "model": text_interpreter.model,
             }
+    check = provider.get("check") or {}
+    if hybrid_release and check.get("status") in {"insufficient_quota", "rate_limited"}:
+        payload = _failure_payload(
+            run_id=run_id,
+            started=started,
+            config=config,
+            selection=selection,
+            git_sha=git_sha,
+            verdict="not_run_provider_quota",
+            error=str(check.get("error") or "the hybrid provider quota is unavailable"),
+            provider=provider,
+        )
+        _write_report(directory, payload)
+        print(f"hybrid provider quota is unavailable: {check.get('error')}")
+        return 2
+
     text_runner = FixedTextRunner(config.root, facts_provider=text_interpreter)
     audio_runner: Any
     stack = None
@@ -370,7 +394,11 @@ def run_eval(config: RunConfig) -> int:
                 config=config,
                 selection=selection,
                 git_sha=git_sha,
-                verdict="not_run_text_provider",
+                verdict=(
+                    "not_run_provider_quota"
+                    if isinstance(exc, TextProviderQuotaError)
+                    else "not_run_text_provider"
+                ),
                 error=str(exc),
                 provider=provider,
             )

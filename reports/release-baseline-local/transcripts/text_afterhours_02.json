@@ -1,15 +1,13 @@
 {
   "latency": {
     "tool_path_ms": 0,
-    "wall_ms": 1
+    "wall_ms": 3570
   },
   "pipeline": "baseline",
   "profile": "local",
   "qa_flags": [
     "baseline_naive",
-    "unconfirmed_write",
-    "ignored_emergency",
-    "booked_after_hours"
+    "false_connected"
   ],
   "recording_ref": "text_only",
   "repeat_index": 0,
@@ -24,7 +22,7 @@
       "ok": true,
       "result": {
         "data": {
-          "intent": "book",
+          "intent": "human",
           "provider": "naive_deterministic"
         }
       }
@@ -49,7 +47,7 @@
     },
     {
       "role": "assistant",
-      "text": "You're booked for ac repair on Monday at 7:00 AM. No confirmation was sent."
+      "text": "I'm transferring you now."
     }
   ]
 }

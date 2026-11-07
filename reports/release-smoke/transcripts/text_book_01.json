@@ -1,7 +1,7 @@
 {
   "latency": {
     "tool_path_ms": 10,
-    "wall_ms": 11
+    "wall_ms": 15
   },
   "pipeline": "fixed",
   "profile": "hybrid",

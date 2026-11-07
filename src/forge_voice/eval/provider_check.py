@@ -32,6 +32,7 @@ def check_groq(
     base_url: str = GROQ_BASE_URL,
     timeout_seconds: float = 30.0,
     sleep: Any = time.sleep,
+    long_prompt: bool = False,
 ) -> dict[str, Any]:
     """Make one tiny live call so the hybrid release claim is not made blind."""
     if not api_key.strip():
@@ -40,6 +41,7 @@ def check_groq(
             "status": "missing_key",
             "error": "GROQ_API_KEY is required for the hybrid release gate",
         }
+    prompt = ("The quick brown fox jumps over the lazy dog. " * 60) if long_prompt else CHECK_PROMPT
     started = time.perf_counter()
     spent = 0.0
     attempts = 0
@@ -54,9 +56,9 @@ def check_groq(
                 },
                 json={
                     "model": model,
-                    "messages": [{"role": "user", "content": CHECK_PROMPT}],
+                    "messages": [{"role": "user", "content": prompt}],
                     "temperature": 0.0,
-                    "max_tokens": 8,
+                    "max_tokens": 4,
                 },
                 timeout=timeout_seconds,
             )
@@ -83,6 +85,20 @@ def check_groq(
             choice = (payload.get("choices") or [{}])[0]
             message = choice.get("message") or {}
             text = str(message.get("content") or "").strip()
+            remaining_raw = response.headers.get("x-ratelimit-remaining-tokens")
+            remaining = int(remaining_raw) if remaining_raw and remaining_raw.isdigit() else None
+            if remaining is not None and remaining < 4000:
+                return {
+                    "ok": False,
+                    "status": "insufficient_quota",
+                    "model": model,
+                    "attempts": attempts,
+                    "remaining_tokens": remaining,
+                    "error": (
+                        "the Groq free-tier token budget is nearly exhausted; "
+                        f"{remaining} tokens remain"
+                    ),
+                }
             return {
                 "ok": bool(text),
                 "status": "ok" if text else "empty",
@@ -92,6 +108,21 @@ def check_groq(
                 "reply": text[:40],
             }
         except _RateLimited as exc:
+            body = ""
+            if exc.response is not None:
+                try:
+                    body = exc.response.text
+                except Exception:
+                    body = ""
+            if "per day" in body.lower() or "tpd" in body.lower():
+                return {
+                    "ok": False,
+                    "status": "insufficient_quota",
+                    "model": model,
+                    "attempts": attempts,
+                    "retry_after_seconds": exc.retry_after,
+                    "error": body[:300] or "the Groq daily token budget is exhausted",
+                }
             delay = 20.0 if exc.retry_after is None else exc.retry_after
             if attempts > MAX_RATE_LIMIT_RETRIES or spent + delay > RATE_LIMIT_BUDGET_SECONDS:
                 return {

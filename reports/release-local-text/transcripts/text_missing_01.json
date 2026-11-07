@@ -1,7 +1,7 @@
 {
   "latency": {
     "tool_path_ms": 25,
-    "wall_ms": 6
+    "wall_ms": 7415
   },
   "pipeline": "fixed",
   "profile": "local",
@@ -26,7 +26,7 @@
           "booking_id": null,
           "call_id": "call_harborlight_text_missing_01",
           "caller": {
-            "name": null,
+            "name": "plumber",
             "phone": "+14155550199",
             "verified": false
           },
@@ -34,7 +34,10 @@
           "intent": "book",
           "reason": "caller_request",
           "requested_at": "2026-11-06T08:00:00-08:00",
-          "service": null,
+          "service": {
+            "id": "drain_cleaning",
+            "name": "Drain cleaning"
+          },
           "summary": "I need a plumber. I don't know the ZIP code. I don't have a phone number right now. Okay, I'll call back with the address.",
           "tenant_id": "harborlight",
           "urgency": "normal"

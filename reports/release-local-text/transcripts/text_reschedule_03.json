@@ -1,11 +1,14 @@
 {
   "latency": {
-    "tool_path_ms": 9,
-    "wall_ms": 8
+    "tool_path_ms": 27,
+    "wall_ms": 6151
   },
   "pipeline": "fixed",
   "profile": "local",
-  "qa_flags": [],
+  "qa_flags": [
+    "handoff_packet_incomplete",
+    "handoff_no_answer"
+  ],
   "recording_ref": "text_only",
   "repeat_index": 0,
   "scenario_id": "text_reschedule_03",
@@ -14,8 +17,8 @@
     {
       "args": {
         "address": {
-          "city": "San Jose",
-          "line1": "88 Meridian Way",
+          "city": "Unknown",
+          "line1": "95125",
           "state": "CA",
           "zip": "95125"
         },
@@ -23,120 +26,78 @@
         "name": "Priya Shah",
         "phone": "+14085550101"
       },
-      "error_code": null,
+      "error_code": "not_found",
       "latency_ms": 2,
       "name": "lookup_customer",
-      "ok": true,
+      "ok": false,
       "result": {
-        "data": {
-          "bookings": [
-            {
-              "booking_id": "bk_summit_0001",
-              "service_id": "ac_repair",
-              "start": "2026-11-11T09:00:00-08:00",
-              "status": "booked"
-            },
-            {
-              "booking_id": "bk_summit_0002",
-              "service_id": "ac_repair",
-              "start": "2026-11-13T13:00:00-08:00",
-              "status": "booked"
-            }
-          ],
-          "customer": {
-            "address": {
-              "city": "San Jose",
-              "line1": "88 Meridian Way",
-              "state": "CA",
-              "zip": "95125"
-            },
-            "customer_id": "cus_summit_0001",
-            "name": "Priya Shah",
-            "phone": "+14085550101"
-          },
-          "match": "exact",
-          "verification_required": false
+        "data": null,
+        "error": {
+          "code": "not_found",
+          "details": {},
+          "message": "No matching customer.",
+          "retryable": false
         },
-        "error": null,
-        "ok": true,
+        "ok": false,
         "request_id": "req_call_summit_text_reschedule_03_001"
       }
     },
     {
       "args": {
-        "preferred_date": "2026-11-13",
-        "service_id": "ac_repair",
-        "window_days": 1,
-        "zip": "95125"
+        "callback_window": {
+          "end": "2026-11-09T12:00:00-08:00",
+          "start": "2026-11-09T08:00:00-08:00"
+        },
+        "mode": "callback",
+        "packet": {
+          "address": {
+            "city": "Unknown",
+            "line1": "95125",
+            "state": "CA",
+            "zip": "95125"
+          },
+          "booking_id": null,
+          "call_id": "call_summit_text_reschedule_03",
+          "caller": {
+            "name": "Priya Shah",
+            "phone": "+14085550101",
+            "verified": false
+          },
+          "emergency_ticket_id": null,
+          "intent": "reschedule",
+          "reason": "caller_request",
+          "requested_at": "2026-11-06T08:00:00-08:00",
+          "service": {
+            "id": "furnace_repair",
+            "name": "Furnace repair"
+          },
+          "summary": "I need to move my AC appointment to Friday. Priya Shah, 88 Meridian Way, 95125. Friday afternoon. Yes, that works.",
+          "tenant_id": "summit",
+          "urgency": "normal"
+        },
+        "reason": "caller_request",
+        "urgency": "normal"
       },
       "error_code": null,
-      "latency_ms": 3,
-      "name": "get_availability",
+      "latency_ms": 25,
+      "name": "transfer_to_human",
       "ok": true,
       "result": {
         "data": {
-          "reason": "ok",
-          "slots": [
-            {
-              "end": "2026-11-13T08:30:00-08:00",
-              "offer_expires_at": "2026-11-06T08:05:00-08:00",
-              "slot_id": "slot_sm_00032",
-              "start": "2026-11-13T07:00:00-08:00",
-              "technician": {
-                "id": "tech_dana",
-                "name": "Dana"
-              }
-            },
-            {
-              "end": "2026-11-13T13:00:00-08:00",
-              "offer_expires_at": "2026-11-06T08:05:00-08:00",
-              "slot_id": "slot_sm_00031",
-              "start": "2026-11-13T11:30:00-08:00",
-              "technician": {
-                "id": "tech_casey",
-                "name": "Casey"
-              }
-            }
-          ],
-          "timezone": "America/Los_Angeles"
+          "callback_id": "cb_summit_0001",
+          "connected_at": null,
+          "packet_complete": false,
+          "status": "queued_callback",
+          "target": {
+            "id": "summit_front_desk",
+            "name": "Summit front desk",
+            "phone": "+14085550100"
+          },
+          "transfer_id": "tr_summit_0001"
         },
         "error": null,
         "ok": true,
         "request_id": "req_call_summit_text_reschedule_03_002"
-      }
-    },
-    {
-      "args": {
-        "booking_id": "bk_summit_0001",
-        "new_slot_id": "slot_sm_00032",
-        "reason": "Caller requested a new time."
-      },
-      "error_code": null,
-      "latency_ms": 4,
-      "name": "reschedule_appointment",
-      "ok": true,
-      "result": {
-        "data": {
-          "booking": {
-            "booking_id": "bk_summit_0001",
-            "current": {
-              "end": "2026-11-13T08:30:00-08:00",
-              "start": "2026-11-13T07:00:00-08:00",
-              "technician": {
-                "id": "tech_dana",
-                "name": "Dana"
-              }
-            },
-            "previous": {
-              "start": "2026-11-11T09:00:00-08:00"
-            },
-            "status": "booked"
-          },
-          "replayed": false
-        },
-        "error": null,
-        "ok": true,
-        "request_id": "req_call_summit_text_reschedule_03_003"
       }
     }
   ],
@@ -163,11 +124,7 @@
     },
     {
       "role": "assistant",
-      "text": "Just to confirm: move your Air conditioning repair from Wednesday 11 November at 9:00 AM to Friday 13 November at 7:00 AM with Dana at 88 Meridian Way, San Jose 95125, for Priya Shah at +14085550101. Should I move it?"
-    },
-    {
-      "role": "assistant",
-      "text": "Moved. Your appointment is now Friday 13 November at 7:00 AM."
+      "text": "I couldn't complete a live transfer. I've saved your details and someone will call you back."
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "latency": {
     "tool_path_ms": 10,
-    "wall_ms": 8
+    "wall_ms": 6549
   },
   "pipeline": "fixed",
   "profile": "local",
@@ -13,32 +13,29 @@
   "tool_calls": [
     {
       "args": {
+        "address": {
+          "city": "94107",
+          "line1": "12 Alder Street",
+          "state": "CA",
+          "zip": "94107"
+        },
         "include_bookings": false,
+        "name": "drain cleaning",
         "phone": "+14155550101"
       },
-      "error_code": null,
+      "error_code": "not_found",
       "latency_ms": 2,
       "name": "lookup_customer",
-      "ok": true,
+      "ok": false,
       "result": {
-        "data": {
-          "bookings": [],
-          "customer": {
-            "address": {
-              "city": "San Francisco",
-              "line1": "12 Alder St",
-              "state": "CA",
-              "zip": "94107"
-            },
-            "customer_id": "cus_0001",
-            "name": "Sam Rivera",
-            "phone": "+14155550101"
-          },
-          "match": "exact",
-          "verification_required": false
+        "data": null,
+        "error": {
+          "code": "not_found",
+          "details": {},
+          "message": "No matching customer.",
+          "retryable": false
         },
-        "error": null,
-        "ok": true,
+        "ok": false,
         "request_id": "req_call_harborlight_text_duplicate_02_001"
       }
     },
@@ -103,12 +100,12 @@
       "args": {
         "customer": {
           "address": {
-            "city": "San Francisco",
+            "city": "94107",
             "line1": "12 Alder Street",
             "state": "CA",
             "zip": "94107"
           },
-          "name": "Caller",
+          "name": "drain cleaning",
           "phone": "+14155550101"
         },
         "service_id": "drain_cleaning",
@@ -122,7 +119,7 @@
         "data": {
           "booking": {
             "address": {
-              "city": "San Francisco",
+              "city": "94107",
               "line1": "12 Alder Street",
               "state": "CA",
               "zip": "94107"
@@ -181,7 +178,7 @@
     },
     {
       "role": "assistant",
-      "text": "Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder Street, San Francisco 94107, for Caller at +14155550101. Should I book that?"
+      "text": "Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder Street, 94107 94107, for drain cleaning at +14155550101. Should I book that?"
     },
     {
       "role": "assistant",

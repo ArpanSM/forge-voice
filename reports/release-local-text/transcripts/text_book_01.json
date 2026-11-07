@@ -1,7 +1,7 @@
 {
   "latency": {
     "tool_path_ms": 10,
-    "wall_ms": 12
+    "wall_ms": 5563
   },
   "pipeline": "fixed",
   "profile": "local",
@@ -14,8 +14,8 @@
     {
       "args": {
         "address": {
-          "city": "San Francisco",
-          "line1": "12 Alder St",
+          "city": "Unknown",
+          "line1": "94107",
           "state": "CA",
           "zip": "94107"
         },
@@ -23,29 +23,19 @@
         "name": "Sam Rivera",
         "phone": "+14155550101"
       },
-      "error_code": null,
+      "error_code": "not_found",
       "latency_ms": 2,
       "name": "lookup_customer",
-      "ok": true,
+      "ok": false,
       "result": {
-        "data": {
-          "bookings": [],
-          "customer": {
-            "address": {
-              "city": "San Francisco",
-              "line1": "12 Alder St",
-              "state": "CA",
-              "zip": "94107"
-            },
-            "customer_id": "cus_0001",
-            "name": "Sam Rivera",
-            "phone": "+14155550101"
-          },
-          "match": "exact",
-          "verification_required": false
+        "data": null,
+        "error": {
+          "code": "not_found",
+          "details": {},
+          "message": "No matching customer.",
+          "retryable": false
         },
-        "error": null,
-        "ok": true,
+        "ok": false,
         "request_id": "req_call_harborlight_text_book_01_001"
       }
     },
@@ -110,8 +100,8 @@
       "args": {
         "customer": {
           "address": {
-            "city": "San Francisco",
-            "line1": "12 Alder St",
+            "city": "Unknown",
+            "line1": "94107",
             "state": "CA",
             "zip": "94107"
           },
@@ -129,8 +119,8 @@
         "data": {
           "booking": {
             "address": {
-              "city": "San Francisco",
-              "line1": "12 Alder St",
+              "city": "Unknown",
+              "line1": "94107",
               "state": "CA",
               "zip": "94107"
             },
@@ -180,7 +170,7 @@
     },
     {
       "role": "assistant",
-      "text": "Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 12 Alder St, San Francisco 94107, for Sam Rivera at +14155550101. Should I book that?"
+      "text": "Just to confirm: Drain cleaning on Monday 9 November at 7:00 AM with Alex at 94107, Unknown 94107, for Sam Rivera at +14155550101. Should I book that?"
     },
     {
       "role": "assistant",

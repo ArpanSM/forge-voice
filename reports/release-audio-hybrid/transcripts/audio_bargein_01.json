@@ -1,47 +1,27 @@
 {
   "latency": {
-    "tool_path_ms": 122335,
-    "wall_ms": 122335
+    "tool_path_ms": 113855,
+    "wall_ms": 113855
   },
   "pipeline": "fixed",
   "profile": "hybrid",
   "qa_flags": [
-    "barge_in_recovered"
+    "harness_error",
+    "harness_runtimeerror"
   ],
-  "recording_ref": "livekit:call_bc2fcd55193d8c6c",
+  "recording_ref": "livekit-failed:audio_bargein_01",
   "repeat_index": 0,
   "scenario_id": "audio_bargein_01",
   "split": "audio",
-  "tool_calls": [
-    {
-      "args": {
-        "zip": "94107"
-      },
-      "error_code": "ok",
-      "name": "get_service_area",
-      "ok": true
-    }
-  ],
+  "tool_calls": [],
   "transcript": [
     {
       "role": "caller",
-      "text": "Hi, I need a drain cleaning. The zip is 94107. My address is 12 Alder Street, San Francisco."
+      "text": "Hi, I need a drain cleaning. The ZIP is nine four one zero seven. My address is 12 Alder Street, San Francisco."
     },
     {
       "role": "caller",
-      "text": "My name is Sam Rivera."
-    },
-    {
-      "role": "caller",
-      "text": "My phone is 555-123-4567."
-    },
-    {
-      "role": "caller",
-      "text": "Wait, I want the second slot instead."
-    },
-    {
-      "role": "caller",
-      "text": "Wait, I want the second slot instead."
+      "text": "My name is Sam Rivera. My phone is five five five, one two three, four five six seven. Wait, I want the second slot instead."
     },
     {
       "role": "caller",
@@ -49,23 +29,7 @@
     },
     {
       "role": "assistant",
-      "text": "Thanks for calling Harborlight Home Services. This is Ava, the virtual assistant. This call is recorded for quality. How can I help?"
-    },
-    {
-      "role": "assistant",
-      "text": "Got it \u2014 drain cleaning at 12 Alder Street, San Francisco, 94107. What's the best phone number for a callback?"
-    },
-    {
-      "role": "assistant",
-      "text": "I haven\u2019t checked availability yet, so I don\u2019t have a list of"
-    },
-    {
-      "role": "assistant",
-      "text": "I haven\u2019t checked"
-    },
-    {
-      "role": "assistant",
-      "text": "I\u2019m sorry, I haven\u2019t checked availability yet, so I don\u2019t have any slots to book. Let me look up real open times for drain cleaning in 94107 now\u2014what date would you prefer?"
+      "text": "The live audio call failed: RuntimeError: hybrid free-tier rate limit; retry in 3s (Groq 429 ITPM)"
     }
   ]
 }

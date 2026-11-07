@@ -1,11 +1,14 @@
 {
   "latency": {
-    "tool_path_ms": 2,
-    "wall_ms": 6
+    "tool_path_ms": 27,
+    "wall_ms": 6643
   },
   "pipeline": "fixed",
   "profile": "local",
-  "qa_flags": [],
+  "qa_flags": [
+    "handoff_packet_incomplete",
+    "handoff_no_answer"
+  ],
   "recording_ref": "text_only",
   "repeat_index": 0,
   "scenario_id": "text_cancel_02",
@@ -15,7 +18,7 @@
       "args": {
         "address": {
           "city": "San Francisco",
-          "line1": "12 Alder St",
+          "line1": "94107",
           "state": "CA",
           "zip": "94107"
         },
@@ -23,43 +26,78 @@
         "name": "Sam Rivera",
         "phone": "+14155550101"
       },
-      "error_code": null,
+      "error_code": "not_found",
       "latency_ms": 2,
       "name": "lookup_customer",
+      "ok": false,
+      "result": {
+        "data": null,
+        "error": {
+          "code": "not_found",
+          "details": {},
+          "message": "No matching customer.",
+          "retryable": false
+        },
+        "ok": false,
+        "request_id": "req_call_harborlight_text_cancel_02_001"
+      }
+    },
+    {
+      "args": {
+        "callback_window": {
+          "end": "2026-11-09T12:00:00-08:00",
+          "start": "2026-11-09T08:00:00-08:00"
+        },
+        "mode": "callback",
+        "packet": {
+          "address": {
+            "city": "San Francisco",
+            "line1": "94107",
+            "state": "CA",
+            "zip": "94107"
+          },
+          "booking_id": null,
+          "call_id": "call_harborlight_text_cancel_02",
+          "caller": {
+            "name": "Sam Rivera",
+            "phone": "+14155550101",
+            "verified": false
+          },
+          "emergency_ticket_id": null,
+          "intent": "cancel",
+          "reason": "caller_request",
+          "requested_at": "2026-11-06T08:00:00-08:00",
+          "service": {
+            "id": "drain_cleaning",
+            "name": "Drain cleaning"
+          },
+          "summary": "Did my cancellation go through? Sam Rivera, 12 Alder Street, 94107. Then cancel it again just to be sure. Okay, thanks.",
+          "tenant_id": "harborlight",
+          "urgency": "normal"
+        },
+        "reason": "caller_request",
+        "urgency": "normal"
+      },
+      "error_code": null,
+      "latency_ms": 25,
+      "name": "transfer_to_human",
       "ok": true,
       "result": {
         "data": {
-          "bookings": [
-            {
-              "booking_id": "bk_0001",
-              "service_id": "drain_cleaning",
-              "start": "2026-11-09T09:00:00-08:00",
-              "status": "booked"
-            },
-            {
-              "booking_id": "bk_0002",
-              "service_id": "leak_repair",
-              "start": "2026-11-10T13:00:00-08:00",
-              "status": "cancelled"
-            }
-          ],
-          "customer": {
-            "address": {
-              "city": "San Francisco",
-              "line1": "12 Alder St",
-              "state": "CA",
-              "zip": "94107"
-            },
-            "customer_id": "cus_0001",
-            "name": "Sam Rivera",
-            "phone": "+14155550101"
+          "callback_id": "cb_harborlight_0001",
+          "connected_at": null,
+          "packet_complete": false,
+          "status": "queued_callback",
+          "target": {
+            "id": "harborlight_front_desk",
+            "name": "Harborlight front desk",
+            "phone": "+14155550100"
           },
-          "match": "exact",
-          "verification_required": false
+          "transfer_id": "tr_harborlight_0001"
         },
         "error": null,
         "ok": true,
-        "request_id": "req_call_harborlight_text_cancel_02_001"
+        "request_id": "req_call_harborlight_text_cancel_02_002"
       }
     }
   ],
@@ -86,7 +124,7 @@
     },
     {
       "role": "assistant",
-      "text": "That appointment is already cancelled. I did not send another message."
+      "text": "I couldn't complete a live transfer. I've saved your details and someone will call you back."
     }
   ]
 }

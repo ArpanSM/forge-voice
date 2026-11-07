@@ -1,7 +1,7 @@
 {
   "latency": {
     "tool_path_ms": 0,
-    "wall_ms": 2
+    "wall_ms": 6825
   },
   "pipeline": "baseline",
   "profile": "local",
@@ -23,7 +23,7 @@
       "ok": true,
       "result": {
         "data": {
-          "intent": "book",
+          "intent": "emergency",
           "provider": "naive_deterministic"
         }
       }

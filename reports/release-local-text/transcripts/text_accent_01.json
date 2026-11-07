@@ -1,11 +1,13 @@
 {
   "latency": {
-    "tool_path_ms": 10,
-    "wall_ms": 8
+    "tool_path_ms": 25,
+    "wall_ms": 6702
   },
   "pipeline": "fixed",
   "profile": "local",
-  "qa_flags": [],
+  "qa_flags": [
+    "handoff_no_answer"
+  ],
   "recording_ref": "text_only",
   "repeat_index": 0,
   "scenario_id": "text_accent_01",
@@ -13,137 +15,60 @@
   "tool_calls": [
     {
       "args": {
-        "address": {
-          "city": "San Francisco",
-          "line1": "77 Valencia Street",
-          "state": "CA",
-          "zip": "94110"
+        "callback_window": {
+          "end": "2026-11-09T12:00:00-08:00",
+          "start": "2026-11-09T08:00:00-08:00"
         },
-        "include_bookings": false,
-        "name": "Sof\u00eda Alvarez",
-        "phone": "+14155550199"
-      },
-      "error_code": "not_found",
-      "latency_ms": 2,
-      "name": "lookup_customer",
-      "ok": false,
-      "result": {
-        "data": null,
-        "error": {
-          "code": "not_found",
-          "details": {},
-          "message": "No matching customer.",
-          "retryable": false
-        },
-        "ok": false,
-        "request_id": "req_call_harborlight_text_accent_01_001"
-      }
-    },
-    {
-      "args": {
-        "service_id": "leak_repair",
-        "zip": "94110"
-      },
-      "error_code": null,
-      "latency_ms": 1,
-      "name": "get_service_area",
-      "ok": true,
-      "result": {
-        "data": {
-          "dispatch_zone": "central",
-          "in_area": true,
-          "message": "We cover 94110.",
-          "restrictions": [],
-          "technicians": [
-            "tech_alex"
-          ]
-        },
-        "error": null,
-        "ok": true,
-        "request_id": "req_call_harborlight_text_accent_01_002"
-      }
-    },
-    {
-      "args": {
-        "preferred_date": "2026-11-10",
-        "service_id": "leak_repair",
-        "window_days": 1,
-        "zip": "94110"
-      },
-      "error_code": null,
-      "latency_ms": 3,
-      "name": "get_availability",
-      "ok": true,
-      "result": {
-        "data": {
-          "reason": "ok",
-          "slots": [
-            {
-              "end": "2026-11-10T08:30:00-08:00",
-              "offer_expires_at": "2026-11-06T08:05:00-08:00",
-              "slot_id": "slot_hl_00008",
-              "start": "2026-11-10T07:00:00-08:00",
-              "technician": {
-                "id": "tech_alex",
-                "name": "Alex"
-              }
-            }
-          ],
-          "timezone": "America/Los_Angeles"
-        },
-        "error": null,
-        "ok": true,
-        "request_id": "req_call_harborlight_text_accent_01_003"
-      }
-    },
-    {
-      "args": {
-        "customer": {
+        "mode": "callback",
+        "packet": {
           "address": {
-            "city": "San Francisco",
+            "city": "Not provided",
             "line1": "77 Valencia Street",
             "state": "CA",
             "zip": "94110"
           },
-          "name": "Sof\u00eda Alvarez",
-          "phone": "+14155550199"
+          "booking_id": null,
+          "call_id": "call_harborlight_text_accent_01",
+          "caller": {
+            "name": "Sof\u00eda Alvarez",
+            "phone": "+14155550199",
+            "verified": false
+          },
+          "emergency_ticket_id": null,
+          "intent": "book",
+          "reason": "caller_request",
+          "requested_at": "2026-11-06T08:00:00-08:00",
+          "service": {
+            "id": "leak_repair",
+            "name": "Leak repair"
+          },
+          "summary": "Hello, I need repair for a leak. My name is Sof\u00eda Alvarez. The address is 77 Valencia Street, 94110. Tuesday afternoon, please. Yes, that is correct.",
+          "tenant_id": "harborlight",
+          "urgency": "normal"
         },
-        "service_id": "leak_repair",
-        "slot_id": "slot_hl_00008"
+        "reason": "caller_request",
+        "urgency": "normal"
       },
       "error_code": null,
-      "latency_ms": 4,
-      "name": "book_appointment",
+      "latency_ms": 25,
+      "name": "transfer_to_human",
       "ok": true,
       "result": {
         "data": {
-          "booking": {
-            "address": {
-              "city": "San Francisco",
-              "line1": "77 Valencia Street",
-              "state": "CA",
-              "zip": "94110"
-            },
-            "booking_id": "bk_harborlight_0001",
-            "confirmation": {
-              "email": "not_requested",
-              "sms": "queued"
-            },
-            "contact_phone": "+14155550199",
-            "end": "2026-11-10T08:30:00-08:00",
-            "service_id": "leak_repair",
-            "start": "2026-11-10T07:00:00-08:00",
-            "status": "booked",
-            "technician": {
-              "id": "tech_alex",
-              "name": "Alex"
-            }
+          "callback_id": "cb_harborlight_0001",
+          "connected_at": null,
+          "packet_complete": true,
+          "status": "queued_callback",
+          "target": {
+            "id": "harborlight_front_desk",
+            "name": "Harborlight front desk",
+            "phone": "+14155550100"
           },
-          "replayed": false
+          "transfer_id": "tr_harborlight_0001"
         },
         "error": null,
         "ok": true,
-        "request_id": "req_call_harborlight_text_accent_01_004"
+        "request_id": "req_call_harborlight_text_accent_01_001"
       }
     }
   ],
@@ -170,11 +95,7 @@
     },
     {
       "role": "assistant",
-      "text": "Just to confirm: Leak repair on Tuesday 10 November at 7:00 AM with Alex at 77 Valencia Street, San Francisco 94110, for Sof\u00eda Alvarez at +14155550199. Should I book that?"
-    },
-    {
-      "role": "assistant",
-      "text": "Booked. Tuesday 10 November at 7:00 AM is confirmed and a text confirmation is queued."
+      "text": "I couldn't complete a live transfer. I've saved your details and someone will call you back."
     }
   ]
 }

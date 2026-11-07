@@ -1,7 +1,7 @@
 {
   "latency": {
     "tool_path_ms": 27,
-    "wall_ms": 7
+    "wall_ms": 6531
   },
   "pipeline": "fixed",
   "profile": "local",
@@ -13,8 +13,15 @@
   "tool_calls": [
     {
       "args": {
+        "address": {
+          "city": "Not provided",
+          "line1": "21 Harbor Blvd",
+          "state": "CA",
+          "zip": "94118"
+        },
         "booking_id": "bk_0003",
         "include_bookings": true,
+        "name": "I need to move my appointment",
         "phone": "+14155550112"
       },
       "error_code": null,
@@ -63,7 +70,7 @@
           "booking_id": "bk_0003",
           "call_id": "call_harborlight_text_reschedule_02",
           "caller": {
-            "name": "Riley Chen",
+            "name": "I need to move my appointment",
             "phone": "+14155550112",
             "verified": true
           },
