@@ -39,9 +39,9 @@
     "runs": 0,
     "scenarios": 0
   },
-  "finished_at": "2026-11-07T12:45:08.108088+00:00",
+  "finished_at": "2026-11-07T13:31:23.530623+00:00",
   "gates": {},
-  "git_sha": "dd1594a",
+  "git_sha": "00764f7",
   "heldout_manifest_sha": "sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd",
   "manifest_sha": "sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2",
   "mode": "audio",
@@ -63,6 +63,6 @@
   "scenarios": [],
   "schema_version": 1,
   "split": "audio",
-  "started_at": "2026-11-07T12:45:08.105447+00:00",
+  "started_at": "2026-11-07T13:31:23.528022+00:00",
   "verdict": "not_run_missing_groq_key"
 }

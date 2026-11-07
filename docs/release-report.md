@@ -14,21 +14,23 @@ these assets, not a release claim.
 
 | Command | Exit | Result | Report |
 |---|---:|---|---|
-| `make test` | 0 | **495 passed** in 69.65 s | — |
+| `make test` | 0 | **495 passed** in 68.22 s | — |
 | `make lint` | 0 | ruff check + format check pass | — |
 | `ruff format --check src tests scripts` | 0 | 136 files already formatted | — |
 | `make eval` | 2 | **not_run_missing_groq_key** (release gate; no Groq key in the final environment) | [report](../reports/release-hybrid-text/report.md) |
-| `make eval-orca` | 2 | **not_run_provider_quota** — optional fallback experiment, not the release gate; OrcaRouter free rate limit | [report](../reports/release-hybrid-text-orca/report.md) |
-| `make eval-local` | 0 | **pass** safety gates; task completion **27/40 (67.5%)**, report-only; 128.5 s | [report](../reports/release-local-text/report.md) |
+| `make eval-orca` | 2 | **not_run_provider_quota** — optional fallback experiment, not the release gate; OrcaRouter free rate limit; retry 37,718 s | [report](../reports/release-hybrid-text-orca/report.md) |
+| `make eval-local` | 0 | **pass** safety gates; task completion **27/40 (67.5%)**, report-only; 124.9 s | [report](../reports/release-local-text/report.md) |
 | `make eval-audio` | 2 | **not_run_missing_groq_key** | [report](../reports/release-audio-hybrid/report.md) |
-| `make eval-audio-local` | 1 | **fail**: 2/6, 767.7 s; emergency handoff and slot-read-back task failures | [report](../reports/release-audio-local/report.md) |
+| `make eval-audio-local` | 1 | **fail**: 2/6, 744.5 s; emergency handoff and slot-read-back task failures | [report](../reports/release-audio-local/report.md) |
 | `make eval-heldout` | 2 | **not_run_missing_groq_key** | [report](../reports/release-heldout/report.md) |
 | `make eval-smoke` | 0 | **pass** 8/8 | [report](../reports/release-smoke/report.md) |
-| `make eval-baseline` | 0 | **local 0/40**; hybrid **not_run_provider_quota 0/0**; never gates | [local](../reports/release-baseline-local/report.md) · [hybrid](../reports/release-baseline-hybrid/report.md) |
+| `make eval-baseline` | 0 | **local 0/40** (`00764f7`); hybrid **not_run_provider_quota 0/0** (`81e71cf`, prior evidence); never gates | [local](../reports/release-baseline-local/report.md) · [hybrid](../reports/release-baseline-hybrid/report.md) |
 
-**Evidence commit:** these report JSON/Markdown files were regenerated from code commit
-`REPORT_COMMIT_SHA`; the tag points at the later report-output commit. Do not describe a report
-as generated at the tag unless its `git_sha` matches the tag.
+**Evidence commit:** the reports below were regenerated from code commit
+`00764f7d5a0442fe6c218d35b881535b38116f75`; the tag points at the later report-output commit.
+Do not describe a report as generated at the tag unless its `git_sha` matches the tag. The
+hybrid baseline report is prior-commit evidence (`81e71cf`) with `not_run_provider_quota` 0/0;
+the local baseline report was regenerated at `00764f7` and is 0/40.
 
 **Why the hybrid gate is not green.** The final sweep had no Groq key, so the release-gate
 report is `not_run_missing_groq_key`. Earlier, Groq's free daily token budget had also been

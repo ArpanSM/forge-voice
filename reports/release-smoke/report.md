@@ -9,7 +9,7 @@ This file is generated from `report.json`; do not hand-edit it.
 - **Split:** smoke
 - **Verdict:** **PASS**
 - **Task completion:** 8/8 (100.00%, 95% Wilson 67.56–100.0%)
-- **Git SHA:** `dd1594a`
+- **Git SHA:** `00764f7`
 - **Manifest SHA:** `sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2`
 - **Held-out manifest SHA:** `sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd`
 
@@ -85,7 +85,7 @@ Latency is demo evidence, not a production SLA. The measured profile uses free/l
 
 | Metric | Value |
 |---|---|
-| p50 wall | 11.0 ms |
+| p50 wall | 10.5 ms |
 | p95 wall | 14.3 ms |
 | p50 tool path | 17.5 ms |
 | p95 tool path | 29.95 ms |

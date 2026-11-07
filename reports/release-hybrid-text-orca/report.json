@@ -18,7 +18,7 @@
   },
   "caveats": [
     "The run did not start or did not complete; this report is written so the failure is visible rather than silent.",
-    "OrcaRouter free-tier rate limit; retry in 40642.0s"
+    "OrcaRouter free-tier rate limit; retry in 37718.0s"
   ],
   "cost_model": {
     "as_of": "2026-11-07",
@@ -39,9 +39,9 @@
     "runs": 0,
     "scenarios": 0
   },
-  "finished_at": "2026-11-07T12:42:38.501357+00:00",
+  "finished_at": "2026-11-07T13:31:23.037777+00:00",
   "gates": {},
-  "git_sha": "dd1594a",
+  "git_sha": "00764f7",
   "heldout_manifest_sha": "sha256:bd9e323a5a938b3606c16c1c1acda5570b8252a165ab0f962119d5d628bfa3bd",
   "manifest_sha": "sha256:e85343a44344825641472daed96a909c2658f31d6a8e665cef2d3f2eb8af14d2",
   "mode": "text",
@@ -52,11 +52,11 @@
     "baseline_engine": null,
     "check": {
       "attempts": 1,
-      "error": "OrcaRouter free-tier rate limit; retry in 40642.0s",
+      "error": "OrcaRouter free-tier rate limit; retry in 37718.0s",
       "model": "deepseek/deepseek-v4.1-flash-free",
       "ok": false,
       "provider": "orcarouter",
-      "retry_after_seconds": 40642.0,
+      "retry_after_seconds": 37718.0,
       "status": "rate_limited"
     },
     "groq_model": "qwen/qwen3.8-27b",
@@ -73,6 +73,6 @@
   "scenarios": [],
   "schema_version": 1,
   "split": "release",
-  "started_at": "2026-11-07T12:42:32.843715+00:00",
+  "started_at": "2026-11-07T13:31:22.435614+00:00",
   "verdict": "not_run_provider_quota"
 }
