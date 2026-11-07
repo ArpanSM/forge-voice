@@ -1,5 +1,8 @@
 # Monitoring, alerts and weekly review
 
+**For:** operators running the local dashboard and weekly review. **Status:** local-only,
+synthetic data; no hosted monitoring.
+
 Local, read-only monitoring for the synthetic Harborlight and Summit calls. It is one
 FastAPI + HTMX app on `127.0.0.1:8000`; there is no public bind and no hosted service.
 
@@ -36,7 +39,7 @@ the dashboard does not re-implement them.
 
 ## Metric definitions
 
-These follow the #26 evaluation definitions. Every binary metric reports numerator,
+These follow the evaluation definitions. Every binary metric reports numerator,
 denominator, n and percent.
 
 | Metric | Definition |
@@ -104,7 +107,7 @@ python -m forge_voice.monitoring.review --call-id CALL_ID --run-smoke
 ```
 
 The web page does not launch a subprocess from a request; the script and Make target own that
-step. The monthly review remains `make eval` + `make eval-heldout` per the #26 release gate.
+step. The monthly review remains `make eval` + `make eval-heldout` for the release gate.
 
 ## Static handover export
 

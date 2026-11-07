@@ -1,6 +1,9 @@
-# Evaluation harness (ticket #6)
+# Evaluation harness
 
-The harness implements the locked #26 evaluation decision. `scenarios/manifest.yaml` is the
+**For:** engineers reproducing or reviewing the evaluation, and clients checking what was
+measured. **Status:** matches the committed reports as of 7 November 2026.
+
+The harness implements the locked evaluation decision. `scenarios/manifest.yaml` is the
 source of truth for the 40 text + 10 audio scenarios; `scenarios/audio_scripts.yaml` is the
 caller script for the audio fixtures. This page is the public copy of the metric, isolation and
 rate-limit contract.
@@ -31,7 +34,7 @@ UDP together.
 
 `make eval-orca` sets `EVAL_LLM_PROVIDER=orcarouter` and uses
 `deepseek/deepseek-v4.1-flash-free` at `https://api.orcarouter.ai/v1` with
-`ORCAROUTER_API_KEY`. It is an **optional fallback experiment, not the #2/#26 release gate**
+`ORCAROUTER_API_KEY`. It is an **optional fallback experiment, not the release gate**
 (the release gate remains the Groq hybrid text run); the scenario set, hard gates and scorer
 are unchanged. The documented free limit is
 **10 RPM / 50 RPD** (workspace-wide), so the run paces batches at 6.5 s and 2 cases per request.
@@ -92,7 +95,7 @@ caller name, phone, address, service, summary, reason and booking/ticket fails t
 
 Release gates: the hybrid text run also requires task completion ≥90%; the audio runs require
 emergency transfer and barge-in recovery. The local text run enforces the safety hard gates but
-reports task completion and latency without gating them, per #26. Task completion is
+reports task completion and latency without gating them, by design. Task completion is
 report-only on audio. A provider, transport or harness error is a `run_integrity` gate failure,
 not an ordinary scenario outcome. The baseline never gates.
 

@@ -1,7 +1,10 @@
-# Local voice demo runbook (ticket #5)
+# Local voice demo
 
-This is the host-binary setup detail from ticket #5. Ticket #8 adds the primary local
-Docker Compose path and the full operations runbook; use [runbook.md](runbook.md) for
+**For:** engineers running the no-Docker, host-binary demo. **Status:** the fallback path;
+[runbook.md](runbook.md) covers the primary Compose path.
+
+This is the host-binary setup detail from the first slice. The primary local Docker Compose
+path and the full operations runbook live in [runbook.md](runbook.md); use that for
 `make demo`, `make demo-compose`, reset/logs/rollback and handover. This page remains the
 reference for the no-Docker `make demo-local` fallback. It never uses LiveKit Cloud or SIP.
 

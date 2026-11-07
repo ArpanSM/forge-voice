@@ -7,15 +7,10 @@ safety, handoff and monitoring layers with a reproducible evaluation.**
 handover; agencies that want a reusable two-tenant engine; and engineers who want to inspect the
 evaluation and monitoring layers, not just a prompt.
 
-**Status:** `evaluated · demo local`. The demo assets are complete. The local text safety run
-passes every hard gate; task completion there is report-only. The **release gate is the Groq
-hybrid text run**, and it is **not claimed**: the final sweep had no Groq key, so its report is
-`not_run_missing_groq_key`. The optional OrcaRouter fallback experiment is also not claimed
-(`not_run_provider_quota`). The hybrid audio and sealed held-out reports are
-`not_run_missing_groq_key`; the live local audio run is **5/6** and every hard gate passes,
-with one genuine ASR entity miss left. This is a demo, not a release. Full status:
-[release report](docs/release-report.md), [evaluation](docs/evaluation.md) and the committed
-[reports](reports/).
+**Status:** `evaluated · demo local`. The local text safety run passes every hard gate, and the
+live local audio run is **5/6** with every hard gate green. The hybrid release gate is **not
+claimed** (`not_run_missing_groq_key`), so this is a demo, not a production release. Full status:
+[release report](docs/release-report.md) · [evaluation](docs/evaluation.md) · [reports](reports/).
 
 ## Start here
 
@@ -47,15 +42,14 @@ path.
   through a signed 120 s browser claim. There is no tenant-specific workflow code; tenant-dependent
   extraction/labels live behind the config/interpretation seam. The measured runs show no
   cross-tenant read or write.
-- **The failure is visible.** The evaluation keeps a failure gallery, a sealed held-out set and
-  hard gates. The live local audio run is **5/6** with every hard gate passing; the remaining
-  `audio_readback_01` `confirmed_entities` miss is shown instead of hidden.
 
 **Caveat next to every measured claim:** local-only, no production SLA. The measured 10-turn
 WebRTC p95 first audio is **5.3 s** and barge-in yield is **~0.88 s**; there is no sub-3 s,
 sub-2 s or sub-1 s claim. One 10-turn sample per profile on a 4 GB laptop is evidence, not a
-benchmark. Production APIs must be re-measured before quoting. The known gaps are no proactive
-silence prompt, fragile degraded-ZIP recognition and no long-utterance turn-taking guard.
+benchmark. The live local audio run is **5/6** — every hard gate passes, and the remaining
+`audio_readback_01` `confirmed_entities` miss is shown instead of hidden. The known gaps are no
+proactive silence prompt, fragile degraded-ZIP recognition and no long-utterance turn-taking
+guard. Production APIs must be re-measured before quoting.
 
 ### Measured evaluation
 
@@ -65,7 +59,7 @@ gallery are in [reports](reports/) and [docs/evaluation.md](docs/evaluation.md).
 
 | Command | Scenarios | Verdict | Honest note |
 |---|---|---|---|
-| `make eval` | 40 text hybrid + 10 critical × 3 | **`not_run_missing_groq_key`** | The #2/#26 release gate. The final sweep had no Groq key, so the hybrid text gate is not claimed. |
+| `make eval` | 40 text hybrid + 10 critical × 3 | **`not_run_missing_groq_key`** | The Groq hybrid text release gate. The final sweep had no Groq key, so the hybrid text gate is not claimed. |
 | `make eval-local` | 40 text, fully local | **Safety hard gates pass**; task completion 27/40 (67.5%) | Task completion and latency are report-only for the local fallback. Confirmation 17/17, slots 11/11, emergency 5/5, handoff 13/13, audit 40/40, 0 double bookings, 0 unconfirmed writes, 0 cross-tenant leaks. |
 | `make eval-smoke` | 8 text dev | **8/8 pass** | Fast commit/PR subset; not a release claim. |
 | `make eval-baseline` | 40 text, local; hybrid | **local 0/40**; hybrid **`not_run_provider_quota` 0/0** | One prompt and a direct write; expected comparison only. It never gates. |

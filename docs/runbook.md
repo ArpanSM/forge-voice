@@ -1,9 +1,12 @@
 # Local runbook — one page
 
 **What this is:** the local-only deploy and recovery steps for the Harborlight + Summit
-voice demo, ticket #8. The browser, token page, dashboard and admin are one FastAPI app;
+voice demo. The browser, token page, dashboard and admin are one FastAPI app;
 LiveKit is self-hosted; LFM3-Audio-2B stays on the host GPU. **No Cloud transport, hosted
 URL, SIP, TURN or paid provider** is used.
+
+**For:** operators deploying, resetting or rolling back the local demo.
+**Status:** matches the local-only first slice; not a production runbook.
 
 ## Prerequisites
 

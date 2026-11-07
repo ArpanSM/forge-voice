@@ -1,5 +1,8 @@
 # Handover checklist and 30-day support boundary
 
+**For:** clients taking ownership of the local kit, and operators running the handover
+checklist. **Status:** local delivery kit, not a hosted service.
+
 The handover is the local delivery kit, not a hosted service. The client owns the repo,
 the tenant YAMLs, the local data and the demo accounts. The public proof is the recorded
 demo; a live local demo is by appointment only.

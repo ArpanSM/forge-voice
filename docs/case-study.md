@@ -1,9 +1,20 @@
 # Case study: a voice booking kit that can prove its own limits
 
-**One page.** A local-first LiveKit voice agent for two fictional home-services businesses,
-with the scope, evaluation, deployment, monitoring and handover kit around it. The interesting
-part is not that it books a drain cleaning. It is that every write, transfer and emergency
-decision is deterministic, auditable and measured against a published gate.
+> **In one paragraph:** A local-first LiveKit voice agent for two fictional home-services
+> businesses, with the scoping, evaluation, deployment, monitoring and handover kit around it.
+> Every booking, transfer and emergency decision is deterministic, auditable and measured
+> against a published gate.
+>
+> **For:** home-services operators who want a narrow first slice with real safety and handover,
+> and engineers reviewing a voice-agent evaluation and monitoring design.
+>
+> **Proof:** the local text safety run passes every hard gate — confirmation 17/17, audit 40/40,
+> zero double bookings, zero unconfirmed writes and zero cross-tenant leaks. The live local
+> audio run is 5/6 with every hard gate green; the hybrid release gate is not claimed because
+> the final sweep had no Groq key.
+
+The interesting part is not that it books a drain cleaning. It is that every write, transfer
+and emergency decision is deterministic, auditable and measured against a published gate.
 
 ## The problem
 
@@ -56,7 +67,7 @@ Text, audio, hybrid and local are reported separately and never pooled.
 
 | Run | Result | What it means |
 |---|---|---|
-| `make eval` (40 text + 10 critical × 3, hybrid text) | **not_run_missing_groq_key** | The #2/#26 release gate. The final sweep had no Groq key; the hybrid text gate is not claimed. |
+| `make eval` (40 text + 10 critical × 3, hybrid text) | **not_run_missing_groq_key** | The Groq hybrid text release gate. The final sweep had no Groq key; the hybrid text gate is not claimed. |
 | `make eval-local` (40 text, local) | 40 scenarios, task completion **27/40 (67.5%)**, every safety hard gate pass | Task completion and latency are report-only for the local safety fallback. Confirmation 17/17, slots 11/11, emergency 5/5, handoff 13/13, audit 40/40, 0 double bookings, 0 unconfirmed writes, 0 cross-tenant leaks. |
 | `make eval-orca` (40 text + 10 critical × 3, hybrid text) | **not_run_provider_quota** — OrcaRouter free daily limit | **Optional fallback experiment, not the release gate.** OrcaRouter free (10 RPM / 50 RPD) was exhausted; no green hybrid claim. |
 | `make eval-smoke` (8 text dev) | **8/8 pass** | Fast commit/PR subset; not a release claim. |
@@ -103,7 +114,7 @@ The demo marginal cost is **$0** on free tiers plus the local GPU; the productio
    mitigation, not a claim that the model is interchangeable.
 
 **Honest gate status.** The demo assets are complete and the local text safety report passes
-its hard gates. The #2/#26 release gate is the Groq hybrid text run; the final sweep had no
+its hard gates. The release gate is the Groq hybrid text run; the final sweep had no
 Groq key, so its report is `not_run_missing_groq_key` and the gate is not claimed. The optional
 OrcaRouter fallback is also not claimed (`not_run_provider_quota`). The hybrid audio and sealed
 held-out reports are `not_run_missing_groq_key`. The live local audio run is **5/6** with every

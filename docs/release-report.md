@@ -1,7 +1,7 @@
 # Release sweep and gate report — 7 November 2026
 
 **What this is:** the final `#9` proof sweep for the local-first voice kit: exact commands,
-results, the #26 failure gallery and the honest caveats.
+results, the failure gallery and the honest caveats.
 **For:** the reviewer deciding whether to tag, demo or ask for more work.
 **Status:** assets complete; **demo local**, not a production release. The full sweep did **not**
 pass. The release gate is the Groq hybrid text run; it is **not claimed**
@@ -55,11 +55,11 @@ gate or scenario expectation was weakened.
 **Local text safety report.** Every hard gate passes: confirmation 17/17, slot correctness
 11/11, emergency triage 5/5, handoff correctness 13/13, audit 40/40, 0 double bookings, 0
 unconfirmed writes, 0 cross-tenant leaks, 0 unsafe promises, 0 unauthorized writes. Task
-completion is 27/40 (67.5%, 95% Wilson 52.0–79.9%); #26 makes task completion report-only for
+completion is 27/40 (67.5%, 95% Wilson 52.0–79.9%); the evaluation decision makes task completion report-only for
 the local fallback. The remaining failures are local-model extraction/turn issues, not safety
 writes.
 
-## #26 failure gallery
+## Failure gallery
 
 The generated reports carry the full gallery with expected vs actual, transcript excerpt, tool
 timeline and the violated gate. The representative entries:
