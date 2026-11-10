@@ -1,0 +1,367 @@
+{
+  "file": "videos/client-proof.mp4",
+  "info": {
+    "w": 1920,
+    "h": 1080,
+    "fps": 30.0,
+    "dur": 48.972,
+    "audio": true
+  },
+  "picture": {
+    "frame0": {
+      "mean": 192.1,
+      "contrast": 72.9
+    },
+    "flashes": [],
+    "pops": [
+      5.6,
+      13.533,
+      14.4,
+      22.267,
+      22.533,
+      23.333,
+      23.433,
+      36.667,
+      41.133
+    ],
+    "cuts": [
+      5.333,
+      13.367,
+      13.633,
+      13.8,
+      13.867,
+      14.0,
+      14.133,
+      14.233,
+      14.6,
+      21.533,
+      21.633,
+      21.767,
+      21.867,
+      22.0,
+      23.567,
+      23.667,
+      23.833,
+      28.4
+    ],
+    "frozen": [
+      {
+        "from": 0.23,
+        "to": 5.33,
+        "secs": 5.1,
+        "to_end": false
+      },
+      {
+        "from": 6.0,
+        "to": 7.27,
+        "secs": 1.27,
+        "to_end": false
+      },
+      {
+        "from": 7.4,
+        "to": 13.37,
+        "secs": 5.97,
+        "to_end": false
+      },
+      {
+        "from": 14.6,
+        "to": 21.4,
+        "secs": 6.8,
+        "to_end": false
+      },
+      {
+        "from": 24.07,
+        "to": 28.4,
+        "secs": 4.33,
+        "to_end": false
+      },
+      {
+        "from": 29.77,
+        "to": 36.67,
+        "secs": 6.9,
+        "to_end": false
+      },
+      {
+        "from": 38.07,
+        "to": 41.13,
+        "secs": 3.07,
+        "to_end": false
+      },
+      {
+        "from": 42.0,
+        "to": 48.9,
+        "secs": 6.9,
+        "to_end": true
+      }
+    ],
+    "flat": [
+      {
+        "from": 28.4,
+        "to": 29.27
+      },
+      {
+        "from": 36.67,
+        "to": 37.47
+      },
+      {
+        "from": 41.13,
+        "to": 41.53
+      }
+    ],
+    "median_step": 0.001
+  },
+  "cuts_vs_plan": {
+    "max_err_frames": 0.0,
+    "errors_frames": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "missing": [],
+    "unplanned": []
+  },
+  "audio": {
+    "lufs": -14.8,
+    "true_peak": -1.4,
+    "loudest_at": 6.3,
+    "loudest_db": -7.5,
+    "p90_db": -11.2,
+    "silence_threshold_db": -30.0,
+    "silences": [
+      {
+        "from": 3.75,
+        "to": 5.75
+      },
+      {
+        "from": 10.2,
+        "to": 10.75
+      },
+      {
+        "from": 12.65,
+        "to": 13.7
+      },
+      {
+        "from": 15.65,
+        "to": 16.25
+      },
+      {
+        "from": 20.65,
+        "to": 21.6
+      },
+      {
+        "from": 22.95,
+        "to": 23.55
+      },
+      {
+        "from": 25.25,
+        "to": 25.75
+      },
+      {
+        "from": 27.7,
+        "to": 28.7
+      },
+      {
+        "from": 30.65,
+        "to": 31.05
+      },
+      {
+        "from": 32.65,
+        "to": 33.1
+      },
+      {
+        "from": 36.3,
+        "to": 37.2
+      },
+      {
+        "from": 41.3,
+        "to": 42.1
+      },
+      {
+        "from": 44.95,
+        "to": 45.5
+      }
+    ],
+    "silence_before_peak": true,
+    "planned_silences": []
+  },
+  "texts": [
+    {
+      "text": "A booking that doesn't match the request is a support ticket.",
+      "role": "hook",
+      "from": 0.5,
+      "box": [
+        48,
+        820,
+        1612,
+        220
+      ],
+      "font_px": 273.6,
+      "contrast": 11.9,
+      "at": 0.6
+    },
+    {
+      "text": "Read-back: Air conditioning repair \u00b7 Wed 11 Nov 12:00 PM \u00b7 Dana \u00b7 88 Meridian Way",
+      "role": "term",
+      "from": 15.0,
+      "box": [
+        48,
+        880,
+        1560,
+        160
+      ],
+      "font_px": 184.7,
+      "contrast": 11.6,
+      "at": 15.1
+    },
+    {
+      "text": "lookup_customer \u2192 get_service_area \u2192 get_availability \u2192 book_appointment",
+      "role": "term",
+      "from": 23.0,
+      "box": [
+        48,
+        880,
+        1560,
+        160
+      ],
+      "font_px": 172.2,
+      "contrast": 11.5,
+      "at": 23.1
+    },
+    {
+      "text": "Send two call flows.",
+      "role": "cta",
+      "from": 42.7,
+      "box": [
+        112,
+        150,
+        1200,
+        200
+      ],
+      "font_px": 250.0,
+      "contrast": 11.9,
+      "at": 42.8
+    }
+  ],
+  "sheets": {
+    "beats": "qa/beats_sheet.jpg",
+    "phone": "qa/phone_sheet.jpg",
+    "hook": "qa/hook_sheet.jpg"
+  },
+  "checks": [
+    {
+      "level": "PASS",
+      "check": "frame 0",
+      "detail": "mean 192.1, contrast 72.9; still confirm it's a finished composition"
+    },
+    {
+      "level": "PASS",
+      "check": "hook text",
+      "detail": "'A booking that doesn't match the request' at 0.6 s: ~273.6 px font (>= 84), contrast 11.9:1 (>= 7:1)"
+    },
+    {
+      "level": "PASS",
+      "check": "term text",
+      "detail": "'Read-back: Air conditioning repair \u00b7 Wed' at 15.1 s: ~184.7 px font (>= 48), contrast 11.6:1 (>= 7:1)"
+    },
+    {
+      "level": "PASS",
+      "check": "term text",
+      "detail": "'lookup_customer \u2192 get_service_area \u2192 get' at 23.1 s: ~172.2 px font (>= 48), contrast 11.5:1 (>= 7:1)"
+    },
+    {
+      "level": "PASS",
+      "check": "cta text",
+      "detail": "'Send two call flows.' at 42.8 s: ~250.0 px font (>= 48), contrast 11.9:1 (>= 7:1)"
+    },
+    {
+      "level": "PASS",
+      "check": "single-frame flashes",
+      "detail": "none"
+    },
+    {
+      "level": "WARN",
+      "check": "pops",
+      "detail": "small spikes at [5.6, 13.533, 14.4, 22.267, 22.533, 23.333, 23.433, 36.667, 41.133]: intended hits, or glitches/stray transitions?"
+    },
+    {
+      "level": "PASS",
+      "check": "cuts vs plan",
+      "detail": "max error 0.0 f; missing []; unplanned []"
+    },
+    {
+      "level": "WARN",
+      "check": "frozen stretch",
+      "detail": "0.23-5.33 s (5.1 s): designed hold or dead air?"
+    },
+    {
+      "level": "WARN",
+      "check": "frozen stretch",
+      "detail": "6.0-7.27 s (1.27 s): designed hold or dead air?"
+    },
+    {
+      "level": "WARN",
+      "check": "frozen stretch",
+      "detail": "7.4-13.37 s (5.97 s): designed hold or dead air?"
+    },
+    {
+      "level": "WARN",
+      "check": "frozen stretch",
+      "detail": "14.6-21.4 s (6.8 s): designed hold or dead air?"
+    },
+    {
+      "level": "WARN",
+      "check": "frozen stretch",
+      "detail": "24.07-28.4 s (4.33 s): designed hold or dead air?"
+    },
+    {
+      "level": "WARN",
+      "check": "frozen stretch",
+      "detail": "29.77-36.67 s (6.9 s): designed hold or dead air?"
+    },
+    {
+      "level": "WARN",
+      "check": "frozen stretch",
+      "detail": "38.07-41.13 s (3.07 s): designed hold or dead air?"
+    },
+    {
+      "level": "WARN",
+      "check": "frozen stretch",
+      "detail": "42.0-48.9 s (6.9 s): final hold"
+    },
+    {
+      "level": "WARN",
+      "check": "flat frames",
+      "detail": "near-uniform frames at [{'from': 28.4, 'to': 29.27}, {'from': 36.67, 'to': 37.47}, {'from': 41.13, 'to': 41.53}]: blank transition frames?"
+    },
+    {
+      "level": "PASS",
+      "check": "loudness",
+      "detail": "-14.8 LUFS (target -14.0 +/-1), true peak -1.4 dBTP (<= -1.0)"
+    },
+    {
+      "level": "INFO",
+      "check": "loudest moment",
+      "detail": "loudest 100 ms at 6.3 s (-7.5 dBFS); voice clock: confirm the payoff hit is the loudest non-voice sound and sits in a VO pause"
+    },
+    {
+      "level": "PASS",
+      "check": "silence before peak",
+      "detail": "silences >= 0.4 s below -30.0 dBFS: [{'from': 3.75, 'to': 5.75}, {'from': 10.2, 'to': 10.75}, {'from': 12.65, 'to': 13.7}, {'from': 15.65, 'to': 16.25}, {'from': 20.65, 'to': 21.6}, {'from': 22.95, 'to': 23.55}, {'from': 25.25, 'to': 25.75}, {'from': 27.7, 'to': 28.7}]"
+    }
+  ]
+}

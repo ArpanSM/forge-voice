@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Forge Voice — the proof</title>
+<style>
+  @font-face { font-family: "Noto Sans"; src: url("fonts/NotoSans-Regular.ttf") format("truetype"); font-weight: 400; }
+  @font-face { font-family: "Noto Sans"; src: url("fonts/NotoSans-Bold.ttf") format("truetype"); font-weight: 700; }
+  @font-face { font-family: "Noto Sans Mono"; src: url("fonts/NotoSansMono-Regular.ttf") format("truetype"); font-weight: 400; }
+  @font-face { font-family: "Noto Serif"; src: url("fonts/NotoSerif-Regular.ttf") format("truetype"); font-weight: 400; }
+  @font-face { font-family: "Noto Serif"; src: url("fonts/NotoSerif-Italic.ttf") format("truetype"); font-weight: 400; font-style: italic; }
+  :root {
+    --ink: #0a1120; --surface: #101a2e; --line: #1e2c46;
+    --text: #e8eef7; --muted: #8fa0b8; --accent: #3d8bff;
+    --amber: #f0a83c; --green: #34c98e; --red: #e05a5a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; width: 1920px; height: 1080px; overflow: hidden; }
+  body { background: var(--ink); }
+  #stage {
+    position: relative; width: 1920px; height: 1080px; overflow: hidden; color: var(--text);
+    font-family: "Noto Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+    background:
+      radial-gradient(circle at 86% 8%, rgba(61,139,255,0.14), transparent 34rem),
+      radial-gradient(circle at 4% 96%, rgba(61,139,255,0.07), transparent 28rem),
+      var(--ink);
+  }
+  #stage::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(143,160,184,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(143,160,184,0.05) 1px, transparent 1px);
+    background-size: 96px 96px;
+    mask-image: radial-gradient(circle at 50% 45%, #000 25%, transparent 82%);
+  }
+  .card { position: absolute; inset: 0; visibility: hidden; }
+  .card.on { visibility: visible; }
+  .frame { position: absolute; inset: 0; padding: 88px 112px 76px; display: flex; flex-direction: column; z-index: 1; }
+  .kicker {
+    font-family: "Noto Sans Mono", monospace; font-size: 15px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .rule { position: absolute; left: 112px; top: 88px; bottom: 76px; width: 2px; background: var(--line); }
+  .rule .fill { position: absolute; top: 0; left: 0; width: 100%; height: 0%; background: var(--accent); }
+  h1 { margin: 22px 0 0; font-family: "Noto Serif", Georgia, serif; font-weight: 400;
+       font-size: 92px; line-height: 1.03; letter-spacing: -0.032em; }
+  h1 .em { font-style: italic; color: var(--accent); }
+
+  /* whyme */
+  #whyme .kicker { padding-left: 34px; }
+  #whyme h1 { padding-left: 34px; max-width: 1300px; }
+  .steps { margin-top: 84px; padding-left: 34px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 56px; position: relative; }
+  .steps .connector { position: absolute; top: 0; left: 8px; right: 8px; height: 1px; background: var(--line); transform-origin: left center; }
+  .step { border-top: 1px solid var(--line); padding-top: 26px; position: relative; }
+  .step .num { font-family: "Noto Sans Mono", monospace; font-size: 14px; letter-spacing: 0.18em; color: var(--muted); }
+  .step h2 { margin: 16px 0 0; font-family: "Noto Serif", Georgia, serif; font-weight: 400; font-size: 42px; letter-spacing: -0.02em; }
+  .step p { margin: 14px 0 0; font-size: 20px; line-height: 1.5; color: var(--muted); max-width: 400px; }
+  .step .token { position: absolute; top: -14px; right: -6px; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--green); display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 6px rgba(52,201,142,0.16); opacity: 0; }
+  .step .token svg { width: 15px; height: 15px; }
+
+  /* metric */
+  #metric .frame { align-items: flex-start; }
+  .metric { margin-top: 40px; display: flex; align-items: center; gap: 56px; }
+  .zero-wrap { position: relative; width: 460px; height: 460px; display: flex; align-items: center; justify-content: center; }
+  .zero-ring { position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(61,139,255,0.35);
+    box-shadow: 0 0 90px rgba(61,139,255,0.18) inset, 0 0 60px rgba(61,139,255,0.10); }
+  .zero-ring.two { inset: 26px; border-color: rgba(143,160,184,0.18); box-shadow: none; }
+  .zero { font-family: "Noto Serif", Georgia, serif; font-weight: 400; font-size: 380px; line-height: 1;
+    letter-spacing: -0.05em; color: var(--text); transform: translateY(18px); }
+  .unit { max-width: 520px; }
+  .unit h1 { margin: 0; font-family: "Noto Serif", Georgia, serif; font-weight: 400; font-size: 96px; line-height: 1.02; letter-spacing: -0.035em; }
+  .unit h1 .em { font-style: italic; color: var(--accent); }
+  .unit p { margin: 22px 0 0; font-size: 24px; line-height: 1.5; color: var(--muted); }
+  .unit p b { color: var(--text); font-weight: 700; }
+  .unit .dataset { margin-top: 18px; font-family: "Noto Sans Mono", monospace; font-size: 16px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .caveat { margin-top: 40px; display: inline-flex; align-items: center; gap: 14px;
+    border: 1px solid rgba(240,168,60,0.4); border-radius: 999px; background: rgba(240,168,60,0.08);
+    padding: 14px 24px; font-family: "Noto Sans Mono", monospace; font-size: 16px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--amber); }
+  .caveat .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 12px rgba(240,168,60,0.7); }
+
+  /* endcard */
+  #endcard h1 { margin: 30px 0 0; max-width: 1400px; font-family: "Noto Serif", Georgia, serif; font-weight: 400;
+    font-size: 132px; line-height: 1.0; letter-spacing: -0.04em; }
+  #endcard h1 .em { font-style: italic; color: var(--accent); }
+  .sub { margin: 34px 0 0; max-width: 1080px; font-size: 27px; line-height: 1.5; color: var(--muted); }
+  .sub b { color: var(--text); font-weight: 700; }
+  .url { margin-top: 44px; display: inline-flex; align-items: center; gap: 16px;
+    font-family: "Noto Sans Mono", monospace; font-size: 22px; letter-spacing: 0.04em; color: var(--text); }
+  .url .mark { width: 34px; height: 34px; border-radius: 50%; background: var(--accent);
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(61,139,255,0.45); }
+  .url .mark svg { width: 18px; height: 18px; }
+
+  .foot { margin-top: auto; display: flex; justify-content: space-between; gap: 40px;
+    font-family: "Noto Sans Mono", monospace; font-size: 13px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted); }
+  .foot .repo { color: var(--text); }
+  .foot .tag { display: inline-flex; align-items: center; gap: 10px; }
+  .foot .tag .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px rgba(52,201,142,0.6); }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="client-proof" data-width="1920" data-height="1080" data-duration="20.7">
+
+  <section class="card on" id="whyme">
+    <div class="rule"><div class="fill" id="ruleFill"></div></div>
+    <div class="frame">
+      <div class="kicker">What hiring me looks like</div>
+      <h1>Reproduce. Measure.<br><span class="em">Fix + gate.</span></h1>
+      <div class="steps">
+        <div class="connector" id="connector"></div>
+        <div class="step" id="s1">
+          <div class="num">01</div>
+          <h2>Reproduce</h2>
+          <p>Your booking failures, replayed as scenarios.</p>
+        </div>
+        <div class="step" id="s2">
+          <div class="num">02</div>
+          <h2>Measure</h2>
+          <p>Model behaviour against deterministic policy.</p>
+        </div>
+        <div class="step" id="s3">
+          <div class="num">03</div>
+          <h2>Fix + gate</h2>
+          <p>Ranked fixes with a before/after evaluation.</p>
+          <div class="token" id="token3"><svg viewBox="0 0 24 24" fill="none" stroke="#0a1120" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
+        </div>
+      </div>
+      <div class="foot">
+        <span class="repo">Forge Voice · proof of concept</span>
+        <span>local-only · synthetic · no production SLA</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="metric">
+    <div class="frame">
+      <div class="kicker">The proof number</div>
+      <div class="metric">
+        <div class="zero-wrap">
+          <div class="zero-ring" id="ring1"></div>
+          <div class="zero-ring two" id="ring2"></div>
+          <div class="zero" id="zero">0</div>
+        </div>
+        <div class="unit">
+          <h1>unsafe<br><span class="em">writes.</span></h1>
+          <p>Zero double bookings, zero unconfirmed writes and zero slot mismatches across a <b>40-scenario local eval</b>.</p>
+          <p class="dataset">40-scenario local eval · separate from the 34-call demo dashboard</p>
+        </div>
+      </div>
+      <div class="caveat" id="caveat"><span class="dot"></span>live audio 5/6 · all hard gates green</div>
+      <div class="foot">
+        <span class="repo">Forge Voice · proof of concept</span>
+        <span>local-only · synthetic · no production SLA</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="endcard">
+    <div class="frame">
+      <div class="kicker">Next step</div>
+      <h1>Send <span class="em">two call flows.</span></h1>
+      <p class="sub">And your worst failure. I'll tell you what's <b>model</b>, <b>policy</b>, or <b>integration</b> — and what I'd fix first.</p>
+      <div class="url" id="url">
+        <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0a1120" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        github.com/ArpanSM/forge-voice
+      </div>
+      <div class="foot">
+        <span class="tag"><span class="dot"></span>Proof of concept · method applies to your call flow</span>
+        <span>Local-only · synthetic · no production SLA</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+<script src="gsap.min.js"></script>
+<script>
+  const tl = gsap.timeline({ paused: true });
+  tl.set('#stage', { opacity: 1 }, 0);
+
+  // 0–8.3 · the engagement
+  tl.from('#stage', { opacity: 0, duration: 0.45, ease: 'power2.out' }, 0);
+  tl.from('#whyme .kicker', { y: 14, opacity: 0, duration: 0.5, ease: 'power3.out' }, 0.12);
+  tl.from('#whyme h1', { y: 26, opacity: 0, duration: 0.75, ease: 'power3.out' }, 0.24);
+  tl.from('.step', { y: 28, opacity: 0, duration: 0.65, stagger: 0.2, ease: 'power3.out' }, 0.55);
+  tl.fromTo('#connector', { scaleX: 0 }, { scaleX: 1, duration: 1.1, ease: 'power2.inOut' }, 0.7);
+  tl.to('#ruleFill', { height: '100%', duration: 1.4, ease: 'power2.inOut' }, 0.5);
+  tl.to('#token3', { opacity: 1, scale: 1.25, duration: 0.32, ease: 'back.out(2.2)' }, 1.75);
+  tl.to('#token3', { scale: 1, duration: 0.22, ease: 'power2.inOut' }, 2.07);
+  tl.from('#whyme .foot', { opacity: 0, duration: 0.55, ease: 'power2.out' }, 1.35);
+  tl.set('#whyme', { autoAlpha: 0 }, 8.2);
+
+  // 8.3–12.5 · the proof number
+  tl.set('#metric', { autoAlpha: 1 }, 8.3);
+  tl.from('#metric .kicker', { y: 14, opacity: 0, duration: 0.5, ease: 'power3.out' }, 8.42);
+  tl.fromTo('#ring1', { scale: 0.82, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.8, ease: 'power3.out' }, 8.55);
+  tl.fromTo('#ring2', { scale: 0.86, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.8, ease: 'power3.out' }, 8.7);
+  tl.fromTo('#zero', { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.75, ease: 'power3.out' }, 8.75);
+  tl.from('#metric .unit h1', { y: 26, opacity: 0, duration: 0.6, ease: 'power3.out' }, 8.9);
+  tl.from('#metric .unit p', { y: 18, opacity: 0, duration: 0.5, ease: 'power2.out' }, 9.15);
+  tl.from('#metric .dataset', { y: 12, opacity: 0, duration: 0.45, ease: 'power2.out' }, 9.45);
+  tl.from('#caveat', { y: 16, opacity: 0, duration: 0.45, ease: 'power2.out' }, 9.7);
+  tl.from('#metric .foot', { opacity: 0, duration: 0.45, ease: 'power2.out' }, 9.8);
+  tl.to('#ring1', { boxShadow: '0 0 120px rgba(61,139,255,0.28) inset, 0 0 80px rgba(61,139,255,0.16)', duration: 1.4, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 10.2);
+  tl.set('#metric', { autoAlpha: 0 }, 12.4);
+
+  // 12.5–20.7 · the call to action
+  tl.set('#endcard', { autoAlpha: 1 }, 12.5);
+  tl.from('#endcard .kicker', { y: 14, opacity: 0, duration: 0.5, ease: 'power3.out' }, 12.62);
+  tl.from('#endcard h1', { y: 34, opacity: 0, duration: 0.8, ease: 'power3.out' }, 12.76);
+  tl.from('#endcard .sub', { y: 22, opacity: 0, duration: 0.65, ease: 'power2.out' }, 13.1);
+  tl.from('#url', { y: 18, opacity: 0, duration: 0.55, ease: 'power2.out' }, 13.4);
+  tl.from('#endcard .foot', { opacity: 0, duration: 0.55, ease: 'power2.out' }, 13.7);
+  tl.fromTo('#url .mark', { boxShadow: '0 0 0 rgba(61,139,255,0)' }, { boxShadow: '0 0 44px rgba(61,139,255,0.6)', duration: 1.1, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 14.1);
+  tl.to({}, { duration: 20.7 });
+
+  window.__timelines = window.__timelines || {};
+  window.__timelines['client-proof'] = tl;
+  window.__compositionReady = Promise.resolve();
+</script>
+</body>
+</html>

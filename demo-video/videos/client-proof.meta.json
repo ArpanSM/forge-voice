@@ -1,0 +1,64 @@
+{
+  "demo": "client-proof",
+  "createdAt": "2026-11-09T21:52:15.653Z",
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "browser": "chromium",
+    "deviceScaleFactor": 2
+  },
+  "tts": {
+    "engine": "lfm3",
+    "model": "lfm3-audio-2b"
+  },
+  "scenes": [
+    {
+      "scene": "hook",
+      "voice": "male",
+      "speed": 0.98,
+      "durationMs": 4075.2083333333335
+    },
+    {
+      "scene": "poc",
+      "voice": "male",
+      "speed": 0.98,
+      "durationMs": 7333.791666666666
+    },
+    {
+      "scene": "call",
+      "voice": "male",
+      "speed": 0.98,
+      "durationMs": 7488.458333333333
+    },
+    {
+      "scene": "write",
+      "voice": "male",
+      "speed": 0.98,
+      "durationMs": 6518.916666666667
+    },
+    {
+      "scene": "whyme",
+      "voice": "male",
+      "speed": 0.98,
+      "durationMs": 8156.25
+    },
+    {
+      "scene": "metric",
+      "voice": "male",
+      "speed": 0.98,
+      "durationMs": 4549.541666666666
+    },
+    {
+      "scene": "endcard",
+      "voice": "male",
+      "speed": 1,
+      "durationMs": 6880
+    }
+  ],
+  "export": {
+    "preset": "slow",
+    "crf": 18
+  },
+  "output": "videos/client-proof.mp4"
+}

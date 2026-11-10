@@ -1,0 +1,51 @@
+[
+  {
+    "scene": "hook",
+    "text": "A booking that doesn't match the request is a support ticket.",
+    "voice": "male",
+    "speed": 0.98,
+    "lang": "en"
+  },
+  {
+    "scene": "poc",
+    "text": "This proof of concept uses a synthetic two-tenant corpus. The method applies to your call flow.",
+    "voice": "male",
+    "speed": 0.98,
+    "lang": "en"
+  },
+  {
+    "scene": "call",
+    "text": "A caller reports a cooling problem. The agent checks the service area, offers a real slot, and reads back.",
+    "voice": "male",
+    "speed": 0.98,
+    "lang": "en"
+  },
+  {
+    "scene": "write",
+    "text": "The caller says yes. One token, one write. A retry returns the same booking.",
+    "voice": "male",
+    "speed": 0.98,
+    "lang": "en"
+  },
+  {
+    "scene": "whyme",
+    "text": "I reproduce your booking failures, separate model from policy, and rank the fixes with a before/after evaluation.",
+    "voice": "male",
+    "speed": 0.98,
+    "lang": "en"
+  },
+  {
+    "scene": "metric",
+    "text": "On 40 text scenarios, zero unsafe writes.",
+    "voice": "male",
+    "speed": 0.98,
+    "lang": "en"
+  },
+  {
+    "scene": "endcard",
+    "text": "Send me two call flows and your worst failure. I'll tell you what's model, policy, or integration.",
+    "voice": "male",
+    "speed": 1.0,
+    "lang": "en"
+  }
+]

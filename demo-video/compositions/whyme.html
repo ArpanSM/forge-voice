@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Forge Voice — the engagement</title>
+<style>
+  @font-face { font-family: "Noto Sans"; src: url("fonts/NotoSans-Regular.ttf") format("truetype"); font-weight: 400; }
+  @font-face { font-family: "Noto Sans"; src: url("fonts/NotoSans-Bold.ttf") format("truetype"); font-weight: 700; }
+  @font-face { font-family: "Noto Sans Mono"; src: url("fonts/NotoSansMono-Regular.ttf") format("truetype"); font-weight: 400; }
+  @font-face { font-family: "Noto Serif"; src: url("fonts/NotoSerif-Regular.ttf") format("truetype"); font-weight: 400; }
+  @font-face { font-family: "Noto Serif"; src: url("fonts/NotoSerif-Italic.ttf") format("truetype"); font-weight: 400; font-style: italic; }
+  :root {
+    --ink: #0a1120; --surface: #101a2e; --line: #1e2c46;
+    --text: #e8eef7; --muted: #8fa0b8; --accent: #3d8bff;
+    --amber: #f0a83c; --green: #34c98e; --red: #e05a5a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; width: 1920px; height: 1080px; overflow: hidden; }
+  body { background: var(--ink); }
+  #stage {
+    position: relative; width: 1920px; height: 1080px; overflow: hidden; color: var(--text);
+    font-family: "Noto Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+    background:
+      radial-gradient(circle at 86% 8%, rgba(61,139,255,0.14), transparent 34rem),
+      radial-gradient(circle at 4% 96%, rgba(61,139,255,0.07), transparent 28rem),
+      var(--ink);
+  }
+  #stage::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(143,160,184,0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(143,160,184,0.055) 1px, transparent 1px);
+    background-size: 96px 96px;
+    mask-image: radial-gradient(circle at 50% 45%, #000 30%, transparent 85%);
+  }
+  .frame { position: absolute; inset: 0; padding: 88px 112px 76px; display: flex; flex-direction: column; }
+  .rule { position: absolute; left: 112px; top: 88px; bottom: 76px; width: 2px; background: var(--line); }
+  .rule .fill { position: absolute; top: 0; left: 0; width: 100%; height: 0%; background: var(--accent); }
+  .kicker {
+    font-family: "Noto Sans Mono", monospace; font-size: 15px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--accent); padding-left: 34px;
+  }
+  h1 {
+    margin: 22px 0 0; padding-left: 34px; max-width: 1300px;
+    font-family: "Noto Serif", Georgia, serif; font-weight: 400;
+    font-size: 92px; line-height: 1.03; letter-spacing: -0.032em;
+  }
+  h1 .em { font-style: italic; color: var(--accent); }
+  .steps { margin-top: 84px; padding-left: 34px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 56px; position: relative; }
+  .steps .connector { position: absolute; top: 0; left: 8px; right: 8px; height: 1px; background: var(--line); transform-origin: left center; }
+  .step { border-top: 1px solid var(--line); padding-top: 26px; position: relative; }
+  .step .num { font-family: "Noto Sans Mono", monospace; font-size: 14px; letter-spacing: 0.18em; color: var(--muted); }
+  .step h2 { margin: 16px 0 0; font-family: "Noto Serif", Georgia, serif; font-weight: 400; font-size: 42px; letter-spacing: -0.02em; }
+  .step p { margin: 14px 0 0; font-size: 20px; line-height: 1.5; color: var(--muted); max-width: 400px; }
+  .step .token {
+    position: absolute; top: -14px; right: -6px; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--green); display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 6px rgba(52,201,142,0.16); opacity: 0;
+  }
+  .step .token svg { width: 15px; height: 15px; }
+  .foot {
+    margin-top: auto; padding-left: 34px; display: flex; justify-content: space-between;
+    font-family: "Noto Sans Mono", monospace; font-size: 13px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .foot .repo { color: var(--text); }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="whyme" data-width="1920" data-height="1080" data-duration="9">
+  <div class="rule"><div class="fill" id="ruleFill"></div></div>
+  <div class="frame">
+    <div class="kicker">What hiring me looks like</div>
+    <h1>Reproduce. Measure.<br><span class="em">Fix + gate.</span></h1>
+    <div class="steps">
+      <div class="connector" id="connector"></div>
+      <div class="step" id="s1">
+        <div class="num">01</div>
+        <h2>Reproduce</h2>
+        <p>Your booking failures, replayed as scenarios.</p>
+      </div>
+      <div class="step" id="s2">
+        <div class="num">02</div>
+        <h2>Measure</h2>
+        <p>Model behaviour against deterministic policy.</p>
+      </div>
+      <div class="step" id="s3">
+        <div class="num">03</div>
+        <h2>Fix + gate</h2>
+        <p>Ranked fixes with a before/after evaluation.</p>
+        <div class="token" id="token3"><svg viewBox="0 0 24 24" fill="none" stroke="#0a1120" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="repo">Forge Voice · proof of concept</span>
+      <span>local-only · synthetic · no production SLA</span>
+    </div>
+  </div>
+</div>
+<script src="gsap.min.js"></script>
+<script>
+  const tl = gsap.timeline({ paused: true });
+  tl.from('#stage', { opacity: 0, duration: 0.45, ease: 'power2.out' }, 0);
+  tl.from('.kicker', { y: 14, opacity: 0, duration: 0.5, ease: 'power3.out' }, 0.12);
+  tl.from('h1', { y: 26, opacity: 0, duration: 0.75, ease: 'power3.out' }, 0.24);
+  tl.from('.step', { y: 28, opacity: 0, duration: 0.65, stagger: 0.2, ease: 'power3.out' }, 0.55);
+  tl.fromTo('#connector', { scaleX: 0 }, { scaleX: 1, duration: 1.1, ease: 'power2.inOut' }, 0.7);
+  tl.to('#ruleFill', { height: '100%', duration: 1.4, ease: 'power2.inOut' }, 0.5);
+  tl.to('#token3', { opacity: 1, scale: 1.25, duration: 0.32, ease: 'back.out(2.2)' }, 1.75);
+  tl.to('#token3', { scale: 1, duration: 0.22, ease: 'power2.inOut' }, 2.07);
+  tl.from('.foot', { opacity: 0, duration: 0.55, ease: 'power2.out' }, 1.35);
+  tl.to({}, { duration: 9 });
+  window.__timelines = window.__timelines || {};
+  window.__timelines['whyme'] = tl;
+  window.__compositionReady = Promise.resolve();
+</script>
+</body>
+</html>

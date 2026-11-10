@@ -1,0 +1,70 @@
+[
+  {
+    "scene": "hook",
+    "text": "A voice agent can sound fluent, and still double-book, invent a slot, or lose an emergency. This local demo shows the booking, the handoff, and the audit trail.",
+    "voice": "male",
+    "speed": 0.98,
+    "lang": "en",
+    "overlay": {
+      "type": "callout",
+      "text": "Text-mode records · local synthetic demo",
+      "placement": "bottom-right",
+      "motion": "fade-in"
+    }
+  },
+  {
+    "scene": "dashboard",
+    "text": "Thirty-four synthetic calls. Booking rate, containment, p95 first audio, and two active alerts are on the first screen.",
+    "voice": "male",
+    "speed": 0.98,
+    "lang": "en"
+  },
+  {
+    "scene": "booked",
+    "text": "Open a booked call. One booking ID, the exact read-back, the tool timeline, and the measured first audio.",
+    "voice": "male",
+    "speed": 0.98,
+    "lang": "en"
+  },
+  {
+    "scene": "emergency",
+    "text": "The emergency path runs before the model. A 911-first script, a structured ticket, and a connected transfer. The transfer is simulated in this local demo.",
+    "voice": "male",
+    "speed": 0.97,
+    "lang": "en",
+    "overlay": {
+      "type": "callout",
+      "text": "Transfer simulated · no live human",
+      "placement": "top-right",
+      "motion": "fade-in"
+    }
+  },
+  {
+    "scene": "review",
+    "text": "The weekly review turns a sample of calls into scenario candidates, so a failure can become a test.",
+    "voice": "male",
+    "speed": 0.98,
+    "lang": "en"
+  },
+  {
+    "scene": "admin",
+    "text": "Both tenants run the same engine. The admin editor validates YAML before it writes.",
+    "voice": "male",
+    "speed": 0.98,
+    "lang": "en"
+  },
+  {
+    "scene": "limits",
+    "text": "Local, synthetic, no production SLA. The live audio run is five of six; one ASR miss is shown, not hidden.",
+    "voice": "male",
+    "speed": 0.98,
+    "lang": "en"
+  },
+  {
+    "scene": "end",
+    "text": "Code and evaluation are in the repository.",
+    "voice": "male",
+    "speed": 1.0,
+    "lang": "en"
+  }
+]

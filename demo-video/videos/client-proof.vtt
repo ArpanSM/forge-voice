@@ -1,0 +1,22 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.076
+A booking that doesn't match the request is a support ticket.
+
+00:00:05.492 --> 00:00:12.825
+This proof of concept uses a synthetic two-tenant corpus. The method applies to your call flow.
+
+00:00:13.477 --> 00:00:20.965
+A caller reports a cooling problem. The agent checks the service area, offers a real slot, and reads back.
+
+00:00:21.372 --> 00:00:27.890
+The caller says yes. One token, one write. A retry returns the same booking.
+
+00:00:28.437 --> 00:00:36.593
+I reproduce your booking failures, separate model from policy, and rank the fixes with a before/after evaluation.
+
+00:00:36.996 --> 00:00:41.545
+On 40 text scenarios, zero unsafe writes.
+
+00:00:41.948 --> 00:00:48.828
+Send me two call flows and your worst failure. I'll tell you what's model, policy, or integration.

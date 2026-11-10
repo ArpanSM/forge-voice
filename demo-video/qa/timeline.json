@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "w": 1920,
+    "h": 1080,
+    "fps": 30,
+    "dur": 48.97,
+    "clock": "voice",
+    "register": "clean",
+    "loop": false,
+    "hookWaiver": "Sales film for a portfolio card and proposal attachment, not feed autoplay. The CTA is the end card.",
+    "vo": { "status": "RENDERED" }
+  },
+  "objects": [
+    { "id": "token", "role": "constant", "what": "the policy token / evidence tag motif" }
+  ],
+  "vo": [
+    { "id": "L1", "text": "A booking that doesn't match the request is a support ticket.", "from": 0.0, "to": 5.49 },
+    { "id": "L2", "text": "This proof of concept uses a synthetic two-tenant corpus. The method applies to your call flow.", "from": 5.49, "to": 13.48 },
+    { "id": "L3", "text": "A caller reports a cooling problem. The agent checks the service area, offers a real slot, and reads back.", "from": 13.48, "to": 21.37 },
+    { "id": "L4", "text": "The caller says yes. One token, one write. A retry returns the same booking.", "from": 21.37, "to": 28.44 },
+    { "id": "L5", "text": "I reproduce your booking failures, separate model from policy, and rank the fixes with a before/after evaluation.", "from": 28.44, "to": 37.0 },
+    { "id": "L6", "text": "On 40 text scenarios, zero unsafe writes.", "from": 37.0, "to": 41.95 },
+    { "id": "L7", "text": "Send me two call flows and your worst failure. I'll tell you what's model, policy, or integration.", "from": 41.95, "to": 48.97 }
+  ],
+  "scenes": [
+    { "id": "hook", "start": 0.0, "end": 5.49, "beats": { "alert": 0.4 }, "transitionOut": { "type": "cut", "dur": 0, "why": "hard cut to the caller page" } },
+    { "id": "poc", "start": 5.49, "end": 13.48, "beats": { "label": 5.8, "disclosure": 7.1 }, "transitionOut": { "type": "cut", "dur": 0, "why": "hard cut to the call record" } },
+    { "id": "call", "start": 13.48, "end": 21.37, "beats": { "readback": 13.9 }, "transitionOut": { "type": "cut", "dur": 0, "why": "hard cut to the write" } },
+    { "id": "write", "start": 21.37, "end": 28.44, "beats": { "booking": 21.7, "retry": 23.7 }, "transitionOut": { "type": "cut", "dur": 0, "why": "hard cut to the drawn card" } },
+    { "id": "whyme", "start": 28.44, "end": 37.0, "beats": { "steps": 28.8 }, "transitionOut": { "type": "cut", "dur": 0, "why": "card swap" } },
+    { "id": "metric", "start": 37.0, "end": 41.95, "beats": { "zero": 37.4 }, "transitionOut": { "type": "cut", "dur": 0, "why": "card swap" } },
+    { "id": "endcard", "start": 41.95, "end": 48.97, "beats": { "cta": 42.7 } }
+  ],
+  "cuts": [5.333, 13.367, 13.633, 13.8, 13.867, 14.0, 14.133, 14.233, 14.6, 21.533, 21.633, 21.767, 21.867, 22.0, 23.567, 23.667, 23.833, 28.4],
+  "hero": { "t": 37.0, "what": "the proof number: 0 unsafe writes" },
+  "silences": [],
+  "texts": [
+    { "id": "hook", "text": "A booking that doesn't match the request is a support ticket.", "from": 0.5, "to": 5.49, "role": "hook", "px": 84, "box": [48, 820, 1612, 220] },
+    { "id": "readback", "text": "Read-back: Air conditioning repair · Wed 11 Nov 12:00 PM · Dana · 88 Meridian Way", "from": 15.0, "to": 21.37, "role": "term", "px": 48, "box": [48, 880, 1560, 160] },
+    { "id": "tools", "text": "lookup_customer → get_service_area → get_availability → book_appointment", "from": 23.0, "to": 28.44, "role": "term", "px": 48, "box": [48, 880, 1560, 160] },
+    { "id": "cta", "text": "Send two call flows.", "from": 42.7, "to": 48.97, "role": "cta", "px": 132, "box": [112, 150, 1200, 200] }
+  ],
+  "captions": [
+    { "from": 13.48, "to": 21.37, "text": "READ-BACK" },
+    { "from": 21.37, "to": 28.44, "text": "ONE WRITE · RETRY → SAME BOOKING" },
+    { "from": 37.0, "to": 41.95, "text": "0 unsafe writes" },
+    { "from": 41.95, "to": 48.97, "text": "model, policy, integration" }
+  ],
+  "terms": ["unsafe writes", "read-back", "one write", "model", "policy", "integration"]
+}

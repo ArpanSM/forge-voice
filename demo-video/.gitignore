@@ -1,0 +1,24 @@
+# Argo intermediates (clips, raw capture, timing, traces)
+.argo/
+test-results/
+playwright-report/
+
+# Local tooling
+node_modules/
+*.tmp.*
+
+# Release artifacts (uploaded to GitHub Releases, kept out of git)
+videos/
+qa/*.jpg
+qa/*.png
+
+# Huashu render artifacts (the delivered copy lives in out/ for review)
+huashu-film/out/
+huashu-film/.om/
+huashu-film/index-*.png
+
+huashu-film/assets/sound.wav
+huashu-film/materials/
+huashu-film/qa/
+
+qa/huashu-stills/

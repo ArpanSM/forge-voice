@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Forge Voice — end card</title>
+<style>
+  @font-face { font-family: "Noto Sans"; src: url("fonts/NotoSans-Regular.ttf") format("truetype"); font-weight: 400; }
+  @font-face { font-family: "Noto Sans"; src: url("fonts/NotoSans-Bold.ttf") format("truetype"); font-weight: 700; }
+  @font-face { font-family: "Noto Sans Mono"; src: url("fonts/NotoSansMono-Regular.ttf") format("truetype"); font-weight: 400; }
+  @font-face { font-family: "Noto Serif"; src: url("fonts/NotoSerif-Regular.ttf") format("truetype"); font-weight: 400; }
+  @font-face { font-family: "Noto Serif"; src: url("fonts/NotoSerif-Italic.ttf") format("truetype"); font-weight: 400; font-style: italic; }
+  :root {
+    --paper: #f4f8fc; --ink: #142033; --ink-soft: #2a3950; --muted: #5c6b80;
+    --line: #dbe4ee; --blue: #2f7ed8; --red: #c83e3e; --green: #237a4a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; width: 1920px; height: 1080px; overflow: hidden; }
+  body { background: var(--paper); }
+  #stage {
+    position: relative; width: 1920px; height: 1080px; overflow: hidden;
+    background:
+      radial-gradient(circle at 92% 6%, rgba(47,126,216,0.10), transparent 30rem),
+      radial-gradient(circle at 2% 98%, rgba(47,126,216,0.05), transparent 24rem),
+      var(--paper);
+    color: var(--ink);
+    font-family: "Noto Sans", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .frame { position: absolute; inset: 0; padding: 78px 104px 62px; display: flex; flex-direction: column; }
+  .brandline {
+    display: flex; align-items: center; gap: 18px;
+    font-family: "Noto Sans Mono", monospace; font-size: 14px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+  }
+  .brandline .rule { width: 54px; height: 2px; background: var(--blue); transform-origin: left center; }
+  .brandline b { color: var(--ink); font-weight: 700; letter-spacing: 0.14em; }
+  .brandline .right { margin-left: auto; }
+
+  .hero { margin-top: 84px; }
+  h1 {
+    margin: 0; font-family: "Noto Serif", Georgia, serif; font-weight: 400;
+    font-size: 112px; line-height: 1.05; letter-spacing: -0.04em;
+  }
+  h1 .line { display: block; }
+  h1 .em { font-style: italic; color: var(--blue); }
+  .sub { margin: 28px 0 0; max-width: 1200px; font-size: 23px; line-height: 1.5; color: var(--muted); }
+  .sub b { color: var(--ink); font-weight: 700; }
+
+  .proof {
+    margin-top: 54px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px;
+  }
+  .proof .item { border-top: 1px solid var(--line); padding-top: 18px; }
+  .proof .label {
+    font-family: "Noto Sans Mono", monospace; font-size: 12px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .proof .value {
+    margin-top: 10px; font-size: 27px; line-height: 1.3; letter-spacing: -0.01em;
+    color: var(--ink-soft); font-weight: 700;
+  }
+  .proof .value.green { color: var(--green); }
+  .proof .value.red { color: var(--red); }
+  .proof .note { margin-top: 6px; font-size: 15px; color: var(--muted); }
+
+  .foot {
+    margin-top: auto; border-top: 1px solid var(--line); padding-top: 22px;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 44px;
+  }
+  .meta { font-family: "Noto Sans Mono", monospace; font-size: 15px; line-height: 1.9; color: var(--muted); }
+  .meta .repo { color: var(--ink); font-size: 18px; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 9px; padding: 8px 14px;
+    border: 1px solid var(--line); border-radius: 999px;
+    background: rgba(255,255,255,0.75); color: var(--ink-soft);
+    font-family: "Noto Sans Mono", monospace; font-size: 13px; letter-spacing: 0.04em;
+  }
+  .tag .dot { width: 8px; height: 8px; border-radius: 99px; background: var(--blue); }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="end" data-width="1920" data-height="1080" data-duration="5.4">
+  <div class="frame">
+    <div class="brandline" id="brandline">
+      <span class="rule"></span><span><b>Forge Voice</b> &nbsp;·&nbsp; the proof</span>
+      <span class="right">text-mode records · local synthetic demo</span>
+    </div>
+
+    <div class="hero">
+      <h1 id="headline">
+        <span class="line">One booking.</span>
+        <span class="line">One handoff.</span>
+        <span class="line em">One audit trail.</span>
+      </h1>
+      <p class="sub" id="subline">A local voice booking agent that can prove what it did:
+        <b>the write, the read-back, the emergency path, and the record.</b></p>
+    </div>
+
+    <div class="proof" id="proof">
+      <div class="item">
+        <div class="label">Booking</div>
+        <div class="value green">bk_summit_0003</div>
+        <div class="note">slot check OK · one committed write</div>
+      </div>
+      <div class="item">
+        <div class="label">Emergency</div>
+        <div class="value red">em_harborlight_0001</div>
+        <div class="note">911-first script · transfer simulated</div>
+      </div>
+      <div class="item">
+        <div class="label">Audit trail</div>
+        <div class="value">34 synthetic calls</div>
+        <div class="note">3 booked · 4 emergency tickets · 3/4 triaged</div>
+      </div>
+    </div>
+
+    <div class="foot" id="foot">
+      <div class="meta">
+        <span class="repo">github.com/ArpanSM/forge-voice</span><br>
+        Local-only · synthetic · no production SLA
+      </div>
+      <div class="tag"><span class="dot"></span>No live call recorded · no phone/SIP</div>
+    </div>
+  </div>
+</div>
+
+<script src="gsap.min.js"></script>
+<script>
+  const DURATION = 5.4;
+  const tl = gsap.timeline({ paused: true });
+  tl.set('#stage', { opacity: 1 }, 0);
+  tl.fromTo('#stage', { scale: 1 }, { scale: 1.02, duration: DURATION, ease: 'none' }, 0);
+  tl.from('.brandline .rule', { scaleX: 0, duration: 0.45, ease: 'power3.out' }, 0);
+  tl.from('#headline .line', {
+    y: 20, duration: 0.55, stagger: 0.1, ease: 'power3.out'
+  }, 0.06);
+  tl.from('#subline', { y: 12, duration: 0.5, ease: 'power2.out' }, 0.58);
+  tl.from('#proof .item', {
+    opacity: 0, y: 16, duration: 0.45, stagger: 0.09, ease: 'power3.out'
+  }, 0.82);
+  tl.from('#foot', { opacity: 0, duration: 0.45, ease: 'power2.out' }, 1.25);
+  tl.to('.tag .dot', { opacity: 0.35, duration: 0.6, repeat: 5, yoyo: true, ease: 'sine.inOut' }, 1.6);
+  tl.to({}, { duration: DURATION });
+  window.__timelines = window.__timelines || {};
+  window.__timelines['end'] = tl;
+  window.__compositionReady = Promise.resolve();
+</script>
+</body>
+</html>
